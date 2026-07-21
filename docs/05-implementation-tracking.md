@@ -40,8 +40,8 @@ flowchart LR
 
 | Issue | ID | Status | Claimed By | Blocked By |
 |-------|----|--------|------------|------------|
-| **3A: Inspection Module** | `rsud-server-stack-5e5` | 🔴 Open | — | 2 |
-| **3B: Media Module** | `rsud-server-stack-2u0` | 🔴 Open | — | 3A |
+| **3A: Inspection Module** | `rsud-server-stack-5e5` | 🟢 Done | k3ntoes.android@gmail.com | 2 |
+| **3B: Media Module** | `rsud-server-stack-2u0` | 🟢 Done | k3ntoes.android@gmail.com | 3A |
 
 ### Phase 4 — Analytics & Background
 

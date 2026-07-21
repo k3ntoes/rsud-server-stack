@@ -10,7 +10,8 @@ from app.core.database import Base
 
 # Import all models so Base.metadata is populated
 from app.modules.auth.models import User, UserSession  # noqa: F401
-from app.modules.master.models import Room, InspectionItem  # noqa: F401
+from app.modules.master.models import Room, InspectionItem
+from app.modules.inspection.models import Inspection, InspectionDetail, InspectionPhoto  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
