@@ -47,8 +47,8 @@ flowchart LR
 
 | Issue | ID | Status | Claimed By | Blocked By |
 |-------|----|--------|------------|------------|
-| **4A: Analytics Module** | `rsud-server-stack-wrx` | 🔴 Open | — | 3A |
-| **4B: Background Jobs** | `rsud-server-stack-4hy` | 🔴 Open | — | 3A, 4A |
+| **4A: Analytics Module** | `rsud-server-stack-wrx` | 🟢 Done | k3ntoes.android@gmail.com | 3A |
+| **4B: Background Jobs** | `rsud-server-stack-4hy` | 🟢 Done | k3ntoes.android@gmail.com | 3A, 4A |
 
 ### Phase 5 — Web Admin Frontend
 

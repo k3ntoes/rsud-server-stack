@@ -95,6 +95,11 @@ async def approve_inspection(db: AsyncSession, inspection_id: int) -> Inspection
     if inspection is None or inspection.status != "PENDING":
         return None
     inspection.status = "APPROVED"
+
+    # Create job BEFORE commit — atomic with status change (outbox pattern)
+    from app.modules.background.services import create_job
+    await create_job(db, "recalculate_analytics", inspection_id)
+
     await db.commit()
     await db.refresh(inspection)
     return inspection
