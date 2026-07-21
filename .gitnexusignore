@@ -1,0 +1,11 @@
+# GitNexus Ignore — direktori yang tidak perlu di-index
+# Format: .gitignore-style patterns
+
+# Agent skills & tools (AI agent config, bukan source code)
+.agents/
+
+# GitNexus skill documentation (sudah di-manage oleh .claude/ sendiri)
+.claude/
+
+# Beads issue tracker (database + runtime files, bukan source code)
+.beads/

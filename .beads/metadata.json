@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "rsud_server_stack",
+  "project_id": "d0486cdd-172d-423d-bcef-a3262feccbfa"
+}

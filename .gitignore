@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.venv/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database (runtime data)
+*.db
+*.sqlite3
+
+# Uploads (runtime data)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# beads data sync
+.beads/dolt/

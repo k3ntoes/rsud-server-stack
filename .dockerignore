@@ -1,0 +1,8 @@
+.venv/
+.git/
+.gitignore
+.gitnexusignore
+.env
+*.md
+tests/
+node_modules/

@@ -1,0 +1,17 @@
+[project]
+name = "rsud-server"
+version = "0.1.0"
+description = "RSUD Ajibarang Server Stack - Backend API"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite",
+    "alembic",
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+    "python-multipart",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio"]
