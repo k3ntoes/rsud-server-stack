@@ -74,3 +74,40 @@ This project is indexed by GitNexus as **rsud-server-stack** (1056 symbols, 2045
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
+
+<!-- graphify:start -->
+# Graphify — Knowledge Graph
+
+This project uses **graphify** (v0.9.23) to build a navigable knowledge graph from source code. The graph helps agents understand code relationships, detect communities, and trace execution paths across the monorepo.
+
+## Monorepo Update (Correct Command)
+
+Gunakan **`graphify extract`** (bukan `graphify .`), lalu merge dengan `--out`:
+
+```bash
+# 1. Extract per subdirectory (output di <dir>/graphify-out/graph.json)
+graphify extract ./backend/ --code-only --no-viz
+graphify extract ./web-admin/ --code-only --no-viz
+
+# 2. Merge into single monorepo graph (output: graphify-out/graph.json)
+graphify merge-graphs ./backend/graphify-out/graph.json ./web-admin/graphify-out/graph.json --out graphify-out/graph.json
+```
+
+## Known Constraints
+
+- **Monorepo**: Wajib `graphify extract ./subdir/` per proyek, lalu `merge-graphs --out`. Root-level `graphify .` gagal dengan `deduplicate_entities: nodes span multiple repos`.
+- **No API key**: Gunakan `--code-only`. AST extraction berfungsi tanpa API key. Semantic extraction (docs, papers, images) butuh `GEMINI_API_KEY`.
+- **Output**: `graphify extract` menempatkan `graphify-out/` di **dalam** direktori yang di-scan (`backend/graphify-out/`, `web-admin/graphify-out/`). Merge dengan `--out` menulis ke root `graphify-out/graph.json`.
+
+## Resources
+
+| Task | Command |
+|------|---------|
+| Full code re-index | `graphify extract ./backend/ --code-only --no-viz && graphify extract ./web-admin/ --code-only --no-viz && graphify merge-graphs ./backend/graphify-out/graph.json ./web-admin/graphify-out/graph.json --out graphify-out/graph.json` |
+| Incremental update | Same as full re-index — graphify handles caching via `extract` |
+| Re-cluster only | `graphify cluster-only <dir>` |
+| Query merged graph | `graphify query "<question>"` (from root, reads `graphify-out/graph.json`) |
+| Shortest path | `graphify path "NodeA" "NodeB"` |
+| Merge graphs | `graphify merge-graphs <g1.json> <g2.json> --out <output.json>` |
+
+<!-- graphify:end -->
