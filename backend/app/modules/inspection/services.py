@@ -77,9 +77,19 @@ async def submit_inspection(
 
     db.add(inspection)
     await db.commit()
-    # Re-fetch with relationships loaded for response serialization
+
+    # Re-fetch with relationships loaded — needed for details/photos access
     fetched = await _refetch_inspection(db, inspection.id)
     assert fetched is not None
+
+    # Create thumbnail generation jobs for each uploaded photo
+    from app.modules.background.services import create_job
+    for detail in fetched.details:
+        for photo in detail.photos:
+            await create_job(db, "generate_thumbnail", photo.id)
+    if any(detail.photos for detail in fetched.details):
+        await db.commit()
+
     return fetched
 
 

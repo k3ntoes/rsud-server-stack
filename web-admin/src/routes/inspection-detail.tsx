@@ -1,13 +1,67 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createRoute, useParams, useNavigate } from "@tanstack/react-router";
 import { protectedRoute } from "./_protected";
 import Modal from "../components/Modal";
+import { apiRequest } from "../lib/api";
 import {
   useInspection,
   useApproveInspection,
   useRejectInspection,
 } from "../hooks/useInspections";
 import { useRooms } from "../hooks/useMasterData";
+
+function PhotoThumb({ filename }: { filename: string }) {
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiRequest<{ token: string }>(
+      `/api/media/token?filename=${encodeURIComponent(filename)}`,
+      { method: "POST" },
+    )
+      .then((data) => {
+        if (!cancelled) {
+          setToken(data.token);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [filename]);
+
+  if (loading) {
+    return <div className="h-10 w-10 animate-pulse rounded border bg-navy-100" />;
+  }
+
+  if (!token) {
+    return (
+      <span className="text-[10px] text-ink-subtle">
+        {filename.slice(0, 12)}…
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href={`/api/media/access/${token}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative inline-block"
+    >
+      <img
+        src={`/api/media/access/${token}`}
+        alt=""
+        className="h-10 w-10 rounded object-cover ring-1 ring-navy-200/50 transition-shadow group-hover:ring-2 group-hover:ring-teal-400"
+        loading="lazy"
+      />
+    </a>
+  );
+}
 
 export const Route = createRoute({
   getParentRoute: () => protectedRoute,
@@ -214,15 +268,14 @@ function InspectionDetailPage() {
                     <td>{scoreBadge(d.score)}</td>
                     <td>
                       {d.photos.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-2">
                           {d.photos.map((p) => (
-                            <span
+                            <PhotoThumb
                               key={p.id}
-                              className="inline-flex items-center gap-1 rounded-plan border border-navy-100/50 bg-navy-50/50 px-2 py-0.5 text-xs text-navy-500"
-                            >
-                              <span className="text-[10px]">📷</span>
-                              {p.photo_file_name.slice(0, 16)}
-                            </span>
+                              filename={
+                                p.thumbnail_file_name || p.photo_file_name
+                              }
+                            />
                           ))}
                         </div>
                       ) : (

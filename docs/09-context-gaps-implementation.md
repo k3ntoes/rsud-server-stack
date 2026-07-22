@@ -33,7 +33,7 @@ flowchart LR
 
 | Issue | ID | Status | Claimed By | Blocked By | Files |
 |-------|----|--------|------------|------------|-------|
-| **GAP B: Weekly Default View** | `rsud-server-stack-h36` | 🟢 Done | buffy | None | `analytics/api.py`, `analytics/CONTEXT.md`, `hooks/useAnalytics.ts` |
+| **GAP B: Weekly Default View** | `rsud-server-stack-h36` | 🔴 Open | — | None | `analytics/api.py`, `analytics/services.py`, `analytics/models.py`, `hooks/useAnalytics.ts` |
 | **GAP C: Thumbnail Lazy Load** | `rsud-server-stack-gi5` | 🟢 Done | buffy | GAP A | `inspection-detail.tsx`, `useInspections.ts` |
 | **GAP D: All Items Validation** | `rsud-server-stack-quo` | 🟢 Done | buffy | None | `inspection/services.py`, `inspection/schemas.py` |
 
@@ -69,12 +69,15 @@ flowchart LR
 |------|--------|
 | **Severity** | 🟡 Sedang |
 | **Sumber** | `analytics/api.py` + `useAnalytics.ts` default ke monthly |
-| **CONTEXT** | "Default dashboard view is weekly, not monthly" |
-| **Scope** | `analytics/CONTEXT.md`, frontend default, API default |
+| **CONTEXT** | "Default dashboard view is weekly, not monthly" ✅ (source of truth — benar) |
+| **Scope** | `analytics/services.py`, `analytics/models.py`, `analytics/api.py`, `hooks/useAnalytics.ts` |
 
-**Action:**
-1. Opsi A: Ubah CONTEXT → bilang monthly (lebih sederhana)
-2. Opsi B: Implementasi weekly granularity + ubah default
+**Action (implementasi harus mengikuti CONTEXT):**
+1. **Schema:** Tambah tabel `room_weekly_stats` dengan granularity `year_week` (format `YYYY-Www`), atau ubah `year_month` menjadi `period` dengan tipe discriminator (M=monthly, W=weekly)
+2. **Service:** `recalculate_analytics()` — hitung stats per minggu (`year_week`) selain per bulan
+3. **API:** Terima parameter `period` (M/W) dan `year_week` selain `year_month`
+4. **Frontend:** Ubah `useAnalytics.ts` — default filter ke **current week** (format `YYYY-Www`), bukan `currentMonth()`
+5. **CONTEXT.md:** Tidak perlu diubah — weekly sudah benar sebagai source of truth
 
 ### GAP C: Thumbnail Lazy Load
 
