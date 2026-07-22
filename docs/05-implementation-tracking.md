@@ -27,28 +27,28 @@ flowchart LR
 
 | Issue | ID | Status | Claimed By | Blocked By | 
 |-------|----|--------|------------|------------|
-| **1A: Backend Foundation** | `rsud-server-stack-5xr` | 🟢 Done | k3ntoes.android@gmail.com | None |
-| **1B: Auth Module** | `rsud-server-stack-3f5` | 🟢 Done | k3ntoes.android@gmail.com | 1A |
+| **1A: Backend Foundation** | `rsud-server-stack-5xr` | 🟢 Done | k3ntoes@gmail.com | None |
+| **1B: Auth Module** | `rsud-server-stack-3f5` | 🟢 Done | k3ntoes@gmail.com | 1A |
 
 ### Phase 2 — Master Data
 
 | Issue | ID | Status | Claimed By | Blocked By |
 |-------|----|--------|------------|------------|
-| **2: Master Data Module** | `rsud-server-stack-pvb` | 🟢 Done | k3ntoes.android@gmail.com | 1A |
+| **2: Master Data Module** | `rsud-server-stack-pvb` | 🟢 Done | k3ntoes@gmail.com | 1A |
 
 ### Phase 3 — Inspection & Media
 
 | Issue | ID | Status | Claimed By | Blocked By |
 |-------|----|--------|------------|------------|
-| **3A: Inspection Module** | `rsud-server-stack-5e5` | 🟢 Done | k3ntoes.android@gmail.com | 2 |
-| **3B: Media Module** | `rsud-server-stack-2u0` | 🟢 Done | k3ntoes.android@gmail.com | 3A |
+| **3A: Inspection Module** | `rsud-server-stack-5e5` | 🟢 Done | k3ntoes@gmail.com | 2 |
+| **3B: Media Module** | `rsud-server-stack-2u0` | 🟢 Done | k3ntoes@gmail.com | 3A |
 
 ### Phase 4 — Analytics & Background
 
 | Issue | ID | Status | Claimed By | Blocked By |
 |-------|----|--------|------------|------------|
-| **4A: Analytics Module** | `rsud-server-stack-wrx` | 🟢 Done | k3ntoes.android@gmail.com | 3A |
-| **4B: Background Jobs** | `rsud-server-stack-4hy` | 🟢 Done | k3ntoes.android@gmail.com | 3A, 4A |
+| **4A: Analytics Module** | `rsud-server-stack-wrx` | 🟢 Done | k3ntoes@gmail.com | 3A |
+| **4B: Background Jobs** | `rsud-server-stack-4hy` | 🟢 Done | k3ntoes@gmail.com | 3A, 4A |
 
 ### Phase 5 — Web Admin Frontend
 
