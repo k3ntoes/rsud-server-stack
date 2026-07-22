@@ -8,6 +8,25 @@ from app.modules.inspection.models import Inspection, InspectionDetail, Inspecti
 from app.modules.inspection.schemas import InspectionSubmit
 
 
+def _base_inspection_query() -> select:
+    """Base query with eagerly loaded details and photos."""
+    return (
+        select(Inspection)
+        .options(
+            joinedload(Inspection.details).joinedload(InspectionDetail.photos)
+        )
+    )
+
+
+async def _refetch_inspection(
+    db: AsyncSession, inspection_id: int
+) -> Inspection | None:
+    result = await db.execute(
+        _base_inspection_query().where(Inspection.id == inspection_id)
+    )
+    return result.unique().scalar_one_or_none()
+
+
 async def submit_inspection(
     db: AsyncSession,
     inspector_id: int,
@@ -48,14 +67,9 @@ async def submit_inspection(
     db.add(inspection)
     await db.commit()
     # Re-fetch with relationships loaded for response serialization
-    result = await db.execute(
-        select(Inspection)
-        .where(Inspection.id == inspection.id)
-        .options(
-            joinedload(Inspection.details).joinedload(InspectionDetail.photos)
-        )
-    )
-    return result.unique().scalar_one()
+    fetched = await _refetch_inspection(db, inspection.id)
+    assert fetched is not None
+    return fetched
 
 
 async def list_inspections(
@@ -87,14 +101,7 @@ async def list_inspections(
 
 
 async def get_inspection(db: AsyncSession, inspection_id: int) -> Inspection | None:
-    result = await db.execute(
-        select(Inspection)
-        .where(Inspection.id == inspection_id)
-        .options(
-            joinedload(Inspection.details).joinedload(InspectionDetail.photos)
-        )
-    )
-    return result.unique().scalar_one_or_none()
+    return await _refetch_inspection(db, inspection_id)
 
 
 async def approve_inspection(db: AsyncSession, inspection_id: int) -> Inspection | None:
@@ -109,14 +116,7 @@ async def approve_inspection(db: AsyncSession, inspection_id: int) -> Inspection
 
     await db.commit()
     # Re-fetch with relationships for response serialization
-    result = await db.execute(
-        select(Inspection)
-        .where(Inspection.id == inspection_id)
-        .options(
-            joinedload(Inspection.details).joinedload(InspectionDetail.photos)
-        )
-    )
-    return result.unique().scalar_one_or_none()
+    return await _refetch_inspection(db, inspection_id)
 
 
 async def reject_inspection(
@@ -129,11 +129,4 @@ async def reject_inspection(
     inspection.rejection_reason = reason
     await db.commit()
     # Re-fetch with relationships for response serialization
-    result = await db.execute(
-        select(Inspection)
-        .where(Inspection.id == inspection_id)
-        .options(
-            joinedload(Inspection.details).joinedload(InspectionDetail.photos)
-        )
-    )
-    return result.unique().scalar_one_or_none()
+    return await _refetch_inspection(db, inspection_id)

@@ -17,7 +17,7 @@ export interface IssueFrequency {
   score_zero_count: number;
 }
 
-function currentMonth() {
+export function currentMonth() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }

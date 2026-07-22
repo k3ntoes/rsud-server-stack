@@ -66,9 +66,5 @@ class InspectionListItem(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class ApproveRequest(BaseModel):
-    pass
-
-
 class RejectRequest(BaseModel):
     rejection_reason: str

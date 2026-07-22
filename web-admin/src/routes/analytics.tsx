@@ -4,6 +4,7 @@ import { protectedRoute } from "./_protected";
 import {
   useLowestRooms,
   useTopIssues,
+  currentMonth,
   type RoomScore,
   type IssueFrequency,
 } from "../hooks/useAnalytics";
@@ -14,11 +15,6 @@ export const Route = createRoute({
   path: "/analytics",
   component: AnalyticsPage,
 });
-
-function currentMonth() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
 
 function Bar({
   value,
