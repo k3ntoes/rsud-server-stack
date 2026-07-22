@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { createRoute } from "@tanstack/react-router";
 import { protectedRoute } from "./_protected";
-import { useLowestRooms, useTopIssues, type RoomScore, type IssueFrequency } from "../hooks/useAnalytics";
+import {
+  useLowestRooms,
+  useTopIssues,
+  type RoomScore,
+  type IssueFrequency,
+} from "../hooks/useAnalytics";
 import { useRooms } from "../hooks/useMasterData";
 
 export const Route = createRoute({
@@ -15,17 +20,27 @@ function currentMonth() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function Bar({ value, max, label, color }: { value: number; max: number; label: string; color: string }) {
+function Bar({
+  value,
+  max,
+  label,
+  indicator,
+}: {
+  value: number;
+  max: number;
+  label: string;
+  indicator: string;
+}) {
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
-    <div className="mb-3">
-      <div className="mb-1 flex justify-between text-sm">
-        <span className="text-gray-700">{label}</span>
-        <span className="font-medium text-gray-900">{value}</span>
+    <div className="mb-4">
+      <div className="mb-1.5 flex justify-between text-sm">
+        <span className="text-ink-muted">{label}</span>
+        <span className="font-semibold text-ink">{value}</span>
       </div>
-      <div className="h-3 w-full rounded-full bg-gray-100">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-navy-100/60">
         <div
-          className={`h-3 rounded-full transition-all duration-500 ${color}`}
+          className={`h-full rounded-full transition-all duration-700 ease-out ${indicator}`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -33,84 +48,153 @@ function Bar({ value, max, label, color }: { value: number; max: number; label: 
   );
 }
 
-function ScoreBar({ room, roomName }: { room: RoomScore; roomName: string }) {
+function ScoreBar({
+  room,
+  roomName,
+}: {
+  room: RoomScore;
+  roomName: string;
+}) {
   const pct = room.score_pct;
-  const color =
-    pct < 60 ? "bg-red-500" : pct < 80 ? "bg-amber-500" : "bg-green-500";
+  const indicator =
+    pct < 60
+      ? "bg-danger"
+      : pct < 80
+        ? "bg-warning"
+        : "bg-success";
   return (
-    <Bar value={room.score_pct} max={100} label={roomName} color={color} />
+    <Bar value={room.score_pct} max={100} label={roomName} indicator={indicator} />
   );
 }
 
-function IssueBar({ issue, max }: { issue: IssueFrequency; max: number }) {
+function IssueBar({
+  issue,
+  max,
+}: {
+  issue: IssueFrequency;
+  max: number;
+}) {
   return (
-    <Bar value={issue.score_zero_count} max={max} label={issue.item_name_snapshot} color="bg-red-400" />
+    <Bar
+      value={issue.score_zero_count}
+      max={max}
+      label={issue.item_name_snapshot}
+      indicator="bg-danger/70"
+    />
   );
 }
 
 function AnalyticsPage() {
   const [month, setMonth] = useState(currentMonth());
   const { data: rooms } = useRooms();
-  const { data: lowestRooms, isLoading: loadingRooms } = useLowestRooms(month, 3);
-  const { data: topIssues, isLoading: loadingIssues } = useTopIssues(month, 10);
+  const {
+    data: lowestRooms,
+    isLoading: loadingRooms,
+  } = useLowestRooms(month, 3);
+  const {
+    data: topIssues,
+    isLoading: loadingIssues,
+  } = useTopIssues(month, 10);
 
   const roomMap = new Map(rooms?.map((r) => [r.id, r.name]) ?? []);
-  const maxIssue = Math.max(...(topIssues?.map((i) => i.score_zero_count) ?? [0]), 1);
+  const maxIssue = Math.max(
+    ...(topIssues?.map((i) => i.score_zero_count) ?? [0]),
+    1,
+  );
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Analitik</h1>
+    <div className="animate-fade-in">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Analitik</h1>
+          <p className="page-subtitle">
+            Ringkasan performa inspeksi kebersihan
+          </p>
+        </div>
         <input
           type="month"
           value={month}
           onChange={(e) => setMonth(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          className="input-plan w-44"
         />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Lowest-rated rooms */}
-        <div className="rounded-xl border bg-white p-6">
-          <h2 className="mb-4 text-base font-semibold text-gray-900">
-            Ruangan dengan Skor Terendah
-          </h2>
-          {loadingRooms ? (
-            <p className="text-sm text-gray-400">Memuat...</p>
-          ) : !lowestRooms?.length ? (
-            <p className="text-sm text-gray-400">Belum ada data untuk bulan ini.</p>
-          ) : (
-            lowestRooms.map((r) => (
-              <ScoreBar
-                key={r.room_id}
-                room={r}
-                roomName={roomMap.get(r.room_id) ?? `Ruangan #${r.room_id}`}
-              />
-            ))
-          )}
+        <div className="card-plan p-6">
+          <div className="mb-1 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-plan bg-navy-50 text-xs">
+              📉
+            </div>
+            <h2 className="text-base font-semibold text-ink">
+              Ruangan dengan Skor Terendah
+            </h2>
+          </div>
+          <div className="mt-5">
+            {loadingRooms ? (
+              <div>
+                <div className="skeleton mb-4 h-4 w-full" />
+                <div className="skeleton mb-4 h-4 w-3/4" />
+                <div className="skeleton h-4 w-5/6" />
+              </div>
+            ) : !lowestRooms?.length ? (
+              <div className="empty-state py-8">
+                <span className="empty-state-icon">📊</span>
+                <p className="empty-state-text">
+                  Belum ada data untuk bulan ini.
+                </p>
+              </div>
+            ) : (
+              lowestRooms.map((r) => (
+                <ScoreBar
+                  key={r.room_id}
+                  room={r}
+                  roomName={
+                    roomMap.get(r.room_id) ?? `Ruangan #${r.room_id}`
+                  }
+                />
+              ))
+            )}
+          </div>
           {lowestRooms && lowestRooms.length > 0 && (
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-ink-subtle">
               Skor dihitung dari total inspeksi bulan ini.
             </p>
           )}
         </div>
 
         {/* Top issues */}
-        <div className="rounded-xl border bg-white p-6">
-          <h2 className="mb-4 text-base font-semibold text-gray-900">
-            Item Paling Sering Bermasalah (Skor 0)
-          </h2>
-          {loadingIssues ? (
-            <p className="text-sm text-gray-400">Memuat...</p>
-          ) : !topIssues?.length ? (
-            <p className="text-sm text-gray-400">Belum ada data untuk bulan ini.</p>
-          ) : (
-            topIssues.map((i) => (
-              <IssueBar key={i.item_id} issue={i} max={maxIssue} />
-            ))
-          )}
+        <div className="card-plan p-6">
+          <div className="mb-1 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-plan bg-danger-muted text-xs">
+              🔴
+            </div>
+            <h2 className="text-base font-semibold text-ink">
+              Item Paling Sering Bermasalah
+            </h2>
+          </div>
+          <div className="mt-5">
+            {loadingIssues ? (
+              <div>
+                <div className="skeleton mb-4 h-4 w-full" />
+                <div className="skeleton mb-4 h-4 w-3/4" />
+                <div className="skeleton h-4 w-5/6" />
+              </div>
+            ) : !topIssues?.length ? (
+              <div className="empty-state py-8">
+                <span className="empty-state-icon">📊</span>
+                <p className="empty-state-text">
+                  Belum ada data untuk bulan ini.
+                </p>
+              </div>
+            ) : (
+              topIssues.map((i) => (
+                <IssueBar key={i.item_id} issue={i} max={maxIssue} />
+              ))
+            )}
+          </div>
           {topIssues && topIssues.length > 0 && (
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-ink-subtle">
               Item dengan skor 0 (Berisiko) paling sering muncul.
             </p>
           )}

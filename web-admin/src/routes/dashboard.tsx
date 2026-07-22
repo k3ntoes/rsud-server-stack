@@ -22,31 +22,90 @@ function useDashboardStats() {
 function DashboardPage() {
   const stats = useDashboardStats();
 
-  const cards = [
-    { label: "Menunggu Approve", value: stats.pendingCount, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Total Ruangan", value: stats.roomCount, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Inspeksi", value: "📊", color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Skor Bulan Ini", value: "📈", color: "text-green-600", bg: "bg-green-50" },
-  ];
-
   return (
-    <div>
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">Dashboard</h1>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((s) => (
-          <div key={s.label} className={`rounded-xl border p-5 ${s.bg}`}>
-            <p className="text-sm text-gray-500">{s.label}</p>
-            <p className={`mt-2 text-2xl font-bold ${s.color}`}>{s.value}</p>
-          </div>
-        ))}
+    <div className="animate-fade-in">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">
+            Ringkasan inspeksi kebersihan RSUD Ajibarang
+          </p>
+        </div>
       </div>
 
-      <div className="mt-8 rounded-xl border bg-white p-8 text-center text-gray-400">
-        <p className="text-lg">🏥</p>
-        <p className="mt-2 text-sm">
-          Selamat datang di dashboard RSUD Ajibarang. Gunakan menu sidebar untuk mengelola data.
-        </p>
+      {/* Stat cards — bento grid asymmetrical */}
+      <div className="grid grid-cols-12 gap-4">
+        {/* Large card — Pending count */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-7">
+          <div className="stat-card flex items-center gap-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-plan-lg bg-warning-muted">
+              <span className="text-2xl">⏳</span>
+            </div>
+            <div>
+              <p className="stat-label">Menunggu Persetujuan</p>
+              <p className="stat-value text-warning">
+                {stats.pendingCount}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Small card — Rooms */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-5">
+          <div className="stat-card flex items-center gap-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-plan-lg bg-navy-50">
+              <span className="text-2xl">🏥</span>
+            </div>
+            <div>
+              <p className="stat-label">Total Ruangan</p>
+              <p className="stat-value text-navy-600">{stats.roomCount}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Small card — Month inspections */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-5">
+          <div className="stat-card flex items-center gap-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-plan-lg bg-teal-50">
+              <span className="text-2xl">📋</span>
+            </div>
+            <div>
+              <p className="stat-label">Inspeksi Bulan Ini</p>
+              <p className="stat-value text-teal-600">—</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Large card — Score */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-7">
+          <div className="stat-card flex items-center gap-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-plan-lg bg-navy-50">
+              <span className="text-2xl">📊</span>
+            </div>
+            <div>
+              <p className="stat-label">Skor Rata-rata Bulan Ini</p>
+              <p className="stat-value text-navy-600">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Welcome section */}
+      <div className="mt-6 card-plan p-8">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-plan-lg bg-teal-50 text-xl">
+            🏥
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-ink">
+              Selamat datang di Dashboard RSUD Ajibarang
+            </h2>
+            <p className="mt-0.5 text-sm text-ink-muted">
+              Gunakan menu sidebar untuk mengelola data master, menyetujui
+              inspeksi, atau melihat analitik.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

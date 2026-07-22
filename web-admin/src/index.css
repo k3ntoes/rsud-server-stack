@@ -1,3 +1,193 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ═══════════════════════════════════════════
+   RSUD Ajibarang — Planograph Design System
+   Filosofi: Wibawa medis + Presisi arsitektur
+   ═══════════════════════════════════════════ */
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+  }
+
+  ::selection {
+    @apply bg-teal-500/20 text-ink;
+  }
+
+  /* ── Planograph scrollbar ── */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-navy-200 transition-colors duration-150;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-navy-300;
+  }
+}
+
+@layer components {
+  /* ── Card ── */
+  .card-plan {
+    @apply rounded-plan border border-navy-100/50 bg-surface shadow-plan;
+  }
+  .card-plan-interactive {
+    @apply card-plan cursor-pointer transition-all duration-200
+           hover:shadow-plan-md hover:border-navy-200/60;
+  }
+  .card-plan-elevated {
+    @apply rounded-plan border border-navy-100/40 bg-surface shadow-plan-md;
+  }
+
+  /* ── Badge Status ── */
+  .badge-pending {
+    @apply inline-flex items-center rounded-full bg-warning-muted px-2.5 py-0.5
+           text-xs font-medium text-warning ring-1 ring-inset ring-warning-border;
+  }
+  .badge-approved {
+    @apply inline-flex items-center rounded-full bg-success-muted px-2.5 py-0.5
+           text-xs font-medium text-success ring-1 ring-inset ring-success-border;
+  }
+  .badge-rejected {
+    @apply inline-flex items-center rounded-full bg-danger-muted px-2.5 py-0.5
+           text-xs font-medium text-danger ring-1 ring-inset ring-danger-border;
+  }
+
+  /* ── Sidebar Navigation ── */
+  .nav-item {
+    @apply flex items-center gap-3 rounded-plan px-3 py-2.5 text-sm font-medium
+           text-navy-300 transition-all duration-150 ease-out
+           hover:bg-navy-800/60 hover:text-navy-100;
+  }
+  .nav-item-active {
+    @apply flex items-center gap-3 rounded-plan px-3 py-2.5 text-sm font-medium
+           bg-teal-500/10 text-teal-400 shadow-sm;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-plan
+           bg-teal-600 px-4 py-2 text-sm font-medium text-white
+           shadow-sm transition-all duration-150 ease-out
+           hover:bg-teal-700 active:bg-teal-800
+           focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-plan
+           border border-navy-200/70 bg-surface px-4 py-2 text-sm font-medium text-ink
+           shadow-sm transition-all duration-150 ease-out
+           hover:bg-surface-hover active:bg-surface-active
+           focus:outline-none focus:ring-2 focus:ring-navy-400 focus:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply btn-secondary text-danger hover:bg-danger-muted hover:border-danger-border;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-plan px-2 py-1.5
+           text-sm font-medium text-ink-muted transition-all duration-150
+           hover:bg-surface-hover hover:text-ink
+           focus:outline-none focus:ring-2 focus:ring-navy-400 focus:ring-offset-1;
+  }
+
+  /* ── Table ── */
+  .table-plan {
+    @apply w-full text-sm;
+  }
+  .table-plan thead th {
+    @apply border-b border-navy-100/70 px-4 py-3 text-left text-xs font-semibold
+           uppercase tracking-wider text-ink-muted;
+  }
+  .table-plan tbody td {
+    @apply border-b border-navy-100/30 px-4 py-3;
+  }
+  .table-plan tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .table-plan tbody tr {
+    @apply transition-colors duration-100 hover:bg-surface-hover;
+  }
+
+  /* ── Form Inputs ── */
+  .input-plan {
+    @apply block w-full rounded-plan border border-navy-200/60 bg-surface px-3 py-2
+           text-sm text-ink shadow-sm transition-all duration-150
+           placeholder:text-ink-subtle
+           focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20;
+  }
+  .input-plan-error {
+    @apply input-plan border-danger/60 focus:border-danger focus:ring-danger/20;
+  }
+  .label-plan {
+    @apply mb-1.5 block text-sm font-medium text-ink-muted;
+  }
+
+  /* ── Filter tabs ── */
+  .tab-group {
+    @apply inline-flex gap-0.5 rounded-plan-lg bg-navy-100/50 p-1;
+  }
+  .tab-item {
+    @apply rounded-plan-sm px-4 py-1.5 text-sm font-medium text-ink-muted
+           transition-all duration-150 hover:text-ink;
+  }
+  .tab-item-active {
+    @apply rounded-plan-sm bg-surface px-4 py-1.5 text-sm font-medium text-ink
+           shadow-plan-sm;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    @apply mb-6 flex items-center justify-between;
+  }
+  .page-title {
+    @apply text-xl font-semibold text-ink;
+  }
+  .page-subtitle {
+    @apply mt-0.5 text-sm text-ink-muted;
+  }
+
+  /* ── Stat card ── */
+  .stat-card {
+    @apply rounded-plan border border-navy-100/50 bg-surface p-5 shadow-plan;
+  }
+  .stat-label {
+    @apply text-sm text-ink-muted;
+  }
+  .stat-value {
+    @apply mt-1.5 text-2xl font-bold tracking-tight;
+  }
+
+  /* ── Skeleton loading ── */
+  .skeleton {
+    @apply animate-pulse rounded-plan bg-navy-100/60;
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 text-center;
+  }
+  .empty-state-icon {
+    @apply mb-3 text-3xl opacity-40;
+  }
+  .empty-state-text {
+    @apply text-sm text-ink-muted;
+  }
+}
+
+/* ── Dialog backdrop polyfill ── */
+dialog::backdrop {
+  @apply bg-black/40 backdrop-blur-sm;
+}
