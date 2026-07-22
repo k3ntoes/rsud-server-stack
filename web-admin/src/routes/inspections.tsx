@@ -11,7 +11,12 @@ export const Route = createRoute({
 });
 
 const STATUSES = ["", "PENDING", "APPROVED", "REJECTED"] as const;
-const STATUS_LABELS: Record<string, string> = { "": "Semua", PENDING: "Menunggu", APPROVED: "Disetujui", REJECTED: "Ditolak" };
+const STATUS_LABELS: Record<string, string> = {
+  "": "Semua",
+  PENDING: "Menunggu",
+  APPROVED: "Disetujui",
+  REJECTED: "Ditolak",
+};
 
 function InspectionsPage() {
   const [statusFilter, setStatusFilter] = useState("PENDING");
@@ -26,80 +31,108 @@ function InspectionsPage() {
   const statusBadge = (s: string) => {
     switch (s) {
       case "PENDING":
-        return <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">Menunggu</span>;
+        return <span className="badge-pending">Menunggu</span>;
       case "APPROVED":
-        return <span className="inline-flex rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">Disetujui</span>;
+        return <span className="badge-approved">Disetujui</span>;
       case "REJECTED":
-        return <span className="inline-flex rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700">Ditolak</span>;
+        return <span className="badge-rejected">Ditolak</span>;
       default:
-        return <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">{s}</span>;
+        return (
+          <span className="inline-flex items-center rounded-full bg-navy-100/40 px-2.5 py-0.5 text-xs font-medium text-navy-500 ring-1 ring-inset ring-navy-200/50">
+            {s}
+          </span>
+        );
     }
   };
 
   return (
-    <div>
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">Inspeksi</h1>
+    <div className="animate-fade-in">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Inspeksi</h1>
+          <p className="page-subtitle">
+            Daftar inspeksi kebersihan harian
+          </p>
+        </div>
+      </div>
 
       {/* Status filter tabs */}
-      <div className="mb-4 flex gap-1 rounded-lg bg-gray-100 p-1 w-fit">
+      <div className="mb-4 tab-group">
         {STATUSES.map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              statusFilter === s
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={statusFilter === s ? "tab-item-active" : "tab-item"}
           >
             {STATUS_LABELS[s]}
           </button>
         ))}
       </div>
 
-      <div className="rounded-xl border bg-white">
+      <div className="card-plan overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-gray-400">Memuat...</div>
+          <div className="p-8">
+            <div className="skeleton mb-3 h-5 w-full" />
+            <div className="skeleton mb-3 h-5 w-3/4" />
+            <div className="skeleton h-5 w-5/6" />
+          </div>
         ) : error ? (
-          <div className="p-8 text-center text-sm text-red-500">Gagal memuat data.</div>
+          <div className="empty-state">
+            <span className="empty-state-icon">⚠️</span>
+            <p className="empty-state-text">Gagal memuat data.</p>
+          </div>
         ) : !inspections?.length ? (
-          <div className="p-8 text-center text-sm text-gray-400">
-            {statusFilter === "PENDING"
-              ? "Tidak ada inspeksi menunggu."
-              : "Belum ada data inspeksi."}
+          <div className="empty-state">
+            <span className="empty-state-icon">✅</span>
+            <p className="empty-state-text">
+              {statusFilter === "PENDING"
+                ? "Tidak ada inspeksi menunggu."
+                : "Belum ada data inspeksi."}
+            </p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <th className="px-4 py-3">Tanggal</th>
-                <th className="px-4 py-3">Ruangan</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-center">Item</th>
-                <th className="px-4 py-3 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {inspections.map((i) => (
-                <tr key={i.id} className="border-b last:border-0 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-700">{i.business_date}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">
-                    {roomMap.get(i.room_id) ?? `Ruangan #${i.room_id}`}
-                  </td>
-                  <td className="px-4 py-3">{statusBadge(i.status)}</td>
-                  <td className="px-4 py-3 text-center text-gray-600">{i.detail_count}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => navigate({ to: '/inspections/$inspectionId', params: { inspectionId: String(i.id) } })}
-                      className="rounded px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors"
-                    >
-                      Detail
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="table-plan">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Ruangan</th>
+                  <th>Status</th>
+                  <th className="text-center">Item</th>
+                  <th className="text-right">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {inspections.map((i) => (
+                  <tr key={i.id}>
+                    <td className="text-ink-muted">{i.business_date}</td>
+                    <td className="font-medium text-ink">
+                      {roomMap.get(i.room_id) ?? `Ruangan #${i.room_id}`}
+                    </td>
+                    <td>{statusBadge(i.status)}</td>
+                    <td className="text-center text-ink-muted">
+                      {i.detail_count}
+                    </td>
+                    <td className="text-right">
+                      <button
+                        onClick={() =>
+                          navigate({
+                            to: "/inspections/$inspectionId",
+                            params: {
+                              inspectionId: String(i.id),
+                            },
+                          })
+                        }
+                        className="btn-ghost text-xs"
+                      >
+                        Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

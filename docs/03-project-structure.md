@@ -41,16 +41,21 @@ rsud-server-stack/
 │   ├── .python-version             # Versi Python
 │   └── Dockerfile                  # Multi-stage build
 │
-├── web-admin/                      # React + Vite Frontend
+├── web-admin/                      # React + Vite Frontend (SPA)
 │   ├── src/
-│   │   ├── components/             # shadcn/ui components
-│   │   ├── pages/                  # TanStack Router pages
-│   │   ├── hooks/                  # Custom hooks + TanStack Query
-│   │   └── lib/                    # Utilities
+│   │   ├── components/             # Layout.tsx (sidebar+header), Modal.tsx (native <dialog>)
+│   │   ├── routes/                 # TanStack Router: login, dashboard, rooms, items, inspections, analytics
+│   │   ├── hooks/                  # useAuth, useMasterData, useInspections, useAnalytics
+│   │   ├── lib/                    # api.ts (kustom fetch wrapper + auto-refresh)
+│   │   ├── main.tsx                # Entry point (Router + Query + Auth setup)
+│   │   └── index.css               # Tailwind + Planograph utility classes
+│   ├── CONTEXT.md                  # Frontend domain context
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── tsconfig.json
-│   └── Dockerfile                  # Multi-stage build (Nginx)
+│   ├── tailwind.config.js          # Planograph design tokens (navy, teal, canvas)
+│   ├── nginx.conf                  # Proxy /api → backend
+│   └── Dockerfile                  # Multi-stage build (Node → Nginx)
 │
 ├── docs/                           # Dokumentasi
 │   ├── 00-core-prompt.md
@@ -58,25 +63,23 @@ rsud-server-stack/
 │   ├── 02-prd-server.md
 │   ├── 03-project-structure.md     # ← file ini
 │   ├── 04-architecture.md          # Arsitektur detail
+│   ├── 05-implementation-tracking.md
+│   ├── 06-refactoring-tracker.md
 │   ├── agents/
 │   └── adr/
 │
-└── src/                            # (akan di-migrasi ke backend/app/modules/)
-    ├── auth/
-    ├── inspection/
-    ├── master/
-    ├── analytics/
-    ├── media/
-    └── background/
+├── CONTEXT-MAP.md                  # Indeks contexts + ADR index + cross-cutting
 ```
 
 ## Aturan
 
 ### Frontend (`web-admin/`)
-- **React + Vite + TanStack Router + TanStack Query + shadcn/ui**
-- Route-based pages di `src/pages/`, komponen reusable di `src/components/`
-- Data fetching via TanStack Query di `src/hooks/`
+- **React + Vite + TanStack Router + TanStack Query** — kustom UI (Planograph theme, tanpa shadcn/ui)
+- Route-based pages di `src/routes/`, komponen reusable di `src/components/`
+- Data fetching via custom hooks + TanStack Query di `src/hooks/`
+- API Client kustom (`src/lib/api.ts`) untuk auto-refresh token + error handling
 - Deploy sebagai static files via Nginx (multi-stage Docker build)
+- Domain context: `web-admin/CONTEXT.md`
 
 ### Backend (`backend/`)
 - **Package manager**: `uv` (bukan pip/poetry) — lihat `docs/04-architecture.md`
@@ -85,10 +88,13 @@ rsud-server-stack/
 - Uploaded files di `backend/uploads/` (Docker volume)
 
 ### Infrastructure (`docker-compose.yml`)
-- **Reverse proxy** (Traefik/Caddy — TBD): handle HTTPS, routing
-- **Database**: SQLite (dev) / PostgreSQL (prod) — ganti via `DATABASE_URL` di `.env`
-- **FastAPI**: backend API di port 8100
-- **Nginx**: serve frontend static files
+- **Reverse proxy**: Nginx di frontend container — proxy `/api/` ke backend
+- **Database**: SQLite + aiosqlite (dev) / PostgreSQL + asyncpg (prod) — ganti via `DATABASE_URL`
+- **FastAPI**: backend API di port 8100 (dev), port 80 (container)
+- **Nginx**: serve frontend static files + proxy `/api` → `http://backend`
 
-### Migrasi dari `src/`
-Folder `src/` berisi domain CONTEXT.md yang akan dipindahkan ke `backend/app/modules/` seiring implementasi.
+### Context Files
+Domain CONTEXT.md sudah co-located dengan kode masing-masing:
+- `backend/app/modules/<domain>/CONTEXT.md` — 6 backend contexts
+- `web-admin/CONTEXT.md` — frontend context
+- `CONTEXT-MAP.md` — indeks semua contexts + cross-cutting concerns

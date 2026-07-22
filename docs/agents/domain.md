@@ -5,7 +5,7 @@ How the engineering skills should consume this repo's domain documentation when 
 ## Before exploring, read these
 
 - **`CONTEXT-MAP.md`** at the repo root — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
-- **`docs/adr/`** — read ADRs that touch the area you're about to work in. For context-specific decisions, check `src/<context>/docs/adr/`.
+- **`docs/adr/`** — read ADRs that touch the area you're about to work in. For context-specific decisions, check `docs/adr/`.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
@@ -17,16 +17,19 @@ This repo uses a **multi-context** layout:
 /
 ├── CONTEXT-MAP.md
 ├── docs/adr/                          ← system-wide decisions
-└── src/
-    ├── <context-1>/
-    │   ├── CONTEXT.md
-    │   └── docs/adr/                  ← context-specific decisions
-    └── <context-2>/
-        ├── CONTEXT.md
-        └── docs/adr/
+└── backend/app/modules/
+    ├── <domain>/
+    │   ├── __init__.py
+    │   ├── api.py
+    │   ├── services.py
+    │   ├── models.py
+    │   ├── schemas.py
+    │   └── CONTEXT.md                  ← domain glossary & decisions
+    └── <domain>/
+        └── ...
 ```
 
-`CONTEXT-MAP.md` at the root points to individual `CONTEXT.md` files per context directory under `src/`.
+`CONTEXT-MAP.md` at the root points to individual `CONTEXT.md` files co-located with each backend module under `backend/app/modules/`.
 
 ## Use the glossary's vocabulary
 

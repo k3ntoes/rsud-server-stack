@@ -242,8 +242,19 @@ Volume: `pgdata` (DB persistent) + `uploads` (foto).
 | `docs/03-project-structure.md` | Struktur proyek detail |
 | `docs/04-architecture.md` | Arsitektur, deployment, env vars |
 | `docs/05-implementation-tracking.md` | Tracking pengerjaan per fase |
-| `docs/adr/` | ADR: Frontend stack, JWT, Multi-photo |
-| `CONTEXT-MAP.md` | Glossary per domain context |
+| `docs/adr/` | **ADR Index** — lihat tabel di bawah |
+| `CONTEXT-MAP.md` | Glossary per domain context, ADR Index, cross-cutting concerns |
+
+### 📐 Architectural Decision Records (ADR)
+
+| ADR | Status | Topik |
+|-----|--------|-------|
+| [ADR-0001](docs/adr/0001-react-vite-frontend-stack.md) | ✅ | React + Vite + TanStack sebagai Frontend Stack |
+| [ADR-0002](docs/adr/0002-multi-photo-schema.md) | ✅ | Multi-Photo Schema — Tabel `inspection_photos` Terpisah |
+| [ADR-0003](docs/adr/0003-jwt-auth-architecture.md) | ✅ | JWT Layered Auth dengan httpOnly Refresh Cookie |
+| [ADR-0004](docs/adr/0004-sqlite-development.md) | ✅ | SQLite + aiosqlite Dev, PostgreSQL Prod |
+| [ADR-0005](docs/adr/0005-async-orm-joinedload.md) | ✅ | Async ORM Strategy — `joinedload` over `selectinload` |
+| [ADR-0006](docs/adr/0006-test-strategy.md) | ✅ | Test Strategy — pytest-asyncio + In-Memory SQLite |
 
 ---
 
