@@ -36,7 +36,7 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       UPLOAD_DIR: /app/uploads
     ports:
-      - "8000:80"
+      - "8100:80"
 
   frontend:
     build:

@@ -87,7 +87,7 @@ rsud-server-stack/
 ### Infrastructure (`docker-compose.yml`)
 - **Reverse proxy** (Traefik/Caddy — TBD): handle HTTPS, routing
 - **Database**: SQLite (dev) / PostgreSQL (prod) — ganti via `DATABASE_URL` di `.env`
-- **FastAPI**: backend API di port 8000
+- **FastAPI**: backend API di port 8100
 - **Nginx**: serve frontend static files
 
 ### Migrasi dari `src/`

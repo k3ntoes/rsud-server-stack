@@ -39,7 +39,7 @@ cp backend/.env.example backend/.env    # edit JWT_SECRET jika perlu
 make reset                               # migrate + seed
 
 # 4. Jalankan backend & frontend (dua terminal atau make all)
-make dev     # terminal 1: backend di :8000
+make dev     # terminal 1: backend di :8100
 make frontend-dev  # terminal 2: frontend di :5173
 
 # Atau langsung dua-duanya:
@@ -69,7 +69,7 @@ Seed juga membuat 6 ruangan, 10 item inspeksi, dan 3 sample inspeksi (2 APPROVED
 | Command | Fungsi |
 |---------|--------|
 | `make install` | Install Python deps (`uv sync`) |
-| `make dev` | Jalankan FastAPI di `:8000` |
+| `make dev` | Jalankan FastAPI di `:8100` |
 | `make migrate` | Jalankan migrasi database |
 | `make seed` | Seed semua data demo |
 | `make reset` | Hapus DB → migrate → seed (start fresh) |
@@ -219,8 +219,8 @@ make docker-up
 docker compose up --build -d
 
 # Akses frontend: http://localhost:8080
-# API: http://localhost:8000/api
-# Swagger: http://localhost:8000/docs
+# API: http://localhost:8100/api
+# Swagger: http://localhost:8100/docs
 ```
 
 Services:
