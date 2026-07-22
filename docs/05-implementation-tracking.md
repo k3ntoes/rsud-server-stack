@@ -63,7 +63,7 @@ flowchart LR
 
 | Issue | ID | Status | Claimed By | Blocked By |
 |-------|----|--------|------------|------------|
-| **6: Docker & CI/CD** | `rsud-server-stack-quy` | 🔴 Open | — | 1A, 5A |
+| **6: Docker & CI/CD** | `rsud-server-stack-quy` | 🟢 Done | k3ntoes@gmail.com | 1A, 5A |
 
 ---
 

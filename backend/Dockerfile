@@ -18,5 +18,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:3.12-slim
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 ENV PATH="/app/.venv/bin:$PATH"
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["fastapi", "run", "app/main.py", "--port", "80"]
