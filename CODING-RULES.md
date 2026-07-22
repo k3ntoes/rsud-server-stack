@@ -65,6 +65,22 @@ Sebelum membuat atau mengubah file apapun, AI agent **WAJIB** melakukan:
 > **Fallback**: Jika tools GitNexus MCP tidak tersedia, gunakan `code-searcher` + `read_files` + `read_subtree` sebagai alternatif untuk memahami codebase.
 > Lihat `.claude/skills/gitnexus/` untuk panduan lengkap.
 
+### Wajib: Update Graphify Graph Setelah Perubahan Besar
+Setelah perubahan kode yang signifikan (refactor, module baru, restrukturisasi), update knowledge graph:
+
+```bash
+# 1. Extract per subdirectory (code-only, no API key needed)
+graphify extract ./backend/ --code-only --no-viz
+graphify extract ./web-admin/ --code-only --no-viz
+
+# 2. Merge into single monorepo graph
+graphify merge-graphs ./backend/graphify-out/graph.json ./web-admin/graphify-out/graph.json --out graphify-out/graph.json
+```
+
+Lihat `AGENTS.md` (bagian Graphify) untuk perintah query, cluster-only, dan troubleshooting.
+
+> **Catatan**: Gunakan `graphify extract ./subdir/` (bukan `graphify .`). Root-level `graphify .` gagal dengan `deduplicate_entities: nodes span multiple repos`. `extract` menempatkan `graphify-out/` di dalam direktori yang di-scan, bukan di root.
+
 ### Wajib: Gunakan Context7 untuk Best Practices & Docs
 Sebelum menulis kode yang melibatkan library/framework tertentu, AI agent **WAJIB**:
 
