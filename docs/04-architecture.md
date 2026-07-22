@@ -10,7 +10,7 @@
 | **Database** | SQLite (dev) / PostgreSQL (prod) | SQLite via aiosqlite untuk dev cepat, PostgreSQL via asyncpg untuk produksi |
 | **Migration** | Alembic | Auto-generate dari SQLAlchemy models |
 | **Auth** | JWT (Access + Refresh) | httpOnly cookie, whitelist `user_sessions` |
-| **Frontend** | React + Vite | TanStack Router + TanStack Query + shadcn/ui |
+| **Frontend** | React + Vite | TanStack Router + TanStack Query + Planograph UI (custom Tailwind) |
 | **Container** | Docker + docker-compose | Multi-stage build, reverse proxy (TBD) |
 
 ---
@@ -208,9 +208,10 @@ class User(Base):
 └──────────────┘     └──────────────┘
 ```
 
-- **Reverse Proxy** (Traefik/Caddy) di depan FastAPI — handle HTTPS, routing
+- **Reverse Proxy**: Nginx di frontend container — proxy `/api/` ke backend, serve SPA static files
 - **React SPA** di-serve via Nginx sebagai static files
 - **Semua container** dalam 1 docker-compose network
+- **Dev**: Vite proxy `/api` → `localhost:8100` (tanpa Nginx)
 - Frontend call API via reverse proxy (no CORS issues)
 
 ### Environment Variables
@@ -258,6 +259,10 @@ Mencegah Docker build meng-copy environment lokal dan file tidak perlu, memperce
 | 0001 | React + Vite + TanStack sebagai Frontend Stack |
 | 0002 | Multi-Photo Schema — Tabel `inspection_photos` Terpisah |
 | 0003 | JWT Layered Auth dengan httpOnly Refresh Cookie |
+| 0004 | SQLite + aiosqlite Dev, PostgreSQL Prod |
+| 0005 | Async ORM Strategy — `joinedload` over `selectinload` |
+| 0006 | Test Strategy — pytest-asyncio + In-Memory SQLite |
+| 0007 | Frontend Auth Pattern — SessionStorage + Auto-Refresh Token |
 
 Lihat `docs/adr/` untuk detail setiap keputusan.
 

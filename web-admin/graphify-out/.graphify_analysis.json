@@ -1,0 +1,335 @@
+{
+  "communities": {
+    "0": [
+      "ref_dom",
+      "ref_dom_iterable",
+      "ref_es2020",
+      "ref_src",
+      "tsconfig_app",
+      "tsconfig_app_compileroptions",
+      "tsconfig_app_compileroptions_allowimportingtsextensions",
+      "tsconfig_app_compileroptions_esmoduleinterop",
+      "tsconfig_app_compileroptions_isolatedmodules",
+      "tsconfig_app_compileroptions_jsx",
+      "tsconfig_app_compileroptions_lib",
+      "tsconfig_app_compileroptions_module",
+      "tsconfig_app_compileroptions_moduledetection",
+      "tsconfig_app_compileroptions_moduleresolution",
+      "tsconfig_app_compileroptions_noemit",
+      "tsconfig_app_compileroptions_nofallthroughcasesinswitch",
+      "tsconfig_app_compileroptions_nouncheckedsideeffectimports",
+      "tsconfig_app_compileroptions_nounusedlocals",
+      "tsconfig_app_compileroptions_nounusedparameters",
+      "tsconfig_app_compileroptions_skiplibcheck",
+      "tsconfig_app_compileroptions_strict",
+      "tsconfig_app_compileroptions_target",
+      "tsconfig_app_compileroptions_usedefineforclassfields",
+      "tsconfig_app_include"
+    ],
+    "1": [
+      "ref_es2023",
+      "ref_vite_config_ts",
+      "tsconfig_node",
+      "tsconfig_node_compileroptions",
+      "tsconfig_node_compileroptions_allowimportingtsextensions",
+      "tsconfig_node_compileroptions_isolatedmodules",
+      "tsconfig_node_compileroptions_lib",
+      "tsconfig_node_compileroptions_module",
+      "tsconfig_node_compileroptions_moduledetection",
+      "tsconfig_node_compileroptions_moduleresolution",
+      "tsconfig_node_compileroptions_noemit",
+      "tsconfig_node_compileroptions_nofallthroughcasesinswitch",
+      "tsconfig_node_compileroptions_nouncheckedsideeffectimports",
+      "tsconfig_node_compileroptions_nounusedlocals",
+      "tsconfig_node_compileroptions_nounusedparameters",
+      "tsconfig_node_compileroptions_skiplibcheck",
+      "tsconfig_node_compileroptions_strict",
+      "tsconfig_node_compileroptions_target",
+      "tsconfig_node_include"
+    ],
+    "2": [
+      "src_components_modal",
+      "src_components_modal_modal",
+      "src_components_modal_modalprops",
+      "src_hooks_usemasterdata",
+      "src_hooks_usemasterdata_item",
+      "src_hooks_usemasterdata_room",
+      "src_hooks_usemasterdata_usecreateitem",
+      "src_hooks_usemasterdata_usecreateroom",
+      "src_hooks_usemasterdata_usedeleteitem",
+      "src_hooks_usemasterdata_usedeleteroom",
+      "src_hooks_usemasterdata_useitems",
+      "src_hooks_usemasterdata_useupdateitem",
+      "src_hooks_usemasterdata_useupdateroom",
+      "src_lib_api_apirequest",
+      "src_routes_items",
+      "src_routes_items_itemspage",
+      "src_routes_rooms",
+      "src_routes_rooms_roomspage",
+      "src_routes_rooms_route"
+    ],
+    "3": [
+      "autoprefixer",
+      "package_devdependencies",
+      "package_devdependencies_autoprefixer",
+      "package_devdependencies_postcss",
+      "package_devdependencies_tailwindcss",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_typescript",
+      "package_devdependencies_vite",
+      "package_devdependencies_vitejs_plugin_react",
+      "postcss",
+      "tailwindcss",
+      "types_react",
+      "types_react_dom",
+      "typescript",
+      "vite",
+      "vitejs_plugin_react"
+    ],
+    "4": [
+      "package",
+      "package_dependencies",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_dependencies_tanstack_react_query",
+      "package_dependencies_tanstack_react_router",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_preview",
+      "package_type",
+      "react",
+      "react_dom",
+      "tanstack_react_query",
+      "tanstack_react_router"
+    ],
+    "5": [
+      "src_components_layout",
+      "src_components_layout_layout",
+      "src_components_layout_navitems",
+      "src_hooks_useauth",
+      "src_hooks_useauth_authcontext",
+      "src_hooks_useauth_authprovider",
+      "src_hooks_useauth_authstate",
+      "src_hooks_useauth_useauth",
+      "src_hooks_useauth_user",
+      "src_lib_api",
+      "src_lib_api_accesstoken",
+      "src_lib_api_setaccesstoken",
+      "src_lib_api_setonunauthorized",
+      "src_lib_api_tryrefresh",
+      "src_routes_login_loginpage"
+    ],
+    "6": [
+      "src_main",
+      "src_main_queryclient",
+      "src_main_register",
+      "src_main_router",
+      "src_main_routetree",
+      "src_main_tanstack_react_router",
+      "src_routes_analytics_route",
+      "src_routes_index",
+      "src_routes_index_route",
+      "src_routes_inspection_detail_route",
+      "src_routes_items_route",
+      "src_routes_login",
+      "src_routes_login_route",
+      "src_routes_root",
+      "src_routes_root_rootroute"
+    ],
+    "7": [
+      "src_hooks_useinspections",
+      "src_hooks_useinspections_inspectiondetail",
+      "src_hooks_useinspections_inspectionlistitem",
+      "src_hooks_useinspections_inspectionout",
+      "src_hooks_useinspections_inspectionphoto",
+      "src_hooks_useinspections_listparams",
+      "src_hooks_useinspections_useapproveinspection",
+      "src_hooks_useinspections_useinspection",
+      "src_hooks_useinspections_userejectinspection",
+      "src_routes_inspection_detail",
+      "src_routes_inspection_detail_inspectiondetailpage",
+      "src_routes_inspection_detail_scorebadge",
+      "src_routes_inspection_detail_statusbadge"
+    ],
+    "8": [
+      "src_hooks_useinspections_useinspections",
+      "src_hooks_usemasterdata_userooms",
+      "src_routes_dashboard",
+      "src_routes_dashboard_dashboardpage",
+      "src_routes_dashboard_route",
+      "src_routes_dashboard_usedashboardstats",
+      "src_routes_inspections",
+      "src_routes_inspections_inspectionspage",
+      "src_routes_inspections_route",
+      "src_routes_inspections_status_labels",
+      "src_routes_inspections_statuses",
+      "src_routes_protected",
+      "src_routes_protected_protectedroute"
+    ],
+    "9": [
+      "src_hooks_useanalytics",
+      "src_hooks_useanalytics_currentmonth",
+      "src_hooks_useanalytics_issuefrequency",
+      "src_hooks_useanalytics_roomscore",
+      "src_hooks_useanalytics_uselowestrooms",
+      "src_hooks_useanalytics_usetopissues",
+      "src_routes_analytics",
+      "src_routes_analytics_analyticspage",
+      "src_routes_analytics_bar",
+      "src_routes_analytics_currentmonth",
+      "src_routes_analytics_issuebar",
+      "src_routes_analytics_scorebar"
+    ],
+    "10": [
+      "tsconfig",
+      "tsconfig_files",
+      "tsconfig_references"
+    ],
+    "11": [
+      "postcss_config"
+    ],
+    "12": [
+      "src_vite_env_d"
+    ],
+    "13": [
+      "tailwind_config"
+    ],
+    "14": [
+      "vite_config"
+    ]
+  },
+  "cohesion": {
+    "0": 0.08333333333333333,
+    "1": 0.10526315789473684,
+    "2": 0.24561403508771928,
+    "3": 0.11764705882352941,
+    "4": 0.11764705882352941,
+    "5": 0.2,
+    "6": 0.2,
+    "7": 0.2564102564102564,
+    "8": 0.2692307692307692,
+    "9": 0.30303030303030304,
+    "10": 0.6666666666666666,
+    "11": 1.0,
+    "12": 1.0,
+    "13": 1.0,
+    "14": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_lib_api_apirequest",
+      "label": "apiRequest()",
+      "degree": 22
+    },
+    {
+      "id": "tsconfig_app_compileroptions",
+      "label": "compilerOptions",
+      "degree": 18
+    },
+    {
+      "id": "tsconfig_node_compileroptions",
+      "label": "compilerOptions",
+      "degree": 15
+    },
+    {
+      "id": "src_hooks_usemasterdata_userooms",
+      "label": "useRooms()",
+      "degree": 12
+    },
+    {
+      "id": "src_routes_protected_protectedroute",
+      "label": "protectedRoute",
+      "degree": 8
+    },
+    {
+      "id": "src_routes_inspection_detail_inspectiondetailpage",
+      "label": "InspectionDetailPage()",
+      "degree": 7
+    },
+    {
+      "id": "src_hooks_useinspections_useinspections",
+      "label": "useInspections()",
+      "degree": 6
+    },
+    {
+      "id": "src_hooks_useanalytics_uselowestrooms",
+      "label": "useLowestRooms()",
+      "degree": 5
+    },
+    {
+      "id": "src_hooks_useanalytics_usetopissues",
+      "label": "useTopIssues()",
+      "degree": 5
+    },
+    {
+      "id": "src_hooks_useauth_authprovider",
+      "label": "AuthProvider()",
+      "degree": 5
+    }
+  ],
+  "surprises": [
+    {
+      "source": "Layout()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/components/Layout.tsx",
+        "src/hooks/useAuth.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `Layout()` unexpectedly reaches hub `useAuth()`"
+    },
+    {
+      "source": "useLowestRooms()",
+      "target": "apiRequest()",
+      "source_files": [
+        "src/hooks/useAnalytics.ts",
+        "src/lib/api.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "useTopIssues()",
+      "target": "apiRequest()",
+      "source_files": [
+        "src/hooks/useAnalytics.ts",
+        "src/lib/api.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "AuthProvider()",
+      "target": "apiRequest()",
+      "source_files": [
+        "src/hooks/useAuth.tsx",
+        "src/lib/api.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "LoginPage()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/routes/login.tsx",
+        "src/hooks/useAuth.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `LoginPage()` unexpectedly reaches hub `useAuth()`"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
