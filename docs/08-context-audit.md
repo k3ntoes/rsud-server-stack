@@ -218,7 +218,7 @@
 1. **Media endpoint tanpa auth** — Tambah `Depends(get_current_user)` atau implementasi one-time token
 
 ### 🟡 Priority 2 (Medium — Functionality)
-2. **Default view weekly** — Ubah frontend + API ke weekly default, atau setidaknya sync docs dengan implementasi
+2. **Default view weekly** — Ubah implementasi (service + schema + API + frontend) ke weekly default sesuai CONTEXT
 3. **Thumbnail lazy load** — Tampilkan thumbnail sebenarnya (bukan nama file)
 4. **One-time token** — Untuk akses foto original via tokenized route
 

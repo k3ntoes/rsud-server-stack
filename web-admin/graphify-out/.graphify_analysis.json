@@ -27,6 +27,76 @@
       "tsconfig_app_include"
     ],
     "1": [
+      "src_components_layout",
+      "src_components_layout_layout",
+      "src_components_layout_navitems",
+      "src_hooks_useauth_useauth",
+      "src_main",
+      "src_main_queryclient",
+      "src_main_register",
+      "src_main_router",
+      "src_main_routetree",
+      "src_main_tanstack_react_router",
+      "src_routes_index",
+      "src_routes_index_route",
+      "src_routes_inspections",
+      "src_routes_inspections_route",
+      "src_routes_inspections_status_labels",
+      "src_routes_inspections_statuses",
+      "src_routes_login",
+      "src_routes_login_loginpage",
+      "src_routes_login_route",
+      "src_routes_protected",
+      "src_routes_protected_protectedroute",
+      "src_routes_root",
+      "src_routes_root_rootroute"
+    ],
+    "2": [
+      "src_components_masterdatapage",
+      "src_components_masterdatapage_entity",
+      "src_components_masterdatapage_masterdatapage",
+      "src_components_masterdatapage_masterdatapageprops",
+      "src_hooks_usemasterdata",
+      "src_hooks_usemasterdata_item",
+      "src_hooks_usemasterdata_room",
+      "src_hooks_usemasterdata_usecreateitem",
+      "src_hooks_usemasterdata_usecreatemutation",
+      "src_hooks_usemasterdata_usecreateroom",
+      "src_hooks_usemasterdata_usedeleteitem",
+      "src_hooks_usemasterdata_usedeletemutation",
+      "src_hooks_usemasterdata_usedeleteroom",
+      "src_hooks_usemasterdata_useitems",
+      "src_hooks_usemasterdata_useupdateitem",
+      "src_hooks_usemasterdata_useupdatemutation",
+      "src_hooks_usemasterdata_useupdateroom",
+      "src_routes_items",
+      "src_routes_items_route",
+      "src_routes_rooms",
+      "src_routes_rooms_route"
+    ],
+    "3": [
+      "src_hooks_useauth",
+      "src_hooks_useauth_authcontext",
+      "src_hooks_useauth_authprovider",
+      "src_hooks_useauth_authstate",
+      "src_hooks_useauth_user",
+      "src_hooks_useinspections",
+      "src_hooks_useinspections_inspectiondetail",
+      "src_hooks_useinspections_inspectionlistitem",
+      "src_hooks_useinspections_inspectionout",
+      "src_hooks_useinspections_inspectionphoto",
+      "src_hooks_useinspections_listparams",
+      "src_hooks_useinspections_useapproveinspection",
+      "src_hooks_useinspections_useinspection",
+      "src_hooks_useinspections_userejectinspection",
+      "src_lib_api",
+      "src_lib_api_accesstoken",
+      "src_lib_api_apirequest",
+      "src_lib_api_setaccesstoken",
+      "src_lib_api_setonunauthorized",
+      "src_lib_api_tryrefresh"
+    ],
+    "4": [
       "ref_es2023",
       "ref_vite_config_ts",
       "tsconfig_node",
@@ -47,28 +117,7 @@
       "tsconfig_node_compileroptions_target",
       "tsconfig_node_include"
     ],
-    "2": [
-      "src_components_modal",
-      "src_components_modal_modal",
-      "src_components_modal_modalprops",
-      "src_hooks_usemasterdata",
-      "src_hooks_usemasterdata_item",
-      "src_hooks_usemasterdata_room",
-      "src_hooks_usemasterdata_usecreateitem",
-      "src_hooks_usemasterdata_usecreateroom",
-      "src_hooks_usemasterdata_usedeleteitem",
-      "src_hooks_usemasterdata_usedeleteroom",
-      "src_hooks_usemasterdata_useitems",
-      "src_hooks_usemasterdata_useupdateitem",
-      "src_hooks_usemasterdata_useupdateroom",
-      "src_lib_api_apirequest",
-      "src_routes_items",
-      "src_routes_items_itemspage",
-      "src_routes_rooms",
-      "src_routes_rooms_roomspage",
-      "src_routes_rooms_route"
-    ],
-    "3": [
+    "5": [
       "autoprefixer",
       "package_devdependencies",
       "package_devdependencies_autoprefixer",
@@ -87,7 +136,7 @@
       "vite",
       "vitejs_plugin_react"
     ],
-    "4": [
+    "6": [
       "package",
       "package_dependencies",
       "package_dependencies_react",
@@ -106,73 +155,24 @@
       "tanstack_react_query",
       "tanstack_react_router"
     ],
-    "5": [
-      "src_components_layout",
-      "src_components_layout_layout",
-      "src_components_layout_navitems",
-      "src_hooks_useauth",
-      "src_hooks_useauth_authcontext",
-      "src_hooks_useauth_authprovider",
-      "src_hooks_useauth_authstate",
-      "src_hooks_useauth_useauth",
-      "src_hooks_useauth_user",
-      "src_lib_api",
-      "src_lib_api_accesstoken",
-      "src_lib_api_setaccesstoken",
-      "src_lib_api_setonunauthorized",
-      "src_lib_api_tryrefresh",
-      "src_routes_login_loginpage"
-    ],
-    "6": [
-      "src_main",
-      "src_main_queryclient",
-      "src_main_register",
-      "src_main_router",
-      "src_main_routetree",
-      "src_main_tanstack_react_router",
-      "src_routes_analytics_route",
-      "src_routes_index",
-      "src_routes_index_route",
-      "src_routes_inspection_detail_route",
-      "src_routes_items_route",
-      "src_routes_login",
-      "src_routes_login_route",
-      "src_routes_root",
-      "src_routes_root_rootroute"
-    ],
     "7": [
-      "src_hooks_useinspections",
-      "src_hooks_useinspections_inspectiondetail",
-      "src_hooks_useinspections_inspectionlistitem",
-      "src_hooks_useinspections_inspectionout",
-      "src_hooks_useinspections_inspectionphoto",
-      "src_hooks_useinspections_listparams",
-      "src_hooks_useinspections_useapproveinspection",
-      "src_hooks_useinspections_useinspection",
-      "src_hooks_useinspections_userejectinspection",
-      "src_routes_inspection_detail",
-      "src_routes_inspection_detail_inspectiondetailpage",
-      "src_routes_inspection_detail_scorebadge",
-      "src_routes_inspection_detail_statusbadge"
-    ],
-    "8": [
       "src_hooks_useinspections_useinspections",
       "src_hooks_usemasterdata_userooms",
       "src_routes_dashboard",
       "src_routes_dashboard_dashboardpage",
       "src_routes_dashboard_route",
       "src_routes_dashboard_usedashboardstats",
-      "src_routes_inspections",
-      "src_routes_inspections_inspectionspage",
-      "src_routes_inspections_route",
-      "src_routes_inspections_status_labels",
-      "src_routes_inspections_statuses",
-      "src_routes_protected",
-      "src_routes_protected_protectedroute"
+      "src_routes_inspection_detail",
+      "src_routes_inspection_detail_inspectiondetailpage",
+      "src_routes_inspection_detail_photothumb",
+      "src_routes_inspection_detail_route",
+      "src_routes_inspection_detail_scorebadge",
+      "src_routes_inspection_detail_statusbadge",
+      "src_routes_inspections_inspectionspage"
     ],
-    "9": [
+    "8": [
       "src_hooks_useanalytics",
-      "src_hooks_useanalytics_currentmonth",
+      "src_hooks_useanalytics_currentweekmonth",
       "src_hooks_useanalytics_issuefrequency",
       "src_hooks_useanalytics_roomscore",
       "src_hooks_useanalytics_uselowestrooms",
@@ -180,9 +180,14 @@
       "src_routes_analytics",
       "src_routes_analytics_analyticspage",
       "src_routes_analytics_bar",
-      "src_routes_analytics_currentmonth",
       "src_routes_analytics_issuebar",
+      "src_routes_analytics_route",
       "src_routes_analytics_scorebar"
+    ],
+    "9": [
+      "src_components_modal",
+      "src_components_modal_modal",
+      "src_components_modal_modalprops"
     ],
     "10": [
       "tsconfig",
@@ -204,15 +209,15 @@
   },
   "cohesion": {
     "0": 0.08333333333333333,
-    "1": 0.10526315789473684,
-    "2": 0.24561403508771928,
-    "3": 0.11764705882352941,
-    "4": 0.11764705882352941,
-    "5": 0.2,
-    "6": 0.2,
-    "7": 0.2564102564102564,
-    "8": 0.2692307692307692,
-    "9": 0.30303030303030304,
+    "1": 0.15019762845849802,
+    "2": 0.17142857142857143,
+    "3": 0.16842105263157894,
+    "4": 0.10526315789473684,
+    "5": 0.11764705882352941,
+    "6": 0.11764705882352941,
+    "7": 0.24358974358974358,
+    "8": 0.3181818181818182,
+    "9": 0.6666666666666666,
     "10": 0.6666666666666666,
     "11": 1.0,
     "12": 1.0,
@@ -220,11 +225,6 @@
     "14": 1.0
   },
   "gods": [
-    {
-      "id": "src_lib_api_apirequest",
-      "label": "apiRequest()",
-      "degree": 22
-    },
     {
       "id": "tsconfig_app_compileroptions",
       "label": "compilerOptions",
@@ -236,19 +236,14 @@
       "degree": 15
     },
     {
+      "id": "src_lib_api_apirequest",
+      "label": "apiRequest()",
+      "degree": 10
+    },
+    {
       "id": "src_hooks_usemasterdata_userooms",
       "label": "useRooms()",
-      "degree": 12
-    },
-    {
-      "id": "src_routes_protected_protectedroute",
-      "label": "protectedRoute",
-      "degree": 8
-    },
-    {
-      "id": "src_routes_inspection_detail_inspectiondetailpage",
-      "label": "InspectionDetailPage()",
-      "degree": 7
+      "degree": 10
     },
     {
       "id": "src_hooks_useinspections_useinspections",
@@ -256,18 +251,28 @@
       "degree": 6
     },
     {
-      "id": "src_hooks_useanalytics_uselowestrooms",
-      "label": "useLowestRooms()",
-      "degree": 5
-    },
-    {
-      "id": "src_hooks_useanalytics_usetopissues",
-      "label": "useTopIssues()",
-      "degree": 5
-    },
-    {
       "id": "src_hooks_useauth_authprovider",
       "label": "AuthProvider()",
+      "degree": 5
+    },
+    {
+      "id": "src_hooks_useauth_useauth",
+      "label": "useAuth()",
+      "degree": 5
+    },
+    {
+      "id": "src_lib_api_setaccesstoken",
+      "label": "setAccessToken()",
+      "degree": 5
+    },
+    {
+      "id": "src_routes_root_rootroute",
+      "label": "rootRoute",
+      "degree": 5
+    },
+    {
+      "id": "src_hooks_useanalytics_currentweekmonth",
+      "label": "currentWeekMonth()",
       "degree": 5
     }
   ],
@@ -284,39 +289,6 @@
       "why": "peripheral node `Layout()` unexpectedly reaches hub `useAuth()`"
     },
     {
-      "source": "useLowestRooms()",
-      "target": "apiRequest()",
-      "source_files": [
-        "src/hooks/useAnalytics.ts",
-        "src/lib/api.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "bridges separate communities"
-    },
-    {
-      "source": "useTopIssues()",
-      "target": "apiRequest()",
-      "source_files": [
-        "src/hooks/useAnalytics.ts",
-        "src/lib/api.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "bridges separate communities"
-    },
-    {
-      "source": "AuthProvider()",
-      "target": "apiRequest()",
-      "source_files": [
-        "src/hooks/useAuth.tsx",
-        "src/lib/api.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "bridges separate communities"
-    },
-    {
       "source": "LoginPage()",
       "target": "useAuth()",
       "source_files": [
@@ -326,6 +298,39 @@
       "confidence": "EXTRACTED",
       "relation": "calls",
       "why": "peripheral node `LoginPage()` unexpectedly reaches hub `useAuth()`"
+    },
+    {
+      "source": "useInspections()",
+      "target": "apiRequest()",
+      "source_files": [
+        "src/hooks/useInspections.ts",
+        "src/lib/api.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "useInspection()",
+      "target": "apiRequest()",
+      "source_files": [
+        "src/hooks/useInspections.ts",
+        "src/lib/api.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `useInspection()` unexpectedly reaches hub `apiRequest()`"
+    },
+    {
+      "source": "useApproveInspection()",
+      "target": "apiRequest()",
+      "source_files": [
+        "src/hooks/useInspections.ts",
+        "src/lib/api.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `useApproveInspection()` unexpectedly reaches hub `apiRequest()`"
     }
   ],
   "tokens": {
