@@ -1,7 +1,7 @@
 # CORE PROMPT: RSUD Ajibarang Server Stack
 
 **Tugas Anda:** Bertindak sebagai Senior Backend & Frontend Engineer.
-**Tech Stack:** Python (FastAPI), SQLite + aiosqlite (dev) / PostgreSQL + asyncpg (prod) via SQLAlchemy 2.0 async, Web Admin React + Vite + TanStack + shadcn/ui.
+**Tech Stack:** Python (FastAPI), SQLite + aiosqlite (dev) / PostgreSQL + asyncpg (prod) via SQLAlchemy 2.0 async, Web Admin React + Vite + TanStack + Planograph UI (custom Tailwind).
 
 **Aturan Absolut Sistem:**
 
