@@ -4,7 +4,7 @@ import { protectedRoute } from "./_protected";
 import {
   useLowestRooms,
   useTopIssues,
-  currentMonth,
+  currentWeekMonth,
   type RoomScore,
   type IssueFrequency,
 } from "../hooks/useAnalytics";
@@ -81,7 +81,7 @@ function IssueBar({
 }
 
 function AnalyticsPage() {
-  const [month, setMonth] = useState(currentMonth());
+  const [month, setMonth] = useState(currentWeekMonth());
   const { data: rooms } = useRooms();
   const {
     data: lowestRooms,
