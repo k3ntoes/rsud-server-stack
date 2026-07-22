@@ -4,14 +4,17 @@ Sistem Informasi Inspeksi Pencegahan dan Pengendalian Infeksi (PPI) untuk RSUD A
 
 **Tech Stack:** FastAPI (Python) · React (Vite) · SQLite (dev) / PostgreSQL (prod) · TanStack Router/Query · Tailwind CSS
 
+---
+
 ## 📋 Prasyarat
 
 | Tool | Versi | Untuk |
 |------|-------|-------|
 | Python | ≥ 3.12 | Backend |
 | Node.js | ≥ 18 | Frontend |
-| `uv` | latest | Package manager backend (Python) |
+| `uv` | latest | Package manager backend |
 | npm | ≥ 9 | Package manager frontend |
+| GNU Make | — | Development automation (`make`) |
 
 Install `uv` jika belum ada:
 ```bash
@@ -20,65 +23,80 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ---
 
-## 🚀 Setup & Menjalankan
-
-### 1. Clone & masuk direktori
+## 🚀 Setup Cepat (Makefile)
 
 ```bash
+# 1. Clone
 git clone https://github.com/k3ntoes/rsud-server-stack.git
 cd rsud-server-stack
+
+# 2. Install semua dependensi
+make install
+make frontend-install
+
+# 3. Setup database + seed demo data
+cp backend/.env.example backend/.env    # edit JWT_SECRET jika perlu
+make reset                               # migrate + seed
+
+# 4. Jalankan backend & frontend (dua terminal atau make all)
+make dev     # terminal 1: backend di :8000
+make frontend-dev  # terminal 2: frontend di :5173
+
+# Atau langsung dua-duanya:
+make all     # Ctrl+C untuk stop keduanya
 ```
 
-### 2. Backend
+Buka **http://localhost:5173** → login dengan salah satu akun di bawah.
 
-```bash
-cd backend
+---
 
-# Install dependencies
-uv sync
+## 👤 Akun Demo (Seed)
 
-# Buat .env (copy dari template)
-cp .env.example .env
-# Edit .env — ganti JWT_SECRET dengan random key
-
-# Jalankan migrasi database
-uv run alembic upgrade head
-
-# Seed admin user
-uv run python -m app.modules.auth.seed
-
-# Jalankan server (development)
-uv run fastapi dev app/main.py --port 8000
-```
-
-Backend berjalan di **http://localhost:8000**.  
-Dokumentasi API (Swagger): **http://localhost:8000/docs**
-
-#### Admin default (seed)
 | Username | Password | Role |
 |----------|----------|------|
-| `admin` | `admin123` | admin_ppi |
+| `admin` | `admin123` | **admin_ppi** — full akses (CRUD master, approval, analytics) |
+| `supervisor` | `supervisor123` | **supervisor** — approval inspeksi, analytics |
+| `inspector` | `inspector123` | **inspector** — submit inspeksi (via API/Android) |
 
-### 3. Frontend (Web Admin)
+Seed juga membuat 6 ruangan, 10 item inspeksi, dan 3 sample inspeksi (2 APPROVED + 1 PENDING) — data analytics sudah terisi.
 
-Buka terminal baru:
+---
 
-```bash
-cd web-admin
+## 🔧 Makefile Commands
 
-# Install dependencies
-npm install
+### Backend
 
-# Jalankan development server
-npm run dev
-```
+| Command | Fungsi |
+|---------|--------|
+| `make install` | Install Python deps (`uv sync`) |
+| `make dev` | Jalankan FastAPI di `:8000` |
+| `make migrate` | Jalankan migrasi database |
+| `make seed` | Seed semua data demo |
+| `make reset` | Hapus DB → migrate → seed (start fresh) |
 
-Frontend berjalan di **http://localhost:5173**.  
-Vite dev server otomatis mem-proxy `/api` ke backend (port 8000).
+### Frontend
 
-### 4. Akses
+| Command | Fungsi |
+|---------|--------|
+| `make frontend-install` | Install Node deps (`npm ci`) |
+| `make frontend-dev` | Jalankan Vite dev server di `:5173` |
+| `make frontend-build` | Build production ke `dist/` |
 
-Buka **http://localhost:5173** di browser → login dengan `admin` / `admin123`.
+### Docker
+
+| Command | Fungsi |
+|---------|--------|
+| `make docker-up` | Build & start semua service |
+| `make docker-down` | Stop & hapus volume |
+| `make docker-logs` | Stream log semua container |
+
+### Utils
+
+| Command | Fungsi |
+|---------|--------|
+| `make clean` | Hapus DB, cache, node_modules, dist |
+| `make test` | Jalankan test backend |
+| `make all` | Backend + frontend bersamaan (Ctrl+C stop keduanya) |
 
 ---
 
@@ -90,19 +108,21 @@ rsud-server-stack/
 │   ├── app/
 │   │   ├── main.py                 # Entry point FastAPI
 │   │   ├── config.py               # Settings (pydantic-settings)
-│   │   ├── core/                   # Shared infrastructure
+│   │   ├── seed.py                 # Seed data komprehensif
+│   │   ├── core/
 │   │   │   ├── database.py         #   AsyncSession, engine
 │   │   │   ├── security.py         #   JWT, password hashing
 │   │   │   └── dependencies.py     #   Global deps
 │   │   ├── modules/
-│   │   │   ├── auth/               # Autentikasi & otorisasi
-│   │   │   ├── master/             # Master data (rooms, items)
-│   │   │   ├── inspection/         # Inspeksi PPI
-│   │   │   ├── media/              # Upload & serve foto
-│   │   │   ├── analytics/          # Dashboard (read-only)
-│   │   │   └── background/         # Background jobs (outbox)
+│   │   │   ├── auth/               # 🔐 Autentikasi & otorisasi
+│   │   │   ├── master/             # 🏗️ Master data (rooms, items)
+│   │   │   ├── inspection/         # 📋 Inspeksi PPI
+│   │   │   ├── media/              # 🖼️ Upload & serve foto
+│   │   │   ├── analytics/          # 📊 Dashboard (read-only)
+│   │   │   └── background/         # ⚙️ Background jobs (outbox)
 │   │   └── alembic/                # Database migrations
-│   ├── uploads/                    # Foto (Docker volume)
+│   ├── uploads/                    # Foto (volume mount)
+│   ├── docker-entrypoint.sh        # Migrasi + seed otomatis di container
 │   └── Dockerfile                  # Multi-stage production build
 │
 ├── web-admin/                      # React + Vite Frontend
@@ -111,10 +131,20 @@ rsud-server-stack/
 │   │   ├── hooks/                  # Custom hooks + TanStack Query
 │   │   ├── routes/                 # TanStack Router pages
 │   │   └── lib/                    # Utilities (API client)
-│   ├── index.html
+│   ├── Dockerfile                  # Multi-stage: Node build → Nginx
+│   ├── nginx.conf                  # Proxy /api ke backend
 │   └── package.json
 │
-└── docs/                           # Dokumentasi arsitektur
+├── docker-compose.yml              # PostgreSQL + Backend + Frontend
+├── Makefile                        # Development shortcuts
+├── .github/workflows/ci.yml        # CI pipeline
+│
+└── docs/
+    ├── 00-core-prompt.md           # Aturan absolut sistem
+    ├── 01-database-schema.md       # Skema database
+    ├── 04-architecture.md          # Arsitektur detail
+    ├── 05-implementation-tracking.md
+    └── adr/                        # Architectural Decision Records
 ```
 
 ---
@@ -122,8 +152,6 @@ rsud-server-stack/
 ## 🏗️ Arsitektur
 
 ### Backend: Modular 3 Layer
-
-Setiap module mengikuti pola **api → services → models**:
 
 ```
 api.py       → HTTP concerns, validasi input (Pydantic)
@@ -134,8 +162,8 @@ models.py    → SQLAlchemy ORM, definisi tabel
 ### Autentikasi: JWT Layered (ADR-0003)
 
 - **Access Token**: short-lived (15 menit), dikirim via `Authorization: Bearer`
-- **Refresh Token**: httpOnly cookie (7 hari), divalidasi dengan whitelist `user_sessions`
-- Auto-refresh: saat API return 401, frontend otomatis merefresh via cookie
+- **Refresh Token**: httpOnly cookie (7 hari), whitelist `user_sessions`
+- Auto-refresh: frontend otomatis merefresh via cookie saat 401
 
 ### Role-based Access
 
@@ -143,14 +171,13 @@ models.py    → SQLAlchemy ORM, definisi tabel
 |------|-------|
 | `admin_ppi` | Full — master data, approval, analytics |
 | `supervisor` | Approval inspeksi, analytics |
-| `inspector` | Submit inspeksi (via Android) |
+| `inspector` | Submit inspeksi (via API) |
 
 ### Database
 
-- Dev: **SQLite** (file-based, zero setup) via `aiosqlite`
-- Prod: **PostgreSQL** via `asyncpg` — ganti `DATABASE_URL` di `.env`
-- Migration: Alembic auto-generate dari SQLAlchemy models
-- Soft-delete: semua tabel transaksional punya `is_active` (Boolean)
+- **Dev**: SQLite (`sqlite+aiosqlite:///./rsud.db`) — file-based, zero setup
+- **Prod**: PostgreSQL (`postgresql+asyncpg://...`) — ganti `DATABASE_URL` di `.env`
+- Migration via Alembic, soft-delete via `is_active`
 
 ---
 
@@ -158,68 +185,50 @@ models.py    → SQLAlchemy ORM, definisi tabel
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/api/auth/login` | — | Login, dapat access + refresh token |
-| POST | `/api/auth/refresh` | Cookie | Refresh access token |
-| POST | `/api/auth/logout` | Cookie | Logout, hapus session |
-| GET | `/api/auth/me` | Bearer | Informasi user saat ini |
-| GET/POST/PUT/DELETE | `/api/rooms` | admin_ppi | CRUD ruangan |
-| GET/POST/PUT/DELETE | `/api/inspection-items` | admin_ppi | CRUD item inspeksi |
-| POST | `/api/inspections` | Bearer | Submit inspeksi (Android) |
-| GET | `/api/inspections` | supervisor+ | List inspeksi (filter: status, room, date) |
-| GET | `/api/inspections/{id}` | supervisor+ | Detail inspeksi |
-| POST | `.../{id}/approve` | supervisor+ | Setujui inspeksi |
-| POST | `.../{id}/reject` | supervisor+ | Tolak inspeksi (body: `rejection_reason`) |
+| POST | `/api/auth/login` | — | Login |
+| POST | `/api/auth/refresh` | Cookie | Refresh token |
+| POST | `/api/auth/logout` | Cookie | Logout |
+| GET | `/api/auth/me` | Bearer | User info |
+| GET | `/api/rooms` | admin_ppi | List ruangan |
+| POST | `/api/rooms` | admin_ppi | Tambah ruangan |
+| PUT | `/api/rooms/{id}` | admin_ppi | Edit ruangan |
+| DELETE | `/api/rooms/{id}` | admin_ppi | Hapus (soft) |
+| GET | `/api/inspection-items` | admin_ppi | List item inspeksi |
+| POST | `/api/inspection-items` | admin_ppi | Tambah item |
+| PUT | `/api/inspection-items/{id}` | admin_ppi | Edit item |
+| DELETE | `/api/inspection-items/{id}` | admin_ppi | Hapus (soft) |
+| POST | `/api/inspections` | Bearer | Submit inspeksi |
+| GET | `/api/inspections` | supervisor+ | List (filter: status, room, date) |
+| GET | `/api/inspections/{id}` | supervisor+ | Detail |
+| POST | `.../{id}/approve` | supervisor+ | Setujui |
+| POST | `.../{id}/reject` | supervisor+ | Tolak (body: `rejection_reason`) |
 | POST | `/api/upload` | Bearer | Upload foto |
-| GET | `/api/media/{file}` | — | Serve foto (untuk `<img>` tag) |
-| GET | `/api/analytics/lowest-rooms` | supervisor+ | Ruangan dengan skor terendah |
+| GET | `/api/media/{file}` | — | Serve foto |
+| GET | `/api/analytics/lowest-rooms` | supervisor+ | Skor terendah per ruangan |
 | GET | `/api/analytics/top-issues` | supervisor+ | Item paling sering bermasalah |
-
----
-
-## 🧪 Development
-
-### Menjalankan migration baru
-
-```bash
-cd backend
-uv run alembic revision --autogenerate -m "<description>"
-uv run alembic upgrade head
-```
-
-### Menambahkan dependency backend
-
-```bash
-cd backend
-uv add <package-name>
-```
-
-### Menambahkan dependency frontend
-
-```bash
-cd web-admin
-npm install <package-name>
-```
-
-### Build frontend production
-
-```bash
-cd web-admin
-npm run build  # output di web-admin/dist/
-```
 
 ---
 
 ## 🐳 Docker (Production)
 
 ```bash
-# Build backend
-docker build -t rsud-backend ./backend
+# Build & start semua service
+make docker-up
 
-# Run backend with PostgreSQL
-docker run -p 8000:80 -e DATABASE_URL=postgresql+asyncpg://... rsud-backend
+# Atau manual:
+docker compose up --build -d
+
+# Akses frontend: http://localhost:8080
+# API: http://localhost:8000/api
+# Swagger: http://localhost:8000/docs
 ```
 
-Docker Compose dan frontend Dockerfile masih dalam pengembangan (Phase 6).
+Services:
+- **Frontend**: Nginx (port `:8080`) — serve SPA + proxy `/api` → backend
+- **Backend**: FastAPI + entrypoint (migrasi & seed otomatis)
+- **Database**: PostgreSQL 16 (port `:5432`)
+
+Volume: `pgdata` (DB persistent) + `uploads` (foto).
 
 ---
 
@@ -232,8 +241,8 @@ Docker Compose dan frontend Dockerfile masih dalam pengembangan (Phase 6).
 | `docs/02-prd-server.md` | Product requirement |
 | `docs/03-project-structure.md` | Struktur proyek detail |
 | `docs/04-architecture.md` | Arsitektur, deployment, env vars |
-| `docs/adr/` | Architectural Decision Records |
 | `docs/05-implementation-tracking.md` | Tracking pengerjaan per fase |
+| `docs/adr/` | ADR: Frontend stack, JWT, Multi-photo |
 | `CONTEXT-MAP.md` | Glossary per domain context |
 
 ---
