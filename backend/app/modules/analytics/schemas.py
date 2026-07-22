@@ -19,3 +19,11 @@ class IssueFrequencyOut(BaseModel):
     score_zero_count: int
 
     model_config = {"from_attributes": True}
+
+
+class InspectorPerformanceOut(BaseModel):
+    inspector_id: int
+    username: str
+    total_inspections: int
+
+    model_config = {"from_attributes": True}

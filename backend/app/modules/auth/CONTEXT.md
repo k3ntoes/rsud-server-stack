@@ -32,6 +32,9 @@ The `user_sessions` table that stores active refresh tokens for cross-validation
 **Seed**:
 Initial admin account created via database migration — no self-registration.
 
+**Admin Reset Password**:
+Admin PPI can reset any user's password without the old password — used when a user forgets their password. Password baru bisa diinput manual atau di-generate acak oleh sistem. Password ditampilkan dalam bentuk plain text agar admin bisa menyampaikannya ke user.
+
 **User Creation**:
 Admin PPI creates Inspector and Supervisor accounts from the web dashboard.
 

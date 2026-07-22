@@ -33,9 +33,9 @@ Multi-context layout: `CONTEXT-MAP.md` at root points to per-context `CONTEXT.md
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **rsud-server-stack** (1191 symbols, 2296 relationships, 78 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **rsud-server-stack** (v1.6.9, 1191 symbols, 2296 relationships, 78 execution flows, 25 communities). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
-> Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
+> Index stale? Run `gitnexus analyze` from the project root (globally installed at `/home/kentoes/.nvm/versions/node/v24.18.0/bin/gitnexus`). Alternate: `node .gitnexus/run.cjs analyze`.
 
 ## Always Do
 
@@ -78,7 +78,15 @@ This project is indexed by GitNexus as **rsud-server-stack** (1191 symbols, 2296
 <!-- graphify:start -->
 # Graphify — Knowledge Graph
 
-This project uses **graphify** (v0.9.23) to build a navigable knowledge graph from source code. The graph helps agents understand code relationships, detect communities, and trace execution paths across the monorepo.
+This project uses **graphify** (v0.9.23, installed at `/home/kentoes/.local/bin/graphify`) to build a navigable knowledge graph from source code. The graph helps agents understand code relationships, detect communities, and trace execution paths across the monorepo.
+
+## Current Graph Stats
+
+| Scope | Nodes | Links | Communities |
+|-------|-------|-------|-------------|
+| `backend/` | 266 | 757 | 27 |
+| `web-admin/` | 176 | 256 | 15 |
+| **Merged** (`graphify-out/graph.json`) | **442** | **1013** | — (per-project) |
 
 ## Monorepo Update (Correct Command)
 
@@ -107,7 +115,9 @@ graphify merge-graphs ./backend/graphify-out/graph.json ./web-admin/graphify-out
 | Incremental update | Same as full re-index — graphify handles caching via `extract` |
 | Re-cluster only | `graphify cluster-only <dir>` |
 | Query merged graph | `graphify query "<question>"` (from root, reads `graphify-out/graph.json`) |
-| Shortest path | `graphify path "NodeA" "NodeB"` |
+| Shortest path | `graphify path "<NodeA>" "<NodeB>"` (e.g. `graphify path "User" "Room"`) |
+| Show god nodes | `graphify gods` — nodes with highest degree centrality (hubs) |
+| Show surprises | `graphify surprises` — unexpected cross-community connections |
 | Merge graphs | `graphify merge-graphs <g1.json> <g2.json> --out <output.json>` |
 
 <!-- graphify:end -->

@@ -311,3 +311,119 @@ async def test_top_issues_no_auth(client: AsyncClient):
     """No token → 401."""
     resp = await client.get("/api/analytics/top-issues")
     assert resp.status_code == 401
+
+
+# ── inspector-performance ──
+
+
+@pytest.mark.asyncio
+async def test_inspector_performance_with_data(
+    client: AsyncClient, db_session: AsyncSession,
+):
+    """Returns inspectors sorted by total_inspections descending."""
+    supervisor = await create_user(db_session, "sup", "pass", "supervisor")
+    busy = await create_user(db_session, "busy_insp", "pass", "inspector")
+    idle = await create_user(db_session, "idle_insp", "pass", "inspector")
+    room = await seed_room(db_session, "Ruang")
+    item = await seed_item(db_session, "Item")
+
+    # Busy inspector: 2 inspections
+    await _seed_approved_inspection(
+        db_session, room.id, busy.id, [item.id, item.id], [2, 2],
+    )
+    await _seed_approved_inspection(
+        db_session, room.id, busy.id, [item.id], [1],
+    )
+    # Idle inspector: 1 inspection
+    await _seed_approved_inspection(
+        db_session, room.id, idle.id, [item.id], [2],
+    )
+
+    headers = auth_header(supervisor)
+    resp = await client.get("/api/analytics/inspector-performance", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 2
+    # Sorted descending: busy first, idle second
+    assert data[0]["inspector_id"] == busy.id
+    assert data[0]["username"] == "busy_insp"
+    assert data[0]["total_inspections"] == 2
+    assert data[1]["inspector_id"] == idle.id
+    assert data[1]["total_inspections"] == 1
+
+
+@pytest.mark.asyncio
+async def test_inspector_performance_empty_month(
+    client: AsyncClient, db_session: AsyncSession,
+):
+    """No inspections in month → empty array."""
+    supervisor = await create_user(db_session, "sup", "pass", "supervisor")
+    await create_user(db_session, "insp", "pass", "inspector")
+
+    headers = auth_header(supervisor)
+    resp = await client.get(
+        "/api/analytics/inspector-performance?year_month=2099-01",
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+@pytest.mark.asyncio
+async def test_inspector_performance_filter_month(
+    client: AsyncClient, db_session: AsyncSession,
+):
+    """Filter by YYYY-MM returns only that month's data."""
+    supervisor = await create_user(db_session, "sup", "pass", "supervisor")
+    insp = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "Ruang")
+    item = await seed_item(db_session, "Item")
+
+    # July: 1 inspection
+    await _seed_approved_inspection(
+        db_session, room.id, insp.id, [item.id], [2],
+        business_date=date(2026, 7, 15),
+    )
+    # June: 2 separate inspections
+    await _seed_approved_inspection(
+        db_session, room.id, insp.id, [item.id], [2],
+        business_date=date(2026, 6, 15),
+    )
+    await _seed_approved_inspection(
+        db_session, room.id, insp.id, [item.id], [2],
+        business_date=date(2026, 6, 16),
+    )
+
+    headers = auth_header(supervisor)
+
+    resp_jul = await client.get(
+        "/api/analytics/inspector-performance?year_month=2026-07", headers=headers,
+    )
+    assert resp_jul.status_code == 200
+    assert len(resp_jul.json()) == 1
+    assert resp_jul.json()[0]["total_inspections"] == 1
+
+    resp_jun = await client.get(
+        "/api/analytics/inspector-performance?year_month=2026-06", headers=headers,
+    )
+    assert resp_jun.status_code == 200
+    assert len(resp_jun.json()) == 1
+    assert resp_jun.json()[0]["total_inspections"] == 2
+
+
+@pytest.mark.asyncio
+async def test_inspector_performance_as_inspector_forbidden(
+    client: AsyncClient, db_session: AsyncSession,
+):
+    """Non-supervisor role gets 403."""
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    headers = auth_header(inspector)
+    resp = await client.get("/api/analytics/inspector-performance", headers=headers)
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_inspector_performance_no_auth(client: AsyncClient):
+    """No token → 401."""
+    resp = await client.get("/api/analytics/inspector-performance")
+    assert resp.status_code == 401

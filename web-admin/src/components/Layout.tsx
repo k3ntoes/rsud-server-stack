@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "../hooks/useAuth";
+import { useChangePassword } from "../hooks/useUsers";
+import Modal from "./Modal";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: "📊" },
   { to: "/rooms", label: "Ruangan", icon: "🏥" },
   { to: "/items", label: "Item Inspeksi", icon: "📋" },
   { to: "/inspections", label: "Inspeksi", icon: "✅" },
+  { to: "/inspectors", label: "Kinerja Inspector", icon: "👤" },
+  { to: "/users", label: "Pengguna", icon: "🔐" },
   { to: "/analytics", label: "Analitik", icon: "📈" },
 ];
 
@@ -15,6 +19,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -109,13 +114,20 @@ export default function Layout() {
 
           <div className="flex-1" />
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-sm text-ink-muted">
               {user?.username}
               <span className="ml-1.5 rounded-full bg-navy-100 px-2 py-0.5 text-[11px] font-medium text-navy-600">
                 {user?.role}
               </span>
             </span>
+            <div className="h-5 w-px bg-navy-200/60" />
+            <button
+              onClick={() => setPwOpen(true)}
+              className="btn-ghost text-xs text-ink-muted hover:text-teal-600"
+            >
+              Ganti Password
+            </button>
             <div className="h-5 w-px bg-navy-200/60" />
             <button
               onClick={logout}
@@ -131,6 +143,102 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* ═══ Change Password Modal ═══ */}
+      <PwModal
+        open={pwOpen}
+        onClose={() => setPwOpen(false)}
+      />
     </div>
+  );
+}
+
+function PwModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const changePw = useChangePassword();
+  const [oldPw, setOldPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const handleSave = async () => {
+    setError("");
+    setSuccess(false);
+    if (!oldPw || !newPw) {
+      setError("Semua field harus diisi");
+      return;
+    }
+    if (newPw !== confirmPw) {
+      setError("Password baru tidak cocok");
+      return;
+    }
+    if (newPw.length < 6) {
+      setError("Password baru minimal 6 karakter");
+      return;
+    }
+    try {
+      await changePw.mutateAsync({ old_password: oldPw, new_password: newPw });
+      setSuccess(true);
+      setOldPw("");
+      setNewPw("");
+      setConfirmPw("");
+      setTimeout(() => onClose(), 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal mengubah password");
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title="Ganti Password">
+      <div className="mb-4">
+        <label className="label-plan">Password Lama</label>
+        <input
+          type="password"
+          value={oldPw}
+          onChange={(e) => setOldPw(e.target.value)}
+          className="input-plan"
+          placeholder="Masukkan password lama"
+          autoFocus
+        />
+      </div>
+      <div className="mb-4">
+        <label className="label-plan">Password Baru</label>
+        <input
+          type="password"
+          value={newPw}
+          onChange={(e) => setNewPw(e.target.value)}
+          className="input-plan"
+          placeholder="Minimal 6 karakter"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="label-plan">Konfirmasi Password Baru</label>
+        <input
+          type="password"
+          value={confirmPw}
+          onChange={(e) => setConfirmPw(e.target.value)}
+          className="input-plan"
+          placeholder="Ulangi password baru"
+        />
+      </div>
+
+      {error && (
+        <p className="animate-fade-in text-sm text-danger">{error}</p>
+      )}
+      {success && (
+        <p className="animate-fade-in text-sm text-success">Password berhasil diubah!</p>
+      )}
+
+      <div className="mt-6 flex justify-end gap-3">
+        <button onClick={onClose} className="btn-secondary">Batal</button>
+        <button
+          onClick={handleSave}
+          disabled={changePw.isPending}
+          className="btn-primary"
+        >
+          {changePw.isPending ? "Menyimpan..." : "Simpan"}
+        </button>
+      </div>
+    </Modal>
   );
 }

@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.modules.auth.dependencies import get_supervisor_user
 from app.modules.auth.models import User
-from app.modules.analytics.schemas import RoomScoreOut, IssueFrequencyOut
-from app.modules.analytics.services import get_lowest_rooms, get_top_issues
+from app.modules.analytics.schemas import RoomScoreOut, IssueFrequencyOut, InspectorPerformanceOut
+from app.modules.analytics.services import get_lowest_rooms, get_top_issues, get_inspector_performance
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
@@ -43,3 +43,13 @@ async def top_issues(
 ):
     ym = year_month or datetime.now().strftime("%Y-%m")
     return await get_top_issues(db, ym, limit)
+
+
+@router.get("/inspector-performance", response_model=list[InspectorPerformanceOut])
+async def inspector_performance(
+    year_month: str | None = Query(None, description="YYYY-MM, defaults to current"),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_supervisor_user),
+):
+    ym = year_month or datetime.now().strftime("%Y-%m")
+    return await get_inspector_performance(db, ym)
