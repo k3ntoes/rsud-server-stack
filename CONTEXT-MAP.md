@@ -39,5 +39,6 @@ This file maps the domain contexts in this repository. Each context has its own 
 | ADR-0005 | ✅ Accepted | Async ORM Strategy — `joinedload` over `selectinload` |
 | ADR-0006 | ✅ Accepted | Test Strategy — pytest-asyncio + In-Memory SQLite |
 | ADR-0007 | ✅ Accepted | Frontend Auth Pattern — SessionStorage + Auto-Refresh Token |
+| ADR-0008 | ✅ Accepted | User Management & Monitoring — User CRUD, Change Password, Inspector Performance |
 
 System-wide ADRs: `docs/adr/`
