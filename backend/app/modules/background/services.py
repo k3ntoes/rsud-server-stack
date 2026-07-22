@@ -113,19 +113,46 @@ async def recalculate_analytics(db: AsyncSession, inspection_id: int) -> None:
     await db.commit()
 
 
+async def _generate_thumbnail(db: AsyncSession, photo_id: int) -> None:
+    """Generate a thumbnail placeholder.
+
+    ponytail: no-op until upload flow triggers thumbnail jobs.
+    Add real resize (Pillow) when the trigger side lands.
+    """
+    logger.info("Thumbnail generation for photo %s: skipped (placeholder)", photo_id)
+
+
 async def process_one_job(db: AsyncSession, job: BackgroundJob) -> bool:
-    """Process a single job. Returns True if successful, False otherwise."""
+    """Process a single job. Returns True if successful, False otherwise.
+
+    ponytail: PROCESSING set in-memory only — final commit flushes it.
+    If worker crashes before final commit, job stays PENDING (safe retry).
+    On failure: retry up to max_retries. Dead-letter at max_retries.
+    """
+    job.status = "PROCESSING"
+
     try:
         if job.task_type == "recalculate_analytics":
             await recalculate_analytics(db, job.reference_id)
+        elif job.task_type == "generate_thumbnail":
+            await _generate_thumbnail(db, job.reference_id)
         else:
             logger.warning("Unknown task_type: %s", job.task_type)
             await mark_job(db, job.id, "FAILED")
             return False
+
         await mark_job(db, job.id, "COMPLETED")
         return True
     except Exception:
         logger.exception("Job %s failed", job.id)
+        # Refresh job to avoid expired-object issues after previous commit
+        job = await db.get(BackgroundJob, job.id)
+        if job and job.retry_count < job.max_retries:
+            job.retry_count += 1
+            job.status = "PENDING"
+            await db.commit()
+            logger.info("Job %s will retry (%d/%d)", job.id, job.retry_count, job.max_retries)
+            return False
         await mark_job(db, job.id, "FAILED")
         return False
 
