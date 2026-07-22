@@ -6,34 +6,27 @@
       "app_alembic_env_run_async_migrations",
       "app_alembic_env_run_migrations_offline",
       "app_alembic_env_run_migrations_online",
+      "app_alembic_versions_006_seed_admin_user",
+      "app_alembic_versions_006_seed_admin_user_downgrade",
+      "app_alembic_versions_006_seed_admin_user_upgrade",
+      "app_config",
+      "app_config_settings",
       "app_core_database",
       "app_core_database_base",
       "app_core_database_enable_sqlite_fk",
       "app_core_database_get_db",
       "app_core_dependencies",
-      "app_core_dependencies_get_current_user",
-      "app_core_dependencies_py_asyncsession",
+      "app_core_security",
+      "app_core_security_create_access_token",
+      "app_core_security_create_refresh_token",
       "app_core_security_hash_password",
-      "app_modules_analytics_api",
-      "app_modules_analytics_api_lowest_rooms",
-      "app_modules_analytics_api_py_asyncsession",
-      "app_modules_analytics_api_top_issues",
+      "app_core_security_verify_password",
+      "app_core_security_verify_token",
       "app_modules_analytics_models",
       "app_modules_analytics_models_issuefrequencystats",
       "app_modules_analytics_models_roommonthlystats",
-      "app_modules_analytics_schemas",
-      "app_modules_analytics_schemas_issuefrequencyout",
-      "app_modules_analytics_schemas_py_basemodel",
-      "app_modules_analytics_schemas_roomscoreout",
-      "app_modules_analytics_services",
-      "app_modules_analytics_services_get_lowest_rooms",
-      "app_modules_analytics_services_get_top_issues",
-      "app_modules_analytics_services_py_asyncsession",
-      "app_modules_auth_dependencies",
-      "app_modules_auth_dependencies_get_admin_user",
-      "app_modules_auth_dependencies_get_supervisor_user",
       "app_modules_auth_models",
-      "app_modules_auth_models_user",
+      "app_modules_auth_models_usersession",
       "app_modules_auth_seed",
       "app_modules_auth_seed_seed_admin",
       "app_modules_inspection_models",
@@ -41,16 +34,166 @@
       "app_modules_inspection_models_inspectiondetail",
       "app_modules_inspection_models_inspectionphoto",
       "app_modules_master_models",
+      "app_modules_media_api",
+      "app_modules_media_api_access_file",
+      "app_modules_media_api_generate_token",
+      "app_modules_media_api_py_user",
+      "app_modules_media_api_rationale_39",
+      "app_modules_media_api_rationale_53",
+      "app_modules_media_api_serve_file",
+      "app_modules_media_api_upload_file",
       "app_seed",
       "app_seed_rationale_1",
       "app_seed_seed",
+      "basesettings",
       "declarativebase",
-      "httpauthorizationcredentials",
       "tests_conftest",
+      "tests_conftest_client",
       "tests_conftest_db_session",
-      "tests_conftest_rationale_20"
+      "tests_conftest_py_asyncclient",
+      "tests_conftest_rationale_20",
+      "tests_conftest_rationale_43",
+      "uploadfile"
     ],
     "1": [
+      "app_modules_auth_services_create_user",
+      "tests_test_auth",
+      "tests_test_auth_py_asyncclient",
+      "tests_test_auth_py_asyncsession",
+      "tests_test_auth_rationale_125",
+      "tests_test_auth_rationale_159",
+      "tests_test_auth_rationale_178",
+      "tests_test_auth_rationale_193",
+      "tests_test_auth_rationale_207",
+      "tests_test_auth_rationale_223",
+      "tests_test_auth_rationale_239",
+      "tests_test_auth_rationale_253",
+      "tests_test_auth_rationale_270",
+      "tests_test_auth_rationale_283",
+      "tests_test_auth_rationale_298",
+      "tests_test_auth_rationale_323",
+      "tests_test_auth_rationale_348",
+      "tests_test_auth_rationale_397",
+      "tests_test_auth_rationale_411",
+      "tests_test_auth_rationale_436",
+      "tests_test_auth_rationale_451",
+      "tests_test_auth_test_admin_reset_password_by_supervisor_forbidden",
+      "tests_test_auth_test_admin_reset_password_forbidden_non_admin",
+      "tests_test_auth_test_admin_reset_password_no_auth",
+      "tests_test_auth_test_admin_reset_password_nonexistent_user",
+      "tests_test_auth_test_admin_reset_password_success",
+      "tests_test_auth_test_admin_reset_password_too_short",
+      "tests_test_auth_test_change_password_login_with_new_password",
+      "tests_test_auth_test_change_password_no_auth",
+      "tests_test_auth_test_change_password_success",
+      "tests_test_auth_test_change_password_wrong_old",
+      "tests_test_auth_test_create_user_as_inspector_forbidden",
+      "tests_test_auth_test_create_user_duplicate",
+      "tests_test_auth_test_create_user_success",
+      "tests_test_auth_test_delete_user_nonexistent",
+      "tests_test_auth_test_delete_user_soft_delete",
+      "tests_test_auth_test_list_users_as_admin",
+      "tests_test_auth_test_list_users_as_inspector_forbidden",
+      "tests_test_auth_test_list_users_no_auth",
+      "tests_test_auth_test_login_inactive_user",
+      "tests_test_auth_test_login_invalid_password",
+      "tests_test_auth_test_login_nonexistent_user",
+      "tests_test_auth_test_login_success",
+      "tests_test_auth_test_logout",
+      "tests_test_auth_test_me_authenticated",
+      "tests_test_auth_test_me_invalid_token",
+      "tests_test_auth_test_me_no_token",
+      "tests_test_auth_test_me_wrong_token_type",
+      "tests_test_auth_test_refresh_no_cookie",
+      "tests_test_auth_test_refresh_with_cookie",
+      "tests_test_auth_test_update_user_deactivate",
+      "tests_test_auth_test_update_user_nonexistent",
+      "tests_test_auth_test_update_user_role"
+    ],
+    "2": [
+      "app_core_dependencies_get_current_user",
+      "app_core_dependencies_py_asyncsession",
+      "app_modules_auth_dependencies",
+      "app_modules_auth_dependencies_get_admin_user",
+      "app_modules_auth_dependencies_get_supervisor_user",
+      "app_modules_auth_models_user",
+      "app_modules_master_api",
+      "app_modules_master_api_create_item_endpoint",
+      "app_modules_master_api_create_room_endpoint",
+      "app_modules_master_api_delete_item_endpoint",
+      "app_modules_master_api_delete_room_endpoint",
+      "app_modules_master_api_get_item_by_id",
+      "app_modules_master_api_get_items",
+      "app_modules_master_api_get_room_by_id",
+      "app_modules_master_api_get_rooms",
+      "app_modules_master_api_py_asyncsession",
+      "app_modules_master_api_update_item_endpoint",
+      "app_modules_master_api_update_room_endpoint",
+      "app_modules_master_models_inspectionitem",
+      "app_modules_master_models_room",
+      "app_modules_master_schemas",
+      "app_modules_master_schemas_itemcreate",
+      "app_modules_master_schemas_itemout",
+      "app_modules_master_schemas_itemupdate",
+      "app_modules_master_schemas_py_basemodel",
+      "app_modules_master_schemas_roomcreate",
+      "app_modules_master_schemas_roomout",
+      "app_modules_master_schemas_roomupdate",
+      "app_modules_master_services",
+      "app_modules_master_services_create_item",
+      "app_modules_master_services_create_room",
+      "app_modules_master_services_delete_item",
+      "app_modules_master_services_delete_room",
+      "app_modules_master_services_get_item",
+      "app_modules_master_services_get_room",
+      "app_modules_master_services_list_items",
+      "app_modules_master_services_list_rooms",
+      "app_modules_master_services_py_asyncsession",
+      "app_modules_master_services_update_item",
+      "app_modules_master_services_update_room",
+      "httpauthorizationcredentials"
+    ],
+    "3": [
+      "app_modules_auth_api",
+      "app_modules_auth_api_admin_reset_password_endpoint",
+      "app_modules_auth_api_change_password_endpoint",
+      "app_modules_auth_api_create_user_endpoint",
+      "app_modules_auth_api_delete_user_endpoint",
+      "app_modules_auth_api_get_users",
+      "app_modules_auth_api_login",
+      "app_modules_auth_api_logout",
+      "app_modules_auth_api_me",
+      "app_modules_auth_api_py_asyncsession",
+      "app_modules_auth_api_py_user",
+      "app_modules_auth_api_refresh",
+      "app_modules_auth_api_update_user_endpoint",
+      "app_modules_auth_schemas",
+      "app_modules_auth_schemas_adminresetpasswordrequest",
+      "app_modules_auth_schemas_changepasswordrequest",
+      "app_modules_auth_schemas_loginrequest",
+      "app_modules_auth_schemas_py_basemodel",
+      "app_modules_auth_schemas_tokenresponse",
+      "app_modules_auth_schemas_usercreate",
+      "app_modules_auth_schemas_userlistout",
+      "app_modules_auth_schemas_userout",
+      "app_modules_auth_schemas_userupdate",
+      "app_modules_auth_services",
+      "app_modules_auth_services_admin_reset_password",
+      "app_modules_auth_services_authenticate",
+      "app_modules_auth_services_change_password",
+      "app_modules_auth_services_create_session",
+      "app_modules_auth_services_deactivate_user",
+      "app_modules_auth_services_list_users",
+      "app_modules_auth_services_py_asyncsession",
+      "app_modules_auth_services_py_user",
+      "app_modules_auth_services_refresh_session",
+      "app_modules_auth_services_revoke_session",
+      "app_modules_auth_services_update_user",
+      "request",
+      "response",
+      "usersession"
+    ],
+    "4": [
       "tests_conftest_auth_header",
       "tests_conftest_create_user",
       "tests_conftest_py_asyncsession",
@@ -89,77 +232,45 @@
       "tests_test_master_test_update_item",
       "tests_test_master_test_update_room"
     ],
-    "2": [
-      "app_modules_master_api",
-      "app_modules_master_api_create_item_endpoint",
-      "app_modules_master_api_create_room_endpoint",
-      "app_modules_master_api_delete_item_endpoint",
-      "app_modules_master_api_delete_room_endpoint",
-      "app_modules_master_api_get_item_by_id",
-      "app_modules_master_api_get_items",
-      "app_modules_master_api_get_room_by_id",
-      "app_modules_master_api_get_rooms",
-      "app_modules_master_api_py_asyncsession",
-      "app_modules_master_api_update_item_endpoint",
-      "app_modules_master_api_update_room_endpoint",
-      "app_modules_master_models_inspectionitem",
-      "app_modules_master_models_room",
-      "app_modules_master_schemas",
-      "app_modules_master_schemas_itemcreate",
-      "app_modules_master_schemas_itemout",
-      "app_modules_master_schemas_itemupdate",
-      "app_modules_master_schemas_py_basemodel",
-      "app_modules_master_schemas_roomcreate",
-      "app_modules_master_schemas_roomout",
-      "app_modules_master_schemas_roomupdate",
-      "app_modules_master_services",
-      "app_modules_master_services_create_item",
-      "app_modules_master_services_create_room",
-      "app_modules_master_services_delete_item",
-      "app_modules_master_services_delete_room",
-      "app_modules_master_services_get_item",
-      "app_modules_master_services_get_room",
-      "app_modules_master_services_list_items",
-      "app_modules_master_services_list_rooms",
-      "app_modules_master_services_py_asyncsession",
-      "app_modules_master_services_update_item",
-      "app_modules_master_services_update_room"
+    "5": [
+      "date",
+      "tests_test_analytics",
+      "tests_test_analytics_py_asyncclient",
+      "tests_test_analytics_py_asyncsession",
+      "tests_test_analytics_rationale_1",
+      "tests_test_analytics_rationale_103",
+      "tests_test_analytics_rationale_114",
+      "tests_test_analytics_rationale_126",
+      "tests_test_analytics_rationale_168",
+      "tests_test_analytics_rationale_201",
+      "tests_test_analytics_rationale_233",
+      "tests_test_analytics_rationale_254",
+      "tests_test_analytics_rationale_28",
+      "tests_test_analytics_rationale_323",
+      "tests_test_analytics_rationale_359",
+      "tests_test_analytics_rationale_62",
+      "tests_test_analytics_rationale_92",
+      "tests_test_analytics_seed_approved_inspection",
+      "tests_test_analytics_test_inspector_performance_as_inspector_forbidden",
+      "tests_test_analytics_test_inspector_performance_empty_month",
+      "tests_test_analytics_test_inspector_performance_filter_month",
+      "tests_test_analytics_test_inspector_performance_no_auth",
+      "tests_test_analytics_test_inspector_performance_with_data",
+      "tests_test_analytics_test_lowest_rooms_as_admin_allowed",
+      "tests_test_analytics_test_lowest_rooms_as_inspector_forbidden",
+      "tests_test_analytics_test_lowest_rooms_empty",
+      "tests_test_analytics_test_lowest_rooms_filter_year_month",
+      "tests_test_analytics_test_lowest_rooms_limit",
+      "tests_test_analytics_test_lowest_rooms_no_auth",
+      "tests_test_analytics_test_lowest_rooms_ordered_by_score_asc",
+      "tests_test_analytics_test_top_issues_as_inspector_forbidden",
+      "tests_test_analytics_test_top_issues_empty",
+      "tests_test_analytics_test_top_issues_filter_year_month",
+      "tests_test_analytics_test_top_issues_no_auth",
+      "tests_test_analytics_test_top_issues_no_data",
+      "tests_test_analytics_test_top_issues_ordered_by_frequency_desc"
     ],
-    "3": [
-      "app_alembic_versions_006_seed_admin_user",
-      "app_alembic_versions_006_seed_admin_user_downgrade",
-      "app_alembic_versions_006_seed_admin_user_upgrade",
-      "app_config",
-      "app_config_settings",
-      "app_core_security",
-      "app_core_security_create_access_token",
-      "app_core_security_create_refresh_token",
-      "app_core_security_verify_password",
-      "app_core_security_verify_token",
-      "app_modules_auth_api",
-      "app_modules_auth_api_login",
-      "app_modules_auth_api_logout",
-      "app_modules_auth_api_me",
-      "app_modules_auth_api_py_asyncsession",
-      "app_modules_auth_api_refresh",
-      "app_modules_auth_models_usersession",
-      "app_modules_auth_schemas",
-      "app_modules_auth_schemas_loginrequest",
-      "app_modules_auth_schemas_py_basemodel",
-      "app_modules_auth_schemas_tokenresponse",
-      "app_modules_auth_schemas_userout",
-      "app_modules_auth_services",
-      "app_modules_auth_services_authenticate",
-      "app_modules_auth_services_create_session",
-      "app_modules_auth_services_create_user",
-      "app_modules_auth_services_py_asyncsession",
-      "app_modules_auth_services_refresh_session",
-      "app_modules_auth_services_revoke_session",
-      "basesettings",
-      "request",
-      "response"
-    ],
-    "4": [
+    "6": [
       "app_modules_background_services_create_job",
       "app_modules_inspection_api",
       "app_modules_inspection_api_approve_inspection_endpoint",
@@ -193,7 +304,7 @@
       "inspection",
       "select"
     ],
-    "5": [
+    "7": [
       "app_main",
       "app_modules_background_models",
       "app_modules_background_models_backgroundjob",
@@ -216,127 +327,117 @@
       "app_modules_background_worker_run_worker_loop",
       "base"
     ],
-    "6": [
-      "app_modules_media_api",
-      "app_modules_media_api_access_file",
-      "app_modules_media_api_generate_token",
-      "app_modules_media_api_py_user",
-      "app_modules_media_api_rationale_39",
-      "app_modules_media_api_rationale_53",
-      "app_modules_media_api_serve_file",
-      "app_modules_media_api_upload_file",
+    "8": [
+      "app_modules_analytics_api",
+      "app_modules_analytics_api_inspector_performance",
+      "app_modules_analytics_api_lowest_rooms",
+      "app_modules_analytics_api_py_asyncsession",
+      "app_modules_analytics_api_py_user",
+      "app_modules_analytics_api_top_issues",
+      "app_modules_analytics_schemas",
+      "app_modules_analytics_schemas_inspectorperformanceout",
+      "app_modules_analytics_schemas_issuefrequencyout",
+      "app_modules_analytics_schemas_py_basemodel",
+      "app_modules_analytics_schemas_roomscoreout",
+      "app_modules_analytics_services",
+      "app_modules_analytics_services_get_inspector_performance",
+      "app_modules_analytics_services_get_lowest_rooms",
+      "app_modules_analytics_services_get_top_issues",
+      "app_modules_analytics_services_py_asyncsession",
+      "issuefrequencystats",
+      "roommonthlystats"
+    ],
+    "9": [
       "app_modules_media_services",
       "app_modules_media_services_ensure_upload_dir",
       "app_modules_media_services_file_exists",
       "app_modules_media_services_get_file_path",
       "app_modules_media_services_py_uploadfile",
       "app_modules_media_services_safe_filename",
-      "app_modules_media_services_save_upload",
-      "uploadfile"
+      "app_modules_media_services_save_upload"
     ],
-    "7": [
-      "tests_test_auth",
-      "tests_test_auth_py_asyncclient",
-      "tests_test_auth_py_asyncsession",
-      "tests_test_auth_test_login_inactive_user",
-      "tests_test_auth_test_login_invalid_password",
-      "tests_test_auth_test_login_nonexistent_user",
-      "tests_test_auth_test_login_success",
-      "tests_test_auth_test_logout",
-      "tests_test_auth_test_me_authenticated",
-      "tests_test_auth_test_me_invalid_token",
-      "tests_test_auth_test_me_no_token",
-      "tests_test_auth_test_me_wrong_token_type",
-      "tests_test_auth_test_refresh_no_cookie",
-      "tests_test_auth_test_refresh_with_cookie"
-    ],
-    "8": [
+    "10": [
       "app_alembic_versions_001_initial_users_sessions",
       "app_alembic_versions_001_initial_users_sessions_downgrade",
       "app_alembic_versions_001_initial_users_sessions_upgrade"
     ],
-    "9": [
+    "11": [
       "app_alembic_versions_002_rooms_inspection_items",
       "app_alembic_versions_002_rooms_inspection_items_downgrade",
       "app_alembic_versions_002_rooms_inspection_items_upgrade"
     ],
-    "10": [
+    "12": [
       "app_alembic_versions_003_inspections",
       "app_alembic_versions_003_inspections_downgrade",
       "app_alembic_versions_003_inspections_upgrade"
     ],
-    "11": [
+    "13": [
       "app_alembic_versions_004_analytics_background_jobs",
       "app_alembic_versions_004_analytics_background_jobs_downgrade",
       "app_alembic_versions_004_analytics_background_jobs_upgrade"
     ],
-    "12": [
+    "14": [
       "app_alembic_versions_005_background_jobs_retry",
       "app_alembic_versions_005_background_jobs_retry_downgrade",
       "app_alembic_versions_005_background_jobs_retry_upgrade"
     ],
-    "13": [
-      "tests_conftest_client",
-      "tests_conftest_py_asyncclient",
-      "tests_conftest_rationale_43"
-    ],
-    "14": [
+    "15": [
       "docker_entrypoint",
       "docker_entrypoint_sh__entry"
     ],
-    "15": [
+    "16": [
       "app_core_init"
     ],
-    "16": [
+    "17": [
       "app_init"
     ],
-    "17": [
+    "18": [
       "app_modules_analytics_init"
     ],
-    "18": [
+    "19": [
       "app_modules_auth_init"
     ],
-    "19": [
+    "20": [
       "app_modules_background_init"
     ],
-    "20": [
+    "21": [
       "app_modules_init"
     ],
-    "21": [
+    "22": [
       "app_modules_inspection_init"
     ],
-    "22": [
+    "23": [
       "app_modules_inspection_schemas_py_basemodel"
     ],
-    "23": [
+    "24": [
       "app_modules_media_api_py_uploadfile"
     ],
-    "24": [
+    "25": [
       "app_modules_media_init"
     ],
-    "25": [
+    "26": [
       "pkg_rsud_server"
     ],
-    "26": [
+    "27": [
       "tests_init"
     ]
   },
   "cohesion": {
-    "0": 0.10815602836879433,
-    "1": 0.24624624624624625,
-    "2": 0.1711229946524064,
-    "3": 0.14717741935483872,
-    "4": 0.17137096774193547,
-    "5": 0.18571428571428572,
-    "6": 0.16666666666666666,
-    "7": 0.32967032967032966,
-    "8": 0.6666666666666666,
-    "9": 0.6666666666666666,
+    "0": 0.07619738751814223,
+    "1": 0.0965166908563135,
+    "2": 0.14390243902439023,
+    "3": 0.15220483641536273,
+    "4": 0.24624624624624625,
+    "5": 0.13015873015873017,
+    "6": 0.17137096774193547,
+    "7": 0.18571428571428572,
+    "8": 0.22875816993464052,
+    "9": 0.42857142857142855,
     "10": 0.6666666666666666,
     "11": 0.6666666666666666,
     "12": 0.6666666666666666,
     "13": 0.6666666666666666,
-    "14": 1.0,
+    "14": 0.6666666666666666,
     "15": 1.0,
     "16": 1.0,
     "17": 1.0,
@@ -348,23 +449,29 @@
     "23": 1.0,
     "24": 1.0,
     "25": 1.0,
-    "26": 1.0
+    "26": 1.0,
+    "27": 1.0
   },
   "gods": [
     {
-      "id": "tests_conftest_create_user",
+      "id": "app_modules_auth_services_create_user",
       "label": "create_user()",
-      "degree": 38
+      "degree": 45
     },
     {
-      "id": "app_modules_auth_models_user",
-      "label": "User",
-      "degree": 37
+      "id": "tests_conftest_create_user",
+      "label": "create_user()",
+      "degree": 30
     },
     {
       "id": "tests_conftest_auth_header",
       "label": "auth_header()",
-      "degree": 31
+      "degree": 29
+    },
+    {
+      "id": "app_modules_auth_models_user",
+      "label": "User",
+      "degree": 26
     },
     {
       "id": "app_core_database_base",
@@ -392,71 +499,66 @@
       "degree": 13
     },
     {
-      "id": "tests_test_inspection_submit_body",
-      "label": "_submit_body()",
-      "degree": 10
-    },
-    {
-      "id": "app_modules_background_services_process_one_job",
-      "label": "process_one_job()",
-      "degree": 10
+      "id": "tests_test_analytics_seed_approved_inspection",
+      "label": "_seed_approved_inspection()",
+      "degree": 12
     }
   ],
   "surprises": [
     {
-      "source": "auth_header()",
-      "target": "create_access_token()",
+      "source": "test_inspector_performance_as_inspector_forbidden()",
+      "target": "create_user()",
       "source_files": [
-        "tests/conftest.py",
-        "app/core/security.py"
+        "tests/test_analytics.py",
+        "app/modules/auth/services.py"
       ],
-      "confidence": "EXTRACTED",
+      "confidence": "INFERRED",
       "relation": "calls",
-      "why": "connects across different repos/directories; bridges separate communities"
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
     },
     {
-      "source": "test_me_wrong_token_type()",
-      "target": "create_refresh_token()",
+      "source": "test_inspector_performance_empty_month()",
+      "target": "create_user()",
       "source_files": [
-        "tests/test_auth.py",
-        "app/core/security.py"
+        "tests/test_analytics.py",
+        "app/modules/auth/services.py"
       ],
-      "confidence": "EXTRACTED",
+      "confidence": "INFERRED",
       "relation": "calls",
-      "why": "connects across different repos/directories; bridges separate communities"
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
     },
     {
-      "source": "create_user()",
-      "target": "hash_password()",
+      "source": "test_inspector_performance_filter_month()",
+      "target": "create_user()",
       "source_files": [
-        "tests/conftest.py",
-        "app/core/security.py"
+        "tests/test_analytics.py",
+        "app/modules/auth/services.py"
       ],
-      "confidence": "EXTRACTED",
+      "confidence": "INFERRED",
       "relation": "calls",
-      "why": "connects across different repos/directories; bridges separate communities"
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
     },
     {
-      "source": "auth_header()",
-      "target": "User",
+      "source": "test_inspector_performance_with_data()",
+      "target": "create_user()",
       "source_files": [
-        "tests/conftest.py",
-        "app/modules/auth/models.py"
+        "tests/test_analytics.py",
+        "app/modules/auth/services.py"
       ],
-      "confidence": "EXTRACTED",
-      "relation": "references",
-      "why": "connects across different repos/directories; bridges separate communities"
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
     },
     {
-      "source": "create_user()",
-      "target": "User",
+      "source": "test_lowest_rooms_as_admin_allowed()",
+      "target": "create_user()",
       "source_files": [
-        "tests/conftest.py",
-        "app/modules/auth/models.py"
+        "tests/test_analytics.py",
+        "app/modules/auth/services.py"
       ],
-      "confidence": "EXTRACTED",
-      "relation": "references",
-      "why": "connects across different repos/directories; bridges separate communities"
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
     }
   ],
   "tokens": {

@@ -10,9 +10,9 @@
     "semantic_hash": "c735540bb63936a123bc867d950c9f69"
   },
   "src/components/Layout.tsx": {
-    "mtime": 1784721886.0934389,
-    "ast_hash": "a01de1380a3428d3eec6f3c9d77587d8",
-    "semantic_hash": "a01de1380a3428d3eec6f3c9d77587d8"
+    "mtime": 1784731637.3357868,
+    "ast_hash": "f7cc6c798007a8030e595ef4d563d181",
+    "semantic_hash": "f7cc6c798007a8030e595ef4d563d181"
   },
   "src/components/Modal.tsx": {
     "mtime": 1784721932.5811691,
@@ -45,9 +45,9 @@
     "semantic_hash": "9b53eecb5c776a837244a00b6a3fe139"
   },
   "src/main.tsx": {
-    "mtime": 1784721445.2509344,
-    "ast_hash": "df3fc060c399129173c8cb02efa7b092",
-    "semantic_hash": "df3fc060c399129173c8cb02efa7b092"
+    "mtime": 1784731650.9541144,
+    "ast_hash": "6853f78c70d55a59623c5ee074a78bd0",
+    "semantic_hash": "6853f78c70d55a59623c5ee074a78bd0"
   },
   "src/routes/__root.tsx": {
     "mtime": 1784716083.2832541,
@@ -133,5 +133,20 @@
     "mtime": 1784725100.8694217,
     "ast_hash": "8fc32515d100407adf5380b396f2c763",
     "semantic_hash": "8fc32515d100407adf5380b396f2c763"
+  },
+  "src/hooks/useUsers.ts": {
+    "mtime": 1784733359.8973377,
+    "ast_hash": "b32501f28eb87d3d801132607ec9b393",
+    "semantic_hash": "b32501f28eb87d3d801132607ec9b393"
+  },
+  "src/routes/inspectors.tsx": {
+    "mtime": 1784731604.9044602,
+    "ast_hash": "7c0cf068160061ffdc1468d5c8c21fe7",
+    "semantic_hash": "7c0cf068160061ffdc1468d5c8c21fe7"
+  },
+  "src/routes/users.tsx": {
+    "mtime": 1784733379.051279,
+    "ast_hash": "0fc3a20f731674572ec8a981fcf17271",
+    "semantic_hash": "0fc3a20f731674572ec8a981fcf17271"
   }
 }

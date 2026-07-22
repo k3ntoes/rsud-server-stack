@@ -29,3 +29,4 @@
 {"id":"int-f93052692ed61113e9b8132d58e43abc","kind":"field_change","created_at":"2026-07-22T14:50:37.832204369Z","actor":"Bagus Sudrajat","issue_id":"rsud-server-stack-43k","extra":{"field":"status","new_value":"closed","old_value":"in_progress"}}
 {"id":"int-1cd955513343ee949b1ca71aaf811887","kind":"field_change","created_at":"2026-07-22T14:50:39.055765448Z","actor":"Bagus Sudrajat","issue_id":"rsud-server-stack-3yk","extra":{"field":"status","new_value":"closed","old_value":"open"}}
 {"id":"int-ce1aa6d81f852d338156261966cb51ef","kind":"field_change","created_at":"2026-07-22T14:50:39.656442025Z","actor":"Bagus Sudrajat","issue_id":"rsud-server-stack-3yl","extra":{"field":"status","new_value":"closed","old_value":"open"}}
+{"id":"int-062864895601db691ad9d1e84ff2d946","kind":"field_change","created_at":"2026-07-22T15:26:18.561463438Z","actor":"Bagus Sudrajat","issue_id":"rsud-server-stack-e91","extra":{"field":"status","new_value":"closed","old_value":"in_progress"}}

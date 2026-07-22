@@ -58,6 +58,12 @@ Komponen `Modal` menggunakan elemen HTML `<dialog>` native — tidak perlu libra
 | `/inspectors` | `inspectors.tsx` | Protected | Kinerja inspector — jumlah inspeksi per inspector |
 | `/users` | `users.tsx` | Protected | CRUD pengguna + admin reset password per baris |
 | `/analytics` | `analytics.tsx` | Protected | Bar chart: ruangan terendah + item bermasalah |
+| `/users` | `users.tsx` | Protected | CRUD manajemen pengguna: table + create/edit modal (role selector, password on create) |
+| `/inspectors` | `inspectors.tsx` | Protected | Bar chart: jumlah inspeksi approved per inspector per bulan |
+
+### Feature: Change Password
+
+Button "Ganti Password" di header Layout — membuka modal native `<dialog>` untuk mengubah password sendiri.
 
 ## Key Decisions
 
