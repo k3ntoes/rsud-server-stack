@@ -15,6 +15,73 @@ from app.core.security import (
 from app.modules.auth.models import User, UserSession
 
 
+async def list_users(db: AsyncSession) -> list[User]:
+    result = await db.execute(
+        select(User).order_by(User.username)
+    )
+    return list(result.scalars().all())
+
+
+async def update_user(
+    db: AsyncSession, user_id: int, username: str | None = None, role: str | None = None,
+    is_active: bool | None = None,
+) -> User | None:
+    user = await db.get(User, user_id)
+    if user is None:
+        return None
+    if username is not None:
+        user.username = username
+    if role is not None:
+        user.role = role
+    if is_active is not None:
+        user.is_active = is_active
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def deactivate_user(db: AsyncSession, user_id: int) -> bool:
+    user = await db.get(User, user_id)
+    if user is None:
+        return False
+    user.is_active = False
+    await db.commit()
+    return True
+
+
+async def admin_reset_password(
+    db: AsyncSession, user_id: int, new_password: str
+) -> User | None:
+    user = await db.get(User, user_id)
+    if user is None:
+        return None
+
+    # Revoke all active sessions — user must re-login
+    result = await db.execute(
+        select(UserSession).where(
+            UserSession.user_id == user_id,
+            UserSession.is_active == True,
+        )
+    )
+    for session in result.scalars().all():
+        session.is_active = False
+
+    user.password_hash = hash_password(new_password)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def change_password(
+    db: AsyncSession, user: User, old_password: str, new_password: str
+) -> bool:
+    if not verify_password(old_password, user.password_hash):
+        return False
+    user.password_hash = hash_password(new_password)
+    await db.commit()
+    return True
+
+
 async def authenticate(db: AsyncSession, username: str, password: str) -> User | None:
     result = await db.execute(
         select(User).where(User.username == username, User.is_active == True)

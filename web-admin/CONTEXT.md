@@ -55,6 +55,8 @@ Komponen `Modal` menggunakan elemen HTML `<dialog>` native — tidak perlu libra
 | `/items` | `items.tsx` | Protected | CRUD table dengan search, create/edit modal |
 | `/inspections` | `inspections.tsx` | Protected | List dengan tab filter (Semua/Menunggu/Disetujui/Ditolak) |
 | `/inspections/$id` | `inspection-detail.tsx` | Protected | Detail inspeksi + approve/reject |
+| `/inspectors` | `inspectors.tsx` | Protected | Kinerja inspector — jumlah inspeksi per inspector |
+| `/users` | `users.tsx` | Protected | CRUD pengguna + admin reset password per baris |
 | `/analytics` | `analytics.tsx` | Protected | Bar chart: ruangan terendah + item bermasalah |
 
 ## Key Decisions

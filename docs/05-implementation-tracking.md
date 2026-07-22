@@ -65,6 +65,39 @@ flowchart LR
 |-------|----|--------|------------|------------|
 | **6: Docker & CI/CD** | `rsud-server-stack-quy` | 🟢 Done | k3ntoes@gmail.com | 1A, 5A |
 
+### Phase 7 — User Management & Monitoring
+
+| Issue | ID | Status | Claimed By | Blocked By |
+|-------|----|--------|------------|------------|
+| **7A: User & Role CRUD** | `rsud-server-stack-43k` | 🟢 Done | k3ntoes@gmail.com | 1B, 5A |
+| **7B: Inspector Monitoring** | `rsud-server-stack-3yk` | 🟢 Done | k3ntoes@gmail.com | 3A, 7A |
+| **7C: Change Password** | `rsud-server-stack-3yl` | 🟢 Done | k3ntoes@gmail.com | 7A |
+
+---
+
+## Phase 7 — Detail Perubahan
+
+### Backend
+
+| File | Perubahan |
+|------|-----------|
+| `backend/app/modules/auth/schemas.py` | +UserCreate, UserUpdate, UserListOut, ChangePasswordRequest |
+| `backend/app/modules/auth/services.py` | +list_users, update_user, deactivate_user, change_password |
+| `backend/app/modules/auth/api.py` | +GET/POST/PUT/DELETE /users, +POST /change-password |
+| `backend/app/modules/analytics/schemas.py` | +InspectorPerformanceOut |
+| `backend/app/modules/analytics/services.py` | +get_inspector_performance |
+| `backend/app/modules/analytics/api.py` | +GET /inspector-performance |
+
+### Frontend
+
+| File | Perubahan |
+|------|-----------|
+| `web-admin/src/hooks/useUsers.ts` | Hooks baru: useUsers, useCreateUser, useUpdateUser, useDeleteUser, useChangePassword, useInspectorPerformance, ROLES constant |
+| `web-admin/src/routes/users.tsx` | Halaman manajemen pengguna (CRUD table + modal) |
+| `web-admin/src/routes/inspectors.tsx` | Halaman monitoring kinerja inspector (bar chart) |
+| `web-admin/src/components/Layout.tsx` | +Sidebar links (Pengguna, Kinerja Inspector), +Modal Change Password |
+| `web-admin/src/main.tsx` | Register UsersRoute, InspectorsRoute |
+
 ---
 
 ## Workflow Per Issue
