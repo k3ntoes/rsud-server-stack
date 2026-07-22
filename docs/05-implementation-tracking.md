@@ -56,8 +56,8 @@ flowchart LR
 |-------|----|--------|------------|------------|
 | **5A: Auth & Layout** | `rsud-server-stack-9j4` | 🟢 Done | k3ntoes@gmail.com | 1B |
 | **5B: Master Data Pages** | `rsud-server-stack-esm` | 🟢 Done | k3ntoes@gmail.com | 5A, 2 |
-| **5C: Approval Workflow** | `rsud-server-stack-h6k` | 🔴 Open | — | 5A, 3A, 3B |
-| **5D: Analytics Dashboard** | `rsud-server-stack-u4h` | 🔴 Open | — | 5A, 4A |
+| **5C: Approval Workflow** | `rsud-server-stack-h6k` | 🟢 Done | k3ntoes@gmail.com | 5A, 3A, 3B |
+| **5D: Analytics Dashboard** | `rsud-server-stack-u4h` | 🟢 Done | k3ntoes@gmail.com | 5A, 4A |
 
 ### Phase 6 — Infrastructure
 
