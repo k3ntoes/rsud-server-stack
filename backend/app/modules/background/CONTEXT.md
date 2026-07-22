@@ -13,7 +13,9 @@ Manage asynchronous task execution using the Outbox Pattern via a database-backe
 | Self-Healing | Failed jobs can be retried automatically (status back to PENDING) |
 | Task Type 1 | `generate_thumbnail` — generate thumbnail setelah image upload |
 | Task Type 2 | `recalculate_analytics` — UPSERT `room_monthly_stats` dan `issue_frequency_stats` saat inspection di-APPROVED |
-| Background Job | Record di `background_jobs` dengan `task_type`, `payload` (JSON), `status`, dan `retry_count` |
+| Background Job | Record di `background_jobs` dengan `task_type`, `payload` (JSON), `status`, `retry_count`, dan `max_retries` |
+| Retry Count | `retry_count` — jumlah retry yang sudah dilakukan (integer, default 0) |
+| Max Retries | `max_retries` — batas maksimal retry sebelum job dianggap FAILED permanen (integer, default 3) |
 
 ## Key Decisions
 
