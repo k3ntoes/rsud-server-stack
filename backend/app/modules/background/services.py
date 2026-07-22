@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from datetime import date
 
 from sqlalchemy import select
@@ -114,12 +115,31 @@ async def recalculate_analytics(db: AsyncSession, inspection_id: int) -> None:
 
 
 async def _generate_thumbnail(db: AsyncSession, photo_id: int) -> None:
-    """Generate a thumbnail placeholder.
+    """Generate a thumbnail for an inspection photo using Pillow."""
+    from app.modules.inspection.models import InspectionPhoto
+    from PIL import Image
+    from app.config import settings
 
-    ponytail: no-op until upload flow triggers thumbnail jobs.
-    Add real resize (Pillow) when the trigger side lands.
-    """
-    logger.info("Thumbnail generation for photo %s: skipped (placeholder)", photo_id)
+    photo = await db.get(InspectionPhoto, photo_id)
+    if photo is None:
+        logger.warning("Photo %s not found for thumbnail generation", photo_id)
+        return
+
+    src_path = os.path.join(settings.UPLOAD_DIR, photo.photo_file_name)
+    if not os.path.isfile(src_path):
+        logger.warning("Photo file %s not found on disk", src_path)
+        return
+
+    thumb_name = f"thumb_{photo.photo_file_name}"
+    dst_path = os.path.join(settings.UPLOAD_DIR, thumb_name)
+
+    with Image.open(src_path) as img:
+        img.thumbnail((300, 300))
+        img.save(dst_path)
+
+    photo.thumbnail_file_name = thumb_name
+    await db.commit()
+    logger.info("Thumbnail saved: %s", thumb_name)
 
 
 async def process_one_job(db: AsyncSession, job: BackgroundJob) -> bool:

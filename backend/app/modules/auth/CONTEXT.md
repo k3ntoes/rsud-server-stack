@@ -30,7 +30,7 @@ _Avoid_: Session token
 The `user_sessions` table that stores active refresh tokens for cross-validation and admin revoke.
 
 **Seed**:
-Initial admin account created via standalone seed script (`python -m app.seed` atau `python -m app.modules.auth.seed`) — no self-registration.
+Initial admin account created via database migration — no self-registration.
 
 **User Creation**:
 Admin PPI creates Inspector and Supervisor accounts from the web dashboard.
@@ -47,7 +47,7 @@ FastAPI HTTPBearer returns **401 Unauthorized** (not 403 Forbidden) when Authori
 - Refresh Token delivered via httpOnly cookie (not localStorage)
 - Refresh Token cross-validated with `user_sessions` table (whitelist)
 - Admin PPI has Kill Switch capability to revoke sessions
-- Seed Admin PPI via standalone seed script; no public registration
+- Seed Admin PPI via migration; no public registration
 - `passlib[bcrypt]` for password hashing, pinned to `bcrypt<4.1` — bcrypt>=4.1 removes `__about__` module yang dibutuhkan passlib
 - HTTPBearer default behavior: missing/invalid token → 401 (not 403)
 

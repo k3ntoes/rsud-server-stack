@@ -17,13 +17,16 @@ export interface IssueFrequency {
   score_zero_count: number;
 }
 
-export function currentMonth() {
+export function currentWeekMonth() {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+  const monday = new Date(d.setDate(diff));
+  return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}`;
 }
 
 export function useLowestRooms(yearMonth?: string, limit = 3) {
-  const ym = yearMonth || currentMonth();
+  const ym = yearMonth || currentWeekMonth();
   return useQuery({
     queryKey: ["analytics", "lowest-rooms", ym, limit],
     queryFn: () =>
@@ -34,7 +37,7 @@ export function useLowestRooms(yearMonth?: string, limit = 3) {
 }
 
 export function useTopIssues(yearMonth?: string, limit = 10) {
-  const ym = yearMonth || currentMonth();
+  const ym = yearMonth || currentWeekMonth();
   return useQuery({
     queryKey: ["analytics", "top-issues", ym, limit],
     queryFn: () =>
