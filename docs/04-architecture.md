@@ -198,9 +198,9 @@ class User(Base):
 │              │     │              │     │  PostgreSQL  │
 │   (Client)   │     │   (Backend)  │     │  (Database)  │
 │              │     │              │     │              │
-└──────────────┘     │  :8000/api   │     └──────────────┘
+└──────────────┘     │  :8100/api   │     └──────────────┘
                      │              │
-┌──────────────┐     │  :8000/docs  │
+┌──────────────┐     │  :8100/docs  │
 │              │     │              │     ┌──────────────┐
 │   Browser    │────▶│  Background  │────▶│   Uploads/   │
 │   (React)    │     │   Worker     │     │  (Volume)    │

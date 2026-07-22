@@ -8,10 +8,10 @@ install:
 	cd backend && uv sync
 
 dev:
-	cd backend && uv run fastapi dev app/main.py --port 8000
+	cd backend && PYTHONPATH=. uv run fastapi dev app/main.py --port 8100
 
 migrate:
-	cd backend && uv run alembic upgrade head
+	cd backend && PYTHONPATH=. uv run alembic upgrade head
 
 seed:
 	cd backend && uv run python -m app.seed
@@ -48,7 +48,7 @@ docker-logs:
 # ── Utils ──
 
 test:
-	cd backend && uv run pytest -v tests/ || echo "⚠️  No tests yet"
+	cd backend && PYTHONPATH=. uv run pytest tests/ -v
 
 clean: clean-db
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
@@ -57,8 +57,8 @@ clean: clean-db
 	@echo "🧹 Clean complete"
 
 all:
-	@echo "Starting backend (port 8000) and frontend (port 5173)..."
+	@echo "Starting backend (port 8100) and frontend (port 5173)..."
 	@echo "Open http://localhost:5173"
 	trap 'kill 0' EXIT; \
-	cd backend && uv run fastapi dev app/main.py --port 8000 & \
+	cd backend && PYTHONPATH=. uv run fastapi dev app/main.py --port 8100 & \
 	cd web-admin && npm run dev

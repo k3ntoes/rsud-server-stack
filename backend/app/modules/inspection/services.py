@@ -2,7 +2,7 @@ from datetime import date
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 
 from app.modules.inspection.models import Inspection, InspectionDetail, InspectionPhoto
 from app.modules.inspection.schemas import InspectionSubmit
@@ -47,8 +47,15 @@ async def submit_inspection(
 
     db.add(inspection)
     await db.commit()
-    await db.refresh(inspection)
-    return inspection
+    # Re-fetch with relationships loaded for response serialization
+    result = await db.execute(
+        select(Inspection)
+        .where(Inspection.id == inspection.id)
+        .options(
+            joinedload(Inspection.details).joinedload(InspectionDetail.photos)
+        )
+    )
+    return result.unique().scalar_one()
 
 
 async def list_inspections(
@@ -74,9 +81,9 @@ async def list_inspections(
 
     total = (await db.execute(count_query)).scalar() or 0
 
-    query = query.options(selectinload(Inspection.details))
+    query = query.options(joinedload(Inspection.details))
     result = await db.execute(query.offset(offset).limit(limit))
-    return list(result.scalars().all()), total
+    return list(result.unique().scalars().all()), total
 
 
 async def get_inspection(db: AsyncSession, inspection_id: int) -> Inspection | None:
@@ -84,10 +91,10 @@ async def get_inspection(db: AsyncSession, inspection_id: int) -> Inspection | N
         select(Inspection)
         .where(Inspection.id == inspection_id)
         .options(
-            selectinload(Inspection.details).selectinload(InspectionDetail.photos)
+            joinedload(Inspection.details).joinedload(InspectionDetail.photos)
         )
     )
-    return result.scalar_one_or_none()
+    return result.unique().scalar_one_or_none()
 
 
 async def approve_inspection(db: AsyncSession, inspection_id: int) -> Inspection | None:
@@ -101,8 +108,15 @@ async def approve_inspection(db: AsyncSession, inspection_id: int) -> Inspection
     await create_job(db, "recalculate_analytics", inspection_id)
 
     await db.commit()
-    await db.refresh(inspection)
-    return inspection
+    # Re-fetch with relationships for response serialization
+    result = await db.execute(
+        select(Inspection)
+        .where(Inspection.id == inspection_id)
+        .options(
+            joinedload(Inspection.details).joinedload(InspectionDetail.photos)
+        )
+    )
+    return result.unique().scalar_one_or_none()
 
 
 async def reject_inspection(
@@ -114,5 +128,12 @@ async def reject_inspection(
     inspection.status = "REJECTED"
     inspection.rejection_reason = reason
     await db.commit()
-    await db.refresh(inspection)
-    return inspection
+    # Re-fetch with relationships for response serialization
+    result = await db.execute(
+        select(Inspection)
+        .where(Inspection.id == inspection_id)
+        .options(
+            joinedload(Inspection.details).joinedload(InspectionDetail.photos)
+        )
+    )
+    return result.unique().scalar_one_or_none()

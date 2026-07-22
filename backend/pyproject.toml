@@ -11,8 +11,15 @@ dependencies = [
     "alembic",
     "python-jose[cryptography]",
     "passlib[bcrypt]",
+    "bcrypt<4.1",
     "python-multipart",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-asyncio"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
