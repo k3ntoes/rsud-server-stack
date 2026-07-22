@@ -221,7 +221,7 @@ function InspectionDetailPage() {
                               className="inline-flex items-center gap-1 rounded-plan border border-navy-100/50 bg-navy-50/50 px-2 py-0.5 text-xs text-navy-500"
                             >
                               <span className="text-[10px]">📷</span>
-                              {p.photo_file_name.slice(0, 12)}…
+                              {p.photo_file_name.slice(0, 16)}
                             </span>
                           ))}
                         </div>

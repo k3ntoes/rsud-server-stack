@@ -17,7 +17,7 @@
 - Dashboard Web HANYA melakukan SELECT ke tabel ini agar performa super cepat.
 
 **4. State Machine (`background_jobs`)**
-- Kolom: `id`, `reference_id`, `task_type`, `status` (PENDING, COMPLETED, FAILED), `payload`.
+- Kolom: `id`, `reference_id`, `task_type`, `status` (PENDING, PROCESSING, COMPLETED, FAILED), `payload`, `retry_count` (Integer, default 0), `max_retries` (Integer, default 3).
 
 **5. Scoring Formula**
 - Skor% = (Jumlah Skor Didapat) / (Jumlah Item × 2) × 100%

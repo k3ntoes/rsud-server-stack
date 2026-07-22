@@ -18,7 +18,10 @@ async def upload_file(
 
 
 @router.get("/media/{filename}")
-async def serve_file(filename: str):
+async def serve_file(
+    filename: str,
+    _: User = Depends(get_current_user),
+):
     if not file_exists(filename):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="File not found")
     return FileResponse(get_file_path(filename))

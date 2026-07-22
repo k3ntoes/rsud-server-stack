@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload
 
 from app.modules.inspection.models import Inspection, InspectionDetail, InspectionPhoto
 from app.modules.inspection.schemas import InspectionSubmit
+from app.modules.master.models import InspectionItem
 
 
 def _base_inspection_query() -> select:
@@ -33,6 +34,18 @@ async def submit_inspection(
     data: InspectionSubmit,
 ) -> Inspection:
     # Ponytail: composite unique catches duplicates. Let DB do the work.
+
+    # Validate all active items are scored
+    # ponytail: full item scan, cache item count if submission volume grows
+    all_items = await db.execute(
+        select(InspectionItem).where(InspectionItem.is_active == True)
+    )
+    active_ids = {item.id for item in all_items.scalars().all()}
+    submitted_ids = {d.item_id for d in data.details}
+    missing = active_ids - submitted_ids
+    if missing:
+        raise ValueError(f"Missing items: {sorted(missing)}")
+
     inspection = Inspection(
         room_id=data.room_id,
         inspector_id=inspector_id,
@@ -52,8 +65,6 @@ async def submit_inspection(
         inspection.details.append(detail)
 
     # Snapshot item names from master — one query
-    from app.modules.master.models import InspectionItem
-
     item_ids = {d.item_id for d in data.details}
     result = await db.execute(
         select(InspectionItem).where(
