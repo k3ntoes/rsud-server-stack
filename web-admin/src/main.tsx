@@ -13,6 +13,7 @@ import { Route as DashboardRoute } from "./routes/dashboard";
 import { Route as RoomsRoute } from "./routes/rooms";
 import { Route as ItemsRoute } from "./routes/items";
 import { Route as InspectionsRoute } from "./routes/inspections";
+import { Route as InspectionDetailRoute } from "./routes/inspection-detail";
 import { Route as AnalyticsRoute } from "./routes/analytics";
 
 const queryClient = new QueryClient({
@@ -32,6 +33,7 @@ const routeTree = rootRoute.addChildren([
     RoomsRoute,
     ItemsRoute,
     InspectionsRoute,
+    InspectionDetailRoute,
     AnalyticsRoute,
   ]),
 ]);
