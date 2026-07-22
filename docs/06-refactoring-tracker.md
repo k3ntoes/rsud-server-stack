@@ -30,12 +30,12 @@ flowchart LR
 
 | # | Issue ID | Title | Status | Claimed By | Blocked By |
 |---|----------|-------|--------|------------|------------|
-| A | `rsud-server-stack-0lr` | [Cleanup] Hapus `ApproveRequest` model tidak terpakai | 🔴 Open | — | None |
-| B | `rsud-server-stack-4hc` | [Cleanup] Hapus dependency bcrypt redundant dari `pyproject.toml` | 🔴 Open | — | None |
-| C | `rsud-server-stack-9g1` | [Cleanup] Dedup fungsi `currentMonth()` yang terduplikasi | 🔴 Open | — | None |
-| D | `rsud-server-stack-8x4` | [Refactor] Ekstrak helper untuk joinedload re-fetch di `inspection/services.py` | 🔴 Open | — | None |
-| E | `rsud-server-stack-83x` | [Refactor] Factory untuk mutation hooks identik di `useMasterData.ts` | 🔴 Open | — | C |
-| F | `rsud-server-stack-26n` | [Refactor] Kompres halaman `rooms.tsx` dan `items.tsx` menjadi komponen CRUD generik | 🔴 Open | — | A, D |
+| A | `rsud-server-stack-0lr` | [Cleanup] Hapus `ApproveRequest` model tidak terpakai | 🟢 Done | Buffy | None |
+| B | `rsud-server-stack-4hc` | [Cleanup] Hapus dependency bcrypt redundant dari `pyproject.toml` | 🔵 Wontfix | — | Konflik CONTEXT-MAP.md: pin bcrypt<4.1 sengaja untuk kompatibilitas passlib |
+| C | `rsud-server-stack-9g1` | [Cleanup] Dedup fungsi `currentMonth()` yang terduplikasi | 🟢 Done | Buffy | None |
+| D | `rsud-server-stack-8x4` | [Refactor] Ekstrak helper untuk joinedload re-fetch di `inspection/services.py` | 🟢 Done | Buffy | None |
+| E | `rsud-server-stack-83x` | [Refactor] Factory untuk mutation hooks identik di `useMasterData.ts` | 🟢 Done | Buffy | C |
+| F | `rsud-server-stack-26n` | [Refactor] Kompres halaman `rooms.tsx` dan `items.tsx` menjadi komponen CRUD generik | 🟢 Done | Buffy | A, D |
 
 ---
 
@@ -88,33 +88,15 @@ Setiap AI agent **WAJIB** melakukan ini sebelum menyentuh kode:
 
 ---
 
-## Recommended Claim Order
+## Completed
 
-> **🔥 Phase 1 (Trivial)** → A → B (parallel atau sequential, zero risk)
->
-> **🔥 Phase 2 (Small)** → C → E (type-safe, dedup kecil)
->
-> **⏳ Phase 3 (Medium)** → D (perlu test passing)
->
-> **⏳ Phase 4 (Larger)** → F (perlu component design, butuh A + D selesai)
-
-### Quick Start
-
-```bash
-# Claim issue
-bd update rsud-server-stack-0lr --claim
-
-# Lihat detail issue & implementasi plan
-bd show rsud-server-stack-0lr
-
-# Tandai selesai
-bd update rsud-server-stack-0lr --status done
-
-# Finalisasi: commit & push
-git add .
-git commit -m "cleanup: remove unused ApproveRequest model"
-git push
-```
+Semua issue telah dikerjakan:
+- **A**: Hapus `ApproveRequest` dari `schemas.py`
+- **B**: Skip — konflik CONTEXT-MAP.md (pin bcrypt disengaja)
+- **C**: export `currentMonth` dari `useAnalytics.ts`, import di `analytics.tsx`
+- **D**: Extract `_refetch_inspection()` — 4 call site pakai helper
+- **E**: Factory hooks `useCreateMutation`/`useUpdateMutation`/`useDeleteMutation`
+- **F**: Generic `MasterDataPage.tsx` — rooms.tsx & items.tsx jadi ~25 baris masing-masing
 
 ---
 
@@ -140,4 +122,5 @@ git push
 | 🔴 Open | Belum dikerjakan |
 | 🟡 In Progress | Sedang dikerjakan (claimed) |
 | 🟢 Done | Selesai |
+| 🔵 Wontfix | Tidak akan dikerjakan (ada alasan) |
 | ⏸️ Blocked | Menunggu issue lain |
