@@ -87,8 +87,9 @@ async def test_room_non_admin_forbidden(client: AsyncClient, db_session: AsyncSe
     resp = await client.post("/api/rooms", json={"name": "ICU"}, headers=headers)
     assert resp.status_code == 403
 
+    # GET is now public for any authenticated user (Phase 8 — Android sync)
     resp = await client.get("/api/rooms", headers=headers)
-    assert resp.status_code == 403
+    assert resp.status_code == 200
 
 
 # ── Inspection Items ──
@@ -151,3 +152,7 @@ async def test_item_non_admin_forbidden(client: AsyncClient, db_session: AsyncSe
     headers = auth_header(inspector)
     resp = await client.post("/api/inspection-items", json={"name": "Item"}, headers=headers)
     assert resp.status_code == 403
+
+    # GET is now public for any authenticated user (Phase 8 — Android sync)
+    resp = await client.get("/api/inspection-items", headers=headers)
+    assert resp.status_code == 200

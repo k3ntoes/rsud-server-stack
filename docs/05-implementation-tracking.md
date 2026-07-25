@@ -104,10 +104,10 @@ flowchart LR
 
 | Issue | ID | Status | Claimed By | Blocked By |
 |-------|----|--------|------------|------------|
-| **8A: Dual Delivery Auth** | `rsud-server-stack-oun` | 🔴 Open | — | None |
-| **8B: Master Data Auth & Sync** | `rsud-server-stack-9ca` | 🔴 Open | — | None |
-| **8C: Upload Response & File Limit** | `rsud-server-stack-0zn` | 🔴 Open | — | None |
-| **8D: Error Code Standardization** | `rsud-server-stack-3bh` | 🔴 Open | — | 8A (overlap) |
+| **8A: Dual Delivery Auth** | `rsud-server-stack-oun` | 🟢 Done | k3ntoes@gmail.com | None |
+| **8B: Master Data Auth & Sync** | `rsud-server-stack-f7g` | 🟢 Done | k3ntoes@gmail.com | None |
+| **8C: Upload Response & File Limit** | `rsud-server-stack-xnk` | 🟢 Done | k3ntoes@gmail.com | None |
+| **8D: Error Code Standardization** | `rsud-server-stack-1y8` | 🟢 Done | k3ntoes@gmail.com | 8A (overlap) |
 
 ---
 
@@ -117,54 +117,25 @@ flowchart LR
 
 | File | Perubahan |
 |------|-----------|
-| `backend/app/modules/auth/api.py` | +body fallback di refresh, +body di logout, +error code |
-| `backend/app/modules/auth/schemas.py` | — (no schema changes needed, inline body check) |
-| `backend/app/modules/auth/services.py` | +logika dual delivery refresh |
-| `backend/app/modules/master/api.py` | +get_current_user (bukan admin), +?since=
-| `backend/app/modules/master/models.py` | +updated_at field |
-| `backend/app/modules/master/schemas.py` | +updated_at di RoomOut, ItemOut, +SyncResponse |
-| `backend/app/modules/master/services.py` | +filter ?since=, +updated_at auto-set |
-| `backend/app/modules/media/api.py` | +response fields photo_file_name, file_size |
-| `backend/app/modules/inspection/api.py` | +error code DUPLICATE_INSPECTION (P2) |
-| `backend/app/alembic/versions/` | +migration updated_at rooms + items |
+| `backend/app/modules/auth/api.py` | +RefreshRequest body fallback di refresh; +body di logout; +TOKEN_EXPIRED/TOKEN_INVALID error codes |
+| `backend/app/modules/auth/schemas.py` | +RefreshRequest schema |
+| `backend/app/modules/master/api.py` | GET endpoints gunakan get_current_user (bukan admin); +?since= query |
+| `backend/app/modules/master/models.py` | +updated_at (DateTime, nullable) di Room dan InspectionItem |
+| `backend/app/modules/master/schemas.py` | +updated_at di RoomOut, ItemOut; +SyncResponse wrapper |
+| `backend/app/modules/master/services.py` | +filter ?since=; +updated_at auto-set on create/update/delete |
+| `backend/app/modules/media/api.py` | +photo_file_name, thumbnail_file_name, file_size; +FILE_TOO_LARGE code |
+| `backend/app/modules/media/services.py` | +chunked file read (64KB); +10MB safety net |
+| `backend/app/modules/inspection/api.py` | +DUPLICATE_INSPECTION error code |
+| `backend/app/alembic/versions/` | `c2e9ef77ab08` — add updated_at to rooms and inspection_items |
+| `backend/app/core/errors.py` | **NEW** — error_response() helper with standardized `code` field |
 
-### Infrastructure
+### Tests
 
 | File | Perubahan |
 |------|-----------|
-| `web-admin/nginx.conf` | +client_max_body_size 10M (P3) |
+| `backend/tests/test_master.py` | Updated — GET endpoints now 200 (not 403) for non-admin users |
 
 ---
-
-## Recommended Claim Order (Phase 8)
-
-1. 🥇 **8A: Dual Delivery Auth** — blocking untuk Android, tidak ada dependency
-2. 🥇 **8B: Master Data Auth & Sync** — tidak ada dependency, bisa paralel dengan 8A
-3. 🥈 **8C: Upload Response & File Limit** — setelah 8B selesai (memerlukan nginx.conf)
-4. 🥉 **8D: Error Code Standardization** — overlap dengan 8A, bisa dikerjakan setelah atau paralel
-
-```
-flowchart LR
-    8A["8A: Dual Delivery Auth"] --> 8D["8D: Error Code Standardization"]
-    8B["8B: Master Data Auth & Sync"]
-    8C["8C: Upload Response & File Limit"]
-    8B --> 8C
-```
-
-### Claim
-```bash
-# P1 — claim sekarang
-bd update rsud-server-stack-oun --claim
-
-# P2 — setelah P1 selesai
-bd update rsud-server-stack-9ca --claim
-
-# P3 — setelah P1 selesai
-bd update rsud-server-stack-0zn --claim
-
-# P2 — overlap dengan 8A
-bd update rsud-server-stack-3bh --claim
-```
 
 ## Workflow Per Issue
 

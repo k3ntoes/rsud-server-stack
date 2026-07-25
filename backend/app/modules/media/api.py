@@ -6,8 +6,9 @@ from jose import jwt, JWTError
 
 from app.config import settings
 from app.core.dependencies import get_current_user
+from app.core.errors import error_response
 from app.modules.auth.models import User
-from app.modules.media.services import save_upload, get_file_path, file_exists
+from app.modules.media.services import save_upload, get_file_path, file_exists, MAX_FILE_SIZE
 
 router = APIRouter(prefix="/api", tags=["media"])
 
@@ -17,8 +18,19 @@ async def upload_file(
     file: UploadFile = File(...),
     _: User = Depends(get_current_user),
 ):
-    filename = await save_upload(file)
-    return {"file_name": filename}
+    try:
+        filename, file_size = await save_upload(file)
+    except ValueError as e:
+        return error_response(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=str(e),
+            code="FILE_TOO_LARGE",
+        )
+    return {
+        "photo_file_name": filename,
+        "thumbnail_file_name": None,
+        "file_size": file_size,
+    }
 
 
 @router.get("/media/{filename}")

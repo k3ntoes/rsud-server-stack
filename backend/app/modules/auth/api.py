@@ -5,13 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
+from app.core.errors import error_response
 from app.core.security import create_access_token
 from app.modules.auth.dependencies import get_admin_user
 from app.modules.auth.models import User, UserSession
 from app.modules.auth.schemas import (
     LoginRequest, TokenResponse, UserOut,
     UserCreate, UserUpdate, UserListOut, ChangePasswordRequest,
-    AdminResetPasswordRequest,
+    AdminResetPasswordRequest, RefreshRequest,
 )
 from app.modules.auth.services import (
     authenticate, create_session, refresh_session, create_user,
@@ -30,7 +31,10 @@ async def login(
 ):
     user = await authenticate(db, body.username, body.password)
     if user is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
 
     session = await create_session(db, user)
     access_token = create_access_token({"sub": str(user.id)})
@@ -52,17 +56,31 @@ async def login(
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(
-    request: Request,
-    response: Response,
+    body: RefreshRequest | None = None,
+    request: Request = None,
+    response: Response = None,
     db: AsyncSession = Depends(get_db),
 ):
-    refresh_token = request.cookies.get("refresh_token")
+    # Android sends refresh_token in body; Web sends via httpOnly cookie
+    refresh_token = None
+    if body and body.refresh_token:
+        refresh_token = body.refresh_token
     if not refresh_token:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="No refresh token")
+        refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        return error_response(
+            status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired",
+            code="TOKEN_EXPIRED",
+        )
 
     result = await refresh_session(db, refresh_token)
     if result is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+        return error_response(
+            status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            code="TOKEN_INVALID",
+        )
 
     new_access, new_refresh, user = result
     response.set_cookie(
@@ -81,11 +99,18 @@ async def refresh(
 
 @router.post("/logout")
 async def logout(
-    request: Request,
-    response: Response,
+    body: RefreshRequest | None = None,
+    request: Request = None,
+    response: Response = None,
     db: AsyncSession = Depends(get_db),
 ):
-    refresh_token = request.cookies.get("refresh_token")
+    # Android sends refresh_token in body; Web sends via httpOnly cookie
+    refresh_token = None
+    if body and body.refresh_token:
+        refresh_token = body.refresh_token
+    if not refresh_token:
+        refresh_token = request.cookies.get("refresh_token")
+
     if refresh_token:
         result = await db.execute(
             select(UserSession).where(UserSession.refresh_token == refresh_token)

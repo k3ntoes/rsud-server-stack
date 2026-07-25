@@ -1,12 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.dependencies import get_current_user
 from app.modules.auth.dependencies import get_admin_user
 from app.modules.auth.models import User
 from app.modules.master.schemas import (
     RoomCreate, RoomUpdate, RoomOut,
     ItemCreate, ItemUpdate, ItemOut,
+    SyncResponse,
 )
 from app.modules.master.services import (
     list_rooms, get_room, create_room, update_room, delete_room,
@@ -18,19 +22,27 @@ router = APIRouter(prefix="/api", tags=["master"])
 
 # ── Rooms ──
 
-@router.get("/rooms", response_model=list[RoomOut])
+@router.get("/rooms")
 async def get_rooms(
+    since: str | None = Query(None, description="Sync timestamp ISO 8601"),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_current_user),
 ):
-    return await list_rooms(db)
+    dt = datetime.fromisoformat(since) if since else None
+    data = await list_rooms(db, dt)
+    if since:
+        return SyncResponse(
+            data=[RoomOut.model_validate(r).model_dump() for r in data],
+            synced_at=datetime.now(timezone.utc),
+        )
+    return [RoomOut.model_validate(r) for r in data]
 
 
 @router.get("/rooms/{room_id}", response_model=RoomOut)
 async def get_room_by_id(
     room_id: int,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_current_user),
 ):
     room = await get_room(db, room_id)
     if room is None or not room.is_active:
@@ -75,19 +87,27 @@ async def delete_room_endpoint(
 
 # ── Inspection Items ──
 
-@router.get("/inspection-items", response_model=list[ItemOut])
+@router.get("/inspection-items")
 async def get_items(
+    since: str | None = Query(None, description="Sync timestamp ISO 8601"),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_current_user),
 ):
-    return await list_items(db)
+    dt = datetime.fromisoformat(since) if since else None
+    data = await list_items(db, dt)
+    if since:
+        return SyncResponse(
+            data=[ItemOut.model_validate(i).model_dump() for i in data],
+            synced_at=datetime.now(timezone.utc),
+        )
+    return [ItemOut.model_validate(i) for i in data]
 
 
 @router.get("/inspection-items/{item_id}", response_model=ItemOut)
 async def get_item_by_id(
     item_id: int,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_current_user),
 ):
     item = await get_item(db, item_id)
     if item is None or not item.is_active:

@@ -48,6 +48,10 @@ class AdminResetPasswordRequest(BaseModel):
     new_password: str = Field(min_length=6)
 
 
+class RefreshRequest(BaseModel):
+    refresh_token: str | None = None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str

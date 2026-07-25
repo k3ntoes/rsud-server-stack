@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -13,6 +15,7 @@ class RoomOut(BaseModel):
     id: int
     name: str
     is_active: bool
+    updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
@@ -29,5 +32,11 @@ class ItemOut(BaseModel):
     id: int
     name: str
     is_active: bool
+    updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+
+class SyncResponse(BaseModel):
+    data: list
+    synced_at: datetime

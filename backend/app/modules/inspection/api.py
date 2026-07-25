@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
+from app.core.errors import error_response
 from app.modules.auth.dependencies import get_supervisor_user
 from app.modules.auth.models import User
 from app.modules.inspection.schemas import (
@@ -28,9 +29,10 @@ async def create_inspection(
     except ValueError as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     except Exception:
-        raise HTTPException(
+        return error_response(
             status.HTTP_409_CONFLICT,
-            detail="Duplicate inspection or invalid data",
+            detail="Duplicate inspection",
+            code="DUPLICATE_INSPECTION",
         )
 
 
