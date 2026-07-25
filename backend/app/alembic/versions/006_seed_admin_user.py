@@ -26,8 +26,11 @@ def upgrade() -> None:
         conn.execute(
             sa.text(
                 "INSERT INTO users (username, password_hash, role, is_active) "
-                "VALUES ('admin', :hash, 'admin_ppi', 1)"
-            ).bindparams(hash=hash_password("admin123"))
+                "VALUES ('admin', :hash, 'admin_ppi', :is_active)"
+            ).bindparams(
+                hash=hash_password("admin123"),
+                is_active=True,
+            )
         )
 
 
