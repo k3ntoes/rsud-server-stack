@@ -206,9 +206,9 @@ This project uses **graphify** (v0.9.23, installed at `/home/kentoes/.local/bin/
 
 | Scope | Nodes | Links | Communities |
 |-------|-------|-------|-------------|
-| `backend/` | 266 | 757 | 27 |
-| `web-admin/` | 176 | 256 | 15 |
-| **Merged** (`graphify-out/graph.json`) | **442** | **1013** | — (per-project) |
+| `backend/` | 396 | 988 | 36 |
+| `web-admin/` | 201 | 272 | 15 |
+| **Merged** (`graphify-out/graph.json`) | **597** | **1260** | — (per-project) |
 
 ## Monorepo Update (Correct Command)
 

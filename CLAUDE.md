@@ -19,7 +19,7 @@ Gunakan urutan ini — jangan langsung baca file:
 
 ## ➊ Graphify — Pahami Codebase Internal
 
-Graphify (v0.9.23) — **442 node, 1,013 edges**. Gunakan sebelum membaca file:
+Graphify (v0.9.23) — **597 node, 1,260 edges**. Gunakan sebelum membaca file:
 
 ```bash
 graphify query "Bagaimana alur login?"   # ~100-500 token vs ~ribuan token baca file
