@@ -76,7 +76,7 @@ Setiap AI agent **WAJIB** melakukan ini sebelum menyentuh kode:
    # Frontend (typecheck)
    cd web-admin && npx tsc -b
    ```
-2. **`bd update <issue-id> --status done`** — tandai selesai di beads
+2. **`bd update <issue-id> --status closed`** — tandai selesai di beads
 3. **Update tracking file ini** — ubah status issue di tabel atas menjadi 🟢 Done
 4. **Commit & push**:
    ```bash
@@ -110,7 +110,7 @@ Semua issue telah dikerjakan:
 - [ ] Tidak ada duplikasi yang tidak perlu
 - [ ] Sesuai dengan ADRs dan CONTEXT.md
 - [ ] Update tracking file ini (status issue di tabel)
-- [ ] Beads issue ditutup (`bd update <id> --status done`)
+- [ ] Beads issue ditutup (`bd update <id> --status closed`)
 - [ ] Commit & push sudah dilakukan
 
 ---

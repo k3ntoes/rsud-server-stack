@@ -166,8 +166,9 @@ bd update <issue-id> --status closed
 ## Workflow Per Issue
 
 ### Sebelum Mengerjakan
-1. **Baca CONTEXT.md terkait** — pahami glossary dan key decisions domain
-2. **Baca CODING-RULES.md** — pahami YAGNI/KISS/DRY
+1. **Baca CODING-RULES.md** — pahami YAGNI/KISS/DRY, aturan keamanan, research workflow
+   - File ini tidak auto-read — agent WAJIB baca manual.
+2. **Baca CONTEXT.md terkait** — pahami glossary dan key decisions domain
 3. **Baca ADR terkait** — cek di `docs/adr/`
 4. **Claim issue**: `bd update <issue-id> --claim`
 5. **Update tracking file** — ubah status issue di tabel atas menjadi 🟡 In Progress

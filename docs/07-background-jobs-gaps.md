@@ -91,15 +91,16 @@ bd show rsud-server-stack-sgd
 bd show rsud-server-stack-ttj
 
 # Tandai selesai (setelah implementasi & test)
-bd update rsud-server-stack-8x5 --status done
-bd update rsud-server-stack-sgd --status done
-bd update rsud-server-stack-ttj --status done
+bd update rsud-server-stack-8x5 --status closed
+bd update rsud-server-stack-sgd --status closed
+bd update rsud-server-stack-ttj --status closed
 ```
 
 ---
 
 ## Pre-Implementation Checklist (per GAP)
 
+- [ ] **Baca CODING-RULES.md** — pahami YAGNI/KISS/DRY, aturan keamanan, research workflow
 - [ ] Baca `backend/app/modules/background/CONTEXT.md`
 - [ ] Baca `backend/app/modules/analytics/CONTEXT.md`
 - [ ] Jalankan `bd update <issue-id> --claim`
@@ -112,7 +113,7 @@ bd update rsud-server-stack-ttj --status done
 - [ ] CONTEXT.md sudah diupdate jika ada perubahan
 - [ ] Tidak ada duplikasi yang tidak perlu
 - [ ] Status di tracking file ini diupdate
-- [ ] `bd update <issue-id> --status done`
+- [ ] `bd update <issue-id> --status closed`
 
 ---
 

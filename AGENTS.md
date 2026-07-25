@@ -8,6 +8,8 @@
 
 > **Mulailah dengan `CLAUDE.md`** jika Anda AI agent yang mendukung auto-read. Jika tidak, baca `AGENTS.md` ini untuk panduan lengkap.
 
+> ⚠️ **`CODING-RULES.md` tidak auto-read!** Agent WAJIB membaca manual sebagai langkah #0 sebelum claim issue / implement kode.
+
 ---
 
 ## 🧭 Graphify-First Exploration
@@ -69,6 +71,11 @@ Multi-context layout: `CONTEXT-MAP.md` at root points to per-context `CONTEXT.md
 
 ### Always Do
 
+- **WAJIB: Baca `CODING-RULES.md` SEBELUM claim issue atau implementasi kode.**
+  - `CODING-RULES.md` berisi YAGNI/KISS/DRY, max 300 baris/file, aturan keamanan, research workflow (Graphify/GitNexus/Context7), dan checklist pre-commit.
+  - File ini **tidak auto-read** oleh AI tools — agent harus membaca manual.
+  - Ini adalah **langkah #0** — dilakukan SEBELUM `bd update --claim` atau menulis kode apapun.
+
 - **MUST create a Beads issue before starting work on a new change.**
   - Before modifying any file, run `bd create "<title>" --body "<description>"` to create a tracking issue.
   - The issue title should clearly describe what will be changed and why.
@@ -84,14 +91,15 @@ Multi-context layout: `CONTEXT-MAP.md` at root points to per-context `CONTEXT.md
 
 ### Never Do
 
+- NEVER claim an issue (`bd update --claim`) without first reading `CODING-RULES.md`.
 - NEVER make changes without a corresponding Beads issue, unless the change is trivial (typo, rename) or explicitly requested by the user without one.
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **rsud-server-stack** (v1.6.9, 1191 symbols, 2296 relationships, 78 execution flows, 25 communities). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **rsud-server-stack** (1476 symbols, 3138 relationships, 105 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
-> Index stale? Run `gitnexus analyze` from the project root (globally installed at `/home/kentoes/.nvm/versions/node/v24.18.0/bin/gitnexus`). Alternate: `node .gitnexus/run.cjs analyze`.
+> Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
 ## Always Do
 

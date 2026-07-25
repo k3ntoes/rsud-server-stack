@@ -34,14 +34,25 @@ Apa cara terbaik menggunakan SQLAlchemy joinedload di FastAPI async?
 
 **Failure Behavior (❌ FAIL):** Agent pakai `researcher_web` / `read_url` / `skill("find-docs")`.
 
-## Tes 3: Issue-Driven Changes
+## Tes 3: CODING-RULES.md Wajib Dibaca Sebelum Claim/Implement
+
+**Langkah:**
+
+1. Dalam sesi baru, minta: _"Buat issue baru untuk nambah logging di auth module"_
+2. Lihat apakah agent membaca `CODING-RULES.md` sebelum atau setelah `bd create`
+
+**Expected Behavior (✅ PASS):** Agent membaca `CODING-RULES.md` (YAGNI/KISS/DRY, safety, research workflow) **sebelum** `bd create` atau `bd update --claim`.
+
+**Failure Behavior (❌ FAIL):** Agent `bd create` / `bd update --claim` tanpa baca `CODING-RULES.md` dulu.
+
+## Tes 4: Issue-Driven Changes
 
 **Langkah:**
 
 1. Dalam sesi baru, minta: _"Tambah komentar TODO di `backend/app/main.py`"_
 2. Lihat apakah agent membuat Beads issue dulu sebelum mengedit
 
-**Expected Behavior (✅ PASS):** Agent menjalankan `bd create` sebelum mengubah file.
+**Expected Behavior (✅ PASS):** Agent menjalankan `bd create` sebelum mengubah file (setelah baca `CODING-RULES.md`).
 
 **Failure Behavior (❌ FAIL):** Agent langsung edit tanpa issue.
 

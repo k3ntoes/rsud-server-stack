@@ -12,10 +12,12 @@ curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/instal
 
 ## Conventions
 
+> ⚠️ **Sebelum claim issue atau implementasi kode, WAJIB baca `CODING-RULES.md`** — file ini tidak auto-read oleh AI tools.
+
 - **Create an issue**: `bd create "<title>" --body "<description>"`
 - **List issues**: `bd list`
 - **View an issue**: `bd show <issue-id>`
-- **Update issue status**: `bd update <issue-id> --claim` (claim) / `bd update <issue-id> --status done` (resolve)
+- **Update issue status**: `bd update <issue-id> --claim` (claim) / `bd update <issue-id> --status closed` (resolve)
 - **Add comments**: `bd update <issue-id> --comment "<comment>"`
 - **Sync with remote**: `bd dolt push` / `bd dolt pull`
 
@@ -41,4 +43,4 @@ Used by `/wayfinder`. The **map** is a Beads issue that groups related child tic
 - **Blocking**: Recorded in the issue body as a `Blocked by: <issue-id>, <issue-id>` line.
 - **Frontier**: Scan open, unblocked, and unclaimed issues via `bd list`.
 - **Claim**: `bd update <issue-id> --claim`
-- **Resolve**: `bd update <issue-id> --status done`, then append a context pointer to the map.
+- **Resolve**: `bd update <issue-id> --status closed`, then append a context pointer to the map.

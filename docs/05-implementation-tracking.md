@@ -141,9 +141,10 @@ flowchart LR
 
 ### Sebelum Mengerjakan
 
-1. **Baca CONTEXT.md terkait** — pahami glossary dan key decisions domain
+1. **Baca CODING-RULES.md** — pahami YAGNI/KISS/DRY, max 300 baris, aturan gitnexus & context7
+   - File ini tidak auto-read — agent WAJIB baca manual.
+2. **Baca CONTEXT.md terkait** — pahami glossary dan key decisions domain
    - Cari di `CONTEXT-MAP.md` → buka `src/<domain>/CONTEXT.md`
-2. **Baca CODING-RULES.md** — pahami YAGNI/KISS/DRY, max 300 baris, aturan gitnexus & context7
 3. **Baca ADR terkait** — cek di `docs/adr/` untuk keputusan arsitektural yang relevan
 4. **Claim issue**: `bd update <issue-id> --claim`
 5. **Update tracking file** — ubah status issue di tabel atas menjadi 🟡 In Progress
@@ -158,7 +159,7 @@ flowchart LR
 
 ### Setelah Selesai
 
-1. **`bd update <issue-id> --status done`** — tandai selesai di beads
+1. **`bd update <issue-id> --status closed`** — tandai selesai di beads
 2. **Update tracking file ini** — ubah status di tabel atas menjadi 🟢 Done
 3. **GitNexus `detect_changes()`** — verifikasi blast radius
 4. **Jika issue membuka dependensi (blocked issues)** — notifikasi bahwa issue tersebut siap dikerjakan
@@ -185,7 +186,7 @@ bd update rsud-server-stack-5xr --claim
 bd show rsud-server-stack-5xr
 
 # Tandai selesai
-bd update rsud-server-stack-5xr --status done
+bd update rsud-server-stack-5xr --status closed
 ```
 
 ---

@@ -27,6 +27,32 @@
       "tsconfig_app_include"
     ],
     "1": [
+      "src_hooks_useauth",
+      "src_hooks_useauth_authcontext",
+      "src_hooks_useauth_authprovider",
+      "src_hooks_useauth_authstate",
+      "src_hooks_useauth_useauth",
+      "src_hooks_useauth_user",
+      "src_hooks_useinspections",
+      "src_hooks_useinspections_inspectiondetail",
+      "src_hooks_useinspections_inspectionlistitem",
+      "src_hooks_useinspections_inspectionout",
+      "src_hooks_useinspections_inspectionphoto",
+      "src_hooks_useinspections_listparams",
+      "src_hooks_useinspections_useapproveinspection",
+      "src_hooks_useinspections_useinspection",
+      "src_hooks_useinspections_userejectinspection",
+      "src_lib_api",
+      "src_lib_api_accesstoken",
+      "src_lib_api_apirequest",
+      "src_lib_api_setaccesstoken",
+      "src_lib_api_setonunauthorized",
+      "src_lib_api_tryrefresh",
+      "src_routes_login",
+      "src_routes_login_loginpage",
+      "src_routes_login_route"
+    ],
+    "2": [
       "src_hooks_useusers",
       "src_hooks_useusers_roles",
       "src_hooks_useusers_useadminresetpassword",
@@ -52,7 +78,32 @@
       "src_routes_users_route",
       "src_routes_users_userspage"
     ],
-    "2": [
+    "3": [
+      "src_hooks_useinspections_useinspections",
+      "src_hooks_usemasterdata_userooms",
+      "src_routes_dashboard",
+      "src_routes_dashboard_dashboardpage",
+      "src_routes_dashboard_route",
+      "src_routes_dashboard_usedashboardstats",
+      "src_routes_index",
+      "src_routes_index_route",
+      "src_routes_inspection_detail",
+      "src_routes_inspection_detail_inspectiondetailpage",
+      "src_routes_inspection_detail_photothumb",
+      "src_routes_inspection_detail_route",
+      "src_routes_inspection_detail_scorebadge",
+      "src_routes_inspection_detail_statusbadge",
+      "src_routes_inspections",
+      "src_routes_inspections_inspectionspage",
+      "src_routes_inspections_route",
+      "src_routes_inspections_status_labels",
+      "src_routes_inspections_statuses",
+      "src_routes_protected",
+      "src_routes_protected_protectedroute",
+      "src_routes_root",
+      "src_routes_root_rootroute"
+    ],
+    "4": [
       "src_components_masterdatapage",
       "src_components_masterdatapage_entity",
       "src_components_masterdatapage_masterdatapage",
@@ -75,29 +126,7 @@
       "src_routes_rooms",
       "src_routes_rooms_route"
     ],
-    "3": [
-      "src_hooks_useauth",
-      "src_hooks_useauth_authcontext",
-      "src_hooks_useauth_authprovider",
-      "src_hooks_useauth_authstate",
-      "src_hooks_useauth_user",
-      "src_hooks_useinspections",
-      "src_hooks_useinspections_inspectiondetail",
-      "src_hooks_useinspections_inspectionlistitem",
-      "src_hooks_useinspections_inspectionout",
-      "src_hooks_useinspections_inspectionphoto",
-      "src_hooks_useinspections_listparams",
-      "src_hooks_useinspections_useapproveinspection",
-      "src_hooks_useinspections_useinspection",
-      "src_hooks_useinspections_userejectinspection",
-      "src_lib_api",
-      "src_lib_api_accesstoken",
-      "src_lib_api_apirequest",
-      "src_lib_api_setaccesstoken",
-      "src_lib_api_setonunauthorized",
-      "src_lib_api_tryrefresh"
-    ],
-    "4": [
+    "5": [
       "ref_es2023",
       "ref_vite_config_ts",
       "tsconfig_node",
@@ -118,7 +147,7 @@
       "tsconfig_node_compileroptions_target",
       "tsconfig_node_include"
     ],
-    "5": [
+    "6": [
       "autoprefixer",
       "package_devdependencies",
       "package_devdependencies_autoprefixer",
@@ -137,7 +166,7 @@
       "vite",
       "vitejs_plugin_react"
     ],
-    "6": [
+    "7": [
       "package",
       "package_dependencies",
       "package_dependencies_react",
@@ -156,43 +185,7 @@
       "tanstack_react_query",
       "tanstack_react_router"
     ],
-    "7": [
-      "src_hooks_useinspections_useinspections",
-      "src_hooks_usemasterdata_userooms",
-      "src_routes_dashboard",
-      "src_routes_dashboard_dashboardpage",
-      "src_routes_dashboard_route",
-      "src_routes_dashboard_usedashboardstats",
-      "src_routes_inspection_detail",
-      "src_routes_inspection_detail_inspectiondetailpage",
-      "src_routes_inspection_detail_photothumb",
-      "src_routes_inspection_detail_route",
-      "src_routes_inspection_detail_scorebadge",
-      "src_routes_inspection_detail_statusbadge",
-      "src_routes_inspections",
-      "src_routes_inspections_inspectionspage",
-      "src_routes_inspections_route",
-      "src_routes_inspections_status_labels",
-      "src_routes_inspections_statuses"
-    ],
     "8": [
-      "src_components_layout",
-      "src_components_layout_layout",
-      "src_components_layout_navitems",
-      "src_components_layout_pwmodal",
-      "src_hooks_useauth_useauth",
-      "src_hooks_useusers_usechangepassword",
-      "src_routes_index",
-      "src_routes_index_route",
-      "src_routes_login",
-      "src_routes_login_loginpage",
-      "src_routes_login_route",
-      "src_routes_protected",
-      "src_routes_protected_protectedroute",
-      "src_routes_root",
-      "src_routes_root_rootroute"
-    ],
-    "9": [
       "src_hooks_useanalytics",
       "src_hooks_useanalytics_currentweekmonth",
       "src_hooks_useanalytics_issuefrequency",
@@ -206,68 +199,65 @@
       "src_routes_analytics_route",
       "src_routes_analytics_scorebar"
     ],
-    "10": [
-      "components_layout",
-      "hooks_useanalytics",
-      "hooks_useauth",
-      "hooks_useinspections",
-      "hooks_usemasterdata",
-      "lib_api",
-      "protected_layout",
-      "tanstack_query"
+    "9": [
+      "src_components_layout",
+      "src_components_layout_layout",
+      "src_components_layout_navitems",
+      "src_components_layout_pwmodal",
+      "src_hooks_useusers_usechangepassword"
     ],
-    "11": [
+    "10": [
       "src_components_modal",
       "src_components_modal_modal",
       "src_components_modal_modalprops"
     ],
-    "12": [
+    "11": [
       "tsconfig",
       "tsconfig_files",
       "tsconfig_references"
     ],
-    "13": [
-      "components_modal"
-    ],
-    "14": [
+    "12": [
       "context_md"
     ],
-    "15": [
+    "13": [
       "fastapi_backend"
     ],
-    "16": [
+    "14": [
       "index_html"
     ],
-    "17": [
+    "15": [
       "postcss_config"
     ],
-    "18": [
+    "16": [
       "src_vite_env_d"
     ],
-    "19": [
+    "17": [
       "tailwind_config"
     ],
-    "20": [
+    "18": [
+      "tanstack_query"
+    ],
+    "19": [
       "tanstack_router"
     ],
-    "21": [
+    "20": [
       "vite_config"
     ]
   },
   "cohesion": {
     "0": 0.08333333333333333,
-    "1": 0.14855072463768115,
-    "2": 0.17142857142857143,
-    "3": 0.16842105263157894,
-    "4": 0.10526315789473684,
-    "5": 0.11764705882352941,
+    "1": 0.13768115942028986,
+    "2": 0.14855072463768115,
+    "3": 0.1422924901185771,
+    "4": 0.17142857142857143,
+    "5": 0.10526315789473684,
     "6": 0.11764705882352941,
-    "7": 0.18382352941176472,
-    "8": 0.18095238095238095,
-    "9": 0.3181818181818182,
-    "10": 0.2857142857142857,
+    "7": 0.11764705882352941,
+    "8": 0.3181818181818182,
+    "9": 0.5,
+    "10": 0.6666666666666666,
     "11": 0.6666666666666666,
-    "12": 0.6666666666666666,
+    "12": 1.0,
     "13": 1.0,
     "14": 1.0,
     "15": 1.0,
@@ -275,8 +265,7 @@
     "17": 1.0,
     "18": 1.0,
     "19": 1.0,
-    "20": 1.0,
-    "21": 1.0
+    "20": 1.0
   },
   "gods": [
     {
@@ -388,7 +377,7 @@
     }
   ],
   "tokens": {
-    "input": 2689,
-    "output": 1001
+    "input": 0,
+    "output": 0
   }
 }
