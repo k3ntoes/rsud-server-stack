@@ -16,6 +16,8 @@
       "app_core_database_enable_sqlite_fk",
       "app_core_database_get_db",
       "app_core_dependencies",
+      "app_core_dependencies_get_current_user",
+      "app_core_dependencies_py_asyncsession",
       "app_core_security",
       "app_core_security_create_access_token",
       "app_core_security_create_refresh_token",
@@ -25,6 +27,9 @@
       "app_modules_analytics_models",
       "app_modules_analytics_models_issuefrequencystats",
       "app_modules_analytics_models_roommonthlystats",
+      "app_modules_analytics_services",
+      "app_modules_auth_dependencies",
+      "app_modules_auth_dependencies_get_supervisor_user",
       "app_modules_auth_models",
       "app_modules_auth_models_usersession",
       "app_modules_auth_seed",
@@ -47,6 +52,7 @@
       "app_seed_seed",
       "basesettings",
       "declarativebase",
+      "httpauthorizationcredentials",
       "tests_conftest",
       "tests_conftest_client",
       "tests_conftest_db_session",
@@ -111,49 +117,6 @@
       "tests_test_auth_test_update_user_role"
     ],
     "2": [
-      "app_core_dependencies_get_current_user",
-      "app_core_dependencies_py_asyncsession",
-      "app_modules_auth_dependencies",
-      "app_modules_auth_dependencies_get_admin_user",
-      "app_modules_auth_dependencies_get_supervisor_user",
-      "app_modules_auth_models_user",
-      "app_modules_master_api",
-      "app_modules_master_api_create_item_endpoint",
-      "app_modules_master_api_create_room_endpoint",
-      "app_modules_master_api_delete_item_endpoint",
-      "app_modules_master_api_delete_room_endpoint",
-      "app_modules_master_api_get_item_by_id",
-      "app_modules_master_api_get_items",
-      "app_modules_master_api_get_room_by_id",
-      "app_modules_master_api_get_rooms",
-      "app_modules_master_api_py_asyncsession",
-      "app_modules_master_api_update_item_endpoint",
-      "app_modules_master_api_update_room_endpoint",
-      "app_modules_master_models_inspectionitem",
-      "app_modules_master_models_room",
-      "app_modules_master_schemas",
-      "app_modules_master_schemas_itemcreate",
-      "app_modules_master_schemas_itemout",
-      "app_modules_master_schemas_itemupdate",
-      "app_modules_master_schemas_py_basemodel",
-      "app_modules_master_schemas_roomcreate",
-      "app_modules_master_schemas_roomout",
-      "app_modules_master_schemas_roomupdate",
-      "app_modules_master_services",
-      "app_modules_master_services_create_item",
-      "app_modules_master_services_create_room",
-      "app_modules_master_services_delete_item",
-      "app_modules_master_services_delete_room",
-      "app_modules_master_services_get_item",
-      "app_modules_master_services_get_room",
-      "app_modules_master_services_list_items",
-      "app_modules_master_services_list_rooms",
-      "app_modules_master_services_py_asyncsession",
-      "app_modules_master_services_update_item",
-      "app_modules_master_services_update_room",
-      "httpauthorizationcredentials"
-    ],
-    "3": [
       "app_modules_auth_api",
       "app_modules_auth_api_admin_reset_password_endpoint",
       "app_modules_auth_api_change_password_endpoint",
@@ -193,7 +156,7 @@
       "response",
       "usersession"
     ],
-    "4": [
+    "3": [
       "tests_conftest_auth_header",
       "tests_conftest_create_user",
       "tests_conftest_py_asyncsession",
@@ -231,6 +194,44 @@
       "tests_test_master_test_room_non_admin_forbidden",
       "tests_test_master_test_update_item",
       "tests_test_master_test_update_room"
+    ],
+    "4": [
+      "app_modules_auth_dependencies_get_admin_user",
+      "app_modules_auth_models_user",
+      "app_modules_master_api",
+      "app_modules_master_api_create_item_endpoint",
+      "app_modules_master_api_create_room_endpoint",
+      "app_modules_master_api_delete_item_endpoint",
+      "app_modules_master_api_delete_room_endpoint",
+      "app_modules_master_api_get_item_by_id",
+      "app_modules_master_api_get_items",
+      "app_modules_master_api_get_room_by_id",
+      "app_modules_master_api_get_rooms",
+      "app_modules_master_api_py_asyncsession",
+      "app_modules_master_api_update_item_endpoint",
+      "app_modules_master_api_update_room_endpoint",
+      "app_modules_master_models_inspectionitem",
+      "app_modules_master_models_room",
+      "app_modules_master_schemas",
+      "app_modules_master_schemas_itemcreate",
+      "app_modules_master_schemas_itemout",
+      "app_modules_master_schemas_itemupdate",
+      "app_modules_master_schemas_py_basemodel",
+      "app_modules_master_schemas_roomcreate",
+      "app_modules_master_schemas_roomout",
+      "app_modules_master_schemas_roomupdate",
+      "app_modules_master_services",
+      "app_modules_master_services_create_item",
+      "app_modules_master_services_create_room",
+      "app_modules_master_services_delete_item",
+      "app_modules_master_services_delete_room",
+      "app_modules_master_services_get_item",
+      "app_modules_master_services_get_room",
+      "app_modules_master_services_list_items",
+      "app_modules_master_services_list_rooms",
+      "app_modules_master_services_py_asyncsession",
+      "app_modules_master_services_update_item",
+      "app_modules_master_services_update_room"
     ],
     "5": [
       "date",
@@ -271,7 +272,6 @@
       "tests_test_analytics_test_top_issues_ordered_by_frequency_desc"
     ],
     "6": [
-      "app_modules_background_services_create_job",
       "app_modules_inspection_api",
       "app_modules_inspection_api_approve_inspection_endpoint",
       "app_modules_inspection_api_create_inspection",
@@ -309,6 +309,7 @@
       "app_modules_background_models",
       "app_modules_background_models_backgroundjob",
       "app_modules_background_services",
+      "app_modules_background_services_create_job",
       "app_modules_background_services_fetch_pending_jobs",
       "app_modules_background_services_generate_thumbnail",
       "app_modules_background_services_mark_job",
@@ -339,7 +340,6 @@
       "app_modules_analytics_schemas_issuefrequencyout",
       "app_modules_analytics_schemas_py_basemodel",
       "app_modules_analytics_schemas_roomscoreout",
-      "app_modules_analytics_services",
       "app_modules_analytics_services_get_inspector_performance",
       "app_modules_analytics_services_get_lowest_rooms",
       "app_modules_analytics_services_get_top_issues",
@@ -348,6 +348,17 @@
       "roommonthlystats"
     ],
     "9": [
+      "analytics_issue_frequency_stats",
+      "analytics_room_monthly_stats",
+      "app_modules_analytics_context",
+      "app_modules_background_context",
+      "app_modules_inspection_context",
+      "app_modules_media_context",
+      "background_jobs_table",
+      "inspection_photos_table",
+      "inspection_table"
+    ],
+    "10": [
       "app_modules_media_services",
       "app_modules_media_services_ensure_upload_dir",
       "app_modules_media_services_file_exists",
@@ -356,91 +367,101 @@
       "app_modules_media_services_safe_filename",
       "app_modules_media_services_save_upload"
     ],
-    "10": [
+    "11": [
       "app_alembic_versions_001_initial_users_sessions",
       "app_alembic_versions_001_initial_users_sessions_downgrade",
       "app_alembic_versions_001_initial_users_sessions_upgrade"
     ],
-    "11": [
+    "12": [
       "app_alembic_versions_002_rooms_inspection_items",
       "app_alembic_versions_002_rooms_inspection_items_downgrade",
       "app_alembic_versions_002_rooms_inspection_items_upgrade"
     ],
-    "12": [
+    "13": [
       "app_alembic_versions_003_inspections",
       "app_alembic_versions_003_inspections_downgrade",
       "app_alembic_versions_003_inspections_upgrade"
     ],
-    "13": [
+    "14": [
       "app_alembic_versions_004_analytics_background_jobs",
       "app_alembic_versions_004_analytics_background_jobs_downgrade",
       "app_alembic_versions_004_analytics_background_jobs_upgrade"
     ],
-    "14": [
+    "15": [
       "app_alembic_versions_005_background_jobs_retry",
       "app_alembic_versions_005_background_jobs_retry_downgrade",
       "app_alembic_versions_005_background_jobs_retry_upgrade"
     ],
-    "15": [
+    "16": [
+      "app_modules_auth_context",
+      "user_sessions_table",
+      "users_table"
+    ],
+    "17": [
+      "app_modules_master_context",
+      "inspection_items_table",
+      "rooms_table"
+    ],
+    "18": [
       "docker_entrypoint",
       "docker_entrypoint_sh__entry"
     ],
-    "16": [
+    "19": [
       "app_core_init"
     ],
-    "17": [
+    "20": [
       "app_init"
     ],
-    "18": [
+    "21": [
       "app_modules_analytics_init"
     ],
-    "19": [
+    "22": [
       "app_modules_auth_init"
     ],
-    "20": [
+    "23": [
       "app_modules_background_init"
     ],
-    "21": [
+    "24": [
       "app_modules_init"
     ],
-    "22": [
+    "25": [
       "app_modules_inspection_init"
     ],
-    "23": [
+    "26": [
       "app_modules_inspection_schemas_py_basemodel"
     ],
-    "24": [
+    "27": [
       "app_modules_media_api_py_uploadfile"
     ],
-    "25": [
+    "28": [
       "app_modules_media_init"
     ],
-    "26": [
+    "29": [
       "pkg_rsud_server"
     ],
-    "27": [
+    "30": [
       "tests_init"
     ]
   },
   "cohesion": {
-    "0": 0.07619738751814223,
+    "0": 0.06779661016949153,
     "1": 0.0965166908563135,
-    "2": 0.14390243902439023,
-    "3": 0.15220483641536273,
-    "4": 0.24624624624624625,
+    "2": 0.15220483641536273,
+    "3": 0.24624624624624625,
+    "4": 0.173015873015873,
     "5": 0.13015873015873017,
-    "6": 0.17137096774193547,
-    "7": 0.18571428571428572,
-    "8": 0.22875816993464052,
-    "9": 0.42857142857142855,
-    "10": 0.6666666666666666,
+    "6": 0.17634408602150536,
+    "7": 0.18181818181818182,
+    "8": 0.22794117647058823,
+    "9": 0.3611111111111111,
+    "10": 0.42857142857142855,
     "11": 0.6666666666666666,
     "12": 0.6666666666666666,
     "13": 0.6666666666666666,
     "14": 0.6666666666666666,
-    "15": 1.0,
-    "16": 1.0,
-    "17": 1.0,
+    "15": 0.6666666666666666,
+    "16": 0.6666666666666666,
+    "17": 0.6666666666666666,
     "18": 1.0,
     "19": 1.0,
     "20": 1.0,
@@ -450,7 +471,10 @@
     "24": 1.0,
     "25": 1.0,
     "26": 1.0,
-    "27": 1.0
+    "27": 1.0,
+    "28": 1.0,
+    "29": 1.0,
+    "30": 1.0
   },
   "gods": [
     {
@@ -562,7 +586,7 @@
     }
   ],
   "tokens": {
-    "input": 0,
-    "output": 0
+    "input": 4486,
+    "output": 2513
   }
 }

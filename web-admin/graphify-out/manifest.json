@@ -148,5 +148,15 @@
     "mtime": 1784733379.051279,
     "ast_hash": "0fc3a20f731674572ec8a981fcf17271",
     "semantic_hash": "0fc3a20f731674572ec8a981fcf17271"
+  },
+  "CONTEXT.md": {
+    "mtime": 1784734109.395557,
+    "ast_hash": "a2d15d2d6bda273284fe9bfb7e1df6ec",
+    "semantic_hash": "a2d15d2d6bda273284fe9bfb7e1df6ec"
+  },
+  "index.html": {
+    "mtime": 1784721856.7066245,
+    "ast_hash": "9d60e6c4b577dac9760f20be9574eedb",
+    "semantic_hash": "9d60e6c4b577dac9760f20be9574eedb"
   }
 }

@@ -1,12 +1,21 @@
-# ADR-0007: Frontend Auth Pattern — SessionStorage + Auto-Refresh Token
+# ADR-0007: Frontend Auth Pattern — Web Admin (SessionStorage + Auto-Refresh Cookie)
 
-**Status**: Accepted
+**Status**: Accepted (web-specific; lihat ADR-0003 untuk Android dual delivery)
 
 Frontend web-admin menyimpan **Access Token di sessionStorage** dan melakukan **auto-refresh via httpOnly cookie** saat menerima HTTP 401 dari backend.
 
+> **Catatan**: ADR ini khusus untuk **Web Admin (React)**. Android Client menggunakan mekanisme berbeda — lihat ADR-0003 bagian "Dual Delivery Refresh Token" dan `docs/android-to-be-api-contract.md`.
+
 ## Context
 
-JWT auth di backend menggunakan dual-token pattern (ADR-0003): Access Token (15 menit) + Refresh Token (7 hari, httpOnly cookie). Frontend perlu menyimpan Access Token di sisi klien dan secara otomatis merefreshnya tanpa interupsi user.
+JWT auth di backend menggunakan dual-token pattern (ADR-0003 yang telah diupdate): Access Token (15 menit) + Refresh Token (7 hari).
+
+| Client | Refresh Token Delivery | Mekanisme Auto-Refresh |
+|--------|----------------------|----------------------|
+| **Web (browser)** | httpOnly cookie | Cookie otomatis dikirim browser saat POST /api/auth/refresh |
+| **Android** | Request body | Interceptor mendeteksi 401 TOKEN_EXPIRED → kirim refresh_token di body |
+
+Frontend web perlu menyimpan Access Token di sisi klien dan secara otomatis merefreshnya tanpa interupsi user.
 
 ## Keputusan
 
@@ -64,4 +73,6 @@ Ketika refresh berhasil, API client mengulangi **request original yang gagal** (
 
 - Lihat `web-admin/src/lib/api.ts` untuk implementasi API client
 - Lihat `web-admin/src/hooks/useAuth.tsx` untuk implementasi AuthContext
-- ADR-0003: JWT Layered Auth dengan httpOnly Refresh Cookie
+- **ADR-0003**: JWT Layered Auth dengan httpOnly Refresh Cookie — **telah diupdate** dengan Dual Delivery untuk Android
+- `docs/android-to-be-api-contract.md` — API contract lengkap dengan Android
+- `docs/adr/0008-user-management-monitoring.md` — fitur user management

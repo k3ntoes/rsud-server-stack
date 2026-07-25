@@ -100,6 +100,72 @@ flowchart LR
 
 ---
 
+### Phase 8 — Android API Contract
+
+| Issue | ID | Status | Claimed By | Blocked By |
+|-------|----|--------|------------|------------|
+| **8A: Dual Delivery Auth** | `rsud-server-stack-oun` | 🔴 Open | — | None |
+| **8B: Master Data Auth & Sync** | `rsud-server-stack-9ca` | 🔴 Open | — | None |
+| **8C: Upload Response & File Limit** | `rsud-server-stack-0zn` | 🔴 Open | — | None |
+| **8D: Error Code Standardization** | `rsud-server-stack-3bh` | 🔴 Open | — | 8A (overlap) |
+
+---
+
+## Phase 8 — Detail Perubahan
+
+### Backend
+
+| File | Perubahan |
+|------|-----------|
+| `backend/app/modules/auth/api.py` | +body fallback di refresh, +body di logout, +error code |
+| `backend/app/modules/auth/schemas.py` | — (no schema changes needed, inline body check) |
+| `backend/app/modules/auth/services.py` | +logika dual delivery refresh |
+| `backend/app/modules/master/api.py` | +get_current_user (bukan admin), +?since=
+| `backend/app/modules/master/models.py` | +updated_at field |
+| `backend/app/modules/master/schemas.py` | +updated_at di RoomOut, ItemOut, +SyncResponse |
+| `backend/app/modules/master/services.py` | +filter ?since=, +updated_at auto-set |
+| `backend/app/modules/media/api.py` | +response fields photo_file_name, file_size |
+| `backend/app/modules/inspection/api.py` | +error code DUPLICATE_INSPECTION (P2) |
+| `backend/app/alembic/versions/` | +migration updated_at rooms + items |
+
+### Infrastructure
+
+| File | Perubahan |
+|------|-----------|
+| `web-admin/nginx.conf` | +client_max_body_size 10M (P3) |
+
+---
+
+## Recommended Claim Order (Phase 8)
+
+1. 🥇 **8A: Dual Delivery Auth** — blocking untuk Android, tidak ada dependency
+2. 🥇 **8B: Master Data Auth & Sync** — tidak ada dependency, bisa paralel dengan 8A
+3. 🥈 **8C: Upload Response & File Limit** — setelah 8B selesai (memerlukan nginx.conf)
+4. 🥉 **8D: Error Code Standardization** — overlap dengan 8A, bisa dikerjakan setelah atau paralel
+
+```
+flowchart LR
+    8A["8A: Dual Delivery Auth"] --> 8D["8D: Error Code Standardization"]
+    8B["8B: Master Data Auth & Sync"]
+    8C["8C: Upload Response & File Limit"]
+    8B --> 8C
+```
+
+### Claim
+```bash
+# P1 — claim sekarang
+bd update rsud-server-stack-oun --claim
+
+# P2 — setelah P1 selesai
+bd update rsud-server-stack-9ca --claim
+
+# P3 — setelah P1 selesai
+bd update rsud-server-stack-0zn --claim
+
+# P2 — overlap dengan 8A
+bd update rsud-server-stack-3bh --claim
+```
+
 ## Workflow Per Issue
 
 ### Sebelum Mengerjakan

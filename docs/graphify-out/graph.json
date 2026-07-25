@@ -1,0 +1,381 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {
+    "hyperedges": [
+      {
+        "id": "backend_modules",
+        "label": "Backend Domain Modules",
+        "nodes": [
+          "backend_auth",
+          "backend_master",
+          "backend_inspection",
+          "backend_media",
+          "backend_analytics",
+          "backend_background"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0
+      },
+      {
+        "id": "audit_remediation_flow",
+        "label": "Audit and Remediation Flow",
+        "nodes": [
+          "08_context_audit",
+          "09_context_gaps_implementation",
+          "07_background_jobs_gaps"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "label": "Core Prompt: RSUD Ajibarang Server Stack",
+      "file_type": "document",
+      "source_file": "00-core-prompt.md",
+      "id": "00_core_prompt",
+      "community": 5,
+      "norm_label": "core prompt: rsud ajibarang server stack"
+    },
+    {
+      "label": "Database Schema & Logic",
+      "file_type": "document",
+      "source_file": "01-database-schema.md",
+      "id": "01_database_schema",
+      "community": 6,
+      "norm_label": "database schema & logic"
+    },
+    {
+      "label": "Product Requirements Document (PRD)",
+      "file_type": "document",
+      "source_file": "02-prd-server.md",
+      "id": "02_prd_server",
+      "community": 7,
+      "norm_label": "product requirements document (prd)"
+    },
+    {
+      "label": "Project Structure",
+      "file_type": "document",
+      "source_file": "03-project-structure.md",
+      "id": "03_project_structure",
+      "community": 0,
+      "norm_label": "project structure"
+    },
+    {
+      "label": "Architecture Overview",
+      "file_type": "document",
+      "source_file": "04-architecture.md",
+      "id": "04_architecture",
+      "community": 2,
+      "norm_label": "architecture overview"
+    },
+    {
+      "label": "Implementation Tracking",
+      "file_type": "document",
+      "source_file": "05-implementation-tracking.md",
+      "id": "05_implementation_tracking",
+      "community": 1,
+      "norm_label": "implementation tracking"
+    },
+    {
+      "label": "Refactoring Tracker",
+      "file_type": "document",
+      "source_file": "06-refactoring-tracker.md",
+      "id": "06_refactoring_tracker",
+      "community": 8,
+      "norm_label": "refactoring tracker"
+    },
+    {
+      "label": "Background Jobs Gap Fix Tracking",
+      "file_type": "document",
+      "source_file": "07-background-jobs-gaps.md",
+      "id": "07_background_jobs_gaps",
+      "community": 3,
+      "norm_label": "background jobs gap fix tracking"
+    },
+    {
+      "label": "Comprehensive CONTEXT Audit",
+      "file_type": "document",
+      "source_file": "08-context-audit.md",
+      "id": "08_context_audit",
+      "community": 4,
+      "norm_label": "comprehensive context audit"
+    },
+    {
+      "label": "CONTEXT Audit GAP Fixes Tracking",
+      "file_type": "document",
+      "source_file": "09-context-gaps-implementation.md",
+      "id": "09_context_gaps_implementation",
+      "community": 4,
+      "norm_label": "context audit gap fixes tracking"
+    },
+    {
+      "label": "Android to Backend API Contract",
+      "file_type": "document",
+      "source_file": "android-to-be-api-contract.md",
+      "id": "android_to_be_api_contract",
+      "community": 1,
+      "norm_label": "android to backend api contract"
+    },
+    {
+      "label": "FastAPI Entry Point",
+      "file_type": "code",
+      "source_file": "backend/app/main.py",
+      "id": "backend_main",
+      "community": 5,
+      "norm_label": "fastapi entry point"
+    },
+    {
+      "label": "Auth Module",
+      "file_type": "code",
+      "source_file": "backend/app/modules/auth/",
+      "id": "backend_auth",
+      "community": 1,
+      "norm_label": "auth module"
+    },
+    {
+      "label": "Master Data Module",
+      "file_type": "code",
+      "source_file": "backend/app/modules/master/",
+      "id": "backend_master",
+      "community": 11,
+      "norm_label": "master data module"
+    },
+    {
+      "label": "Inspection Module",
+      "file_type": "code",
+      "source_file": "backend/app/modules/inspection/",
+      "id": "backend_inspection",
+      "community": 0,
+      "norm_label": "inspection module"
+    },
+    {
+      "label": "Media Module",
+      "file_type": "code",
+      "source_file": "backend/app/modules/media/",
+      "id": "backend_media",
+      "community": 4,
+      "norm_label": "media module"
+    },
+    {
+      "label": "Analytics Module",
+      "file_type": "code",
+      "source_file": "backend/app/modules/analytics/",
+      "id": "backend_analytics",
+      "community": 3,
+      "norm_label": "analytics module"
+    },
+    {
+      "label": "Background Jobs Module",
+      "file_type": "code",
+      "source_file": "backend/app/modules/background/",
+      "id": "backend_background",
+      "community": 3,
+      "norm_label": "background jobs module"
+    },
+    {
+      "label": "React Web Admin",
+      "file_type": "code",
+      "source_file": "web-admin/",
+      "id": "web_admin",
+      "community": 1,
+      "norm_label": "react web admin"
+    },
+    {
+      "label": "ADR-0001: React + Vite Frontend Stack",
+      "file_type": "document",
+      "source_file": "adr/0001-react-vite-frontend-stack.md",
+      "id": "adr_0001",
+      "community": 2,
+      "norm_label": "adr-0001: react + vite frontend stack"
+    },
+    {
+      "label": "ADR-0002: Multi-Photo Schema",
+      "file_type": "document",
+      "source_file": "adr/0002-multi-photo-schema.md",
+      "id": "adr_0002",
+      "community": 0,
+      "norm_label": "adr-0002: multi-photo schema"
+    },
+    {
+      "label": "ADR-0003: JWT Auth Architecture",
+      "file_type": "document",
+      "source_file": "adr/0003-jwt-auth-architecture.md",
+      "id": "adr_0003",
+      "community": 2,
+      "norm_label": "adr-0003: jwt auth architecture"
+    },
+    {
+      "label": "ADR-0004: Dual-Database Strategy",
+      "file_type": "document",
+      "source_file": "adr/0004-sqlite-dev-postgresql-prod.md",
+      "id": "adr_0004",
+      "community": 9,
+      "norm_label": "adr-0004: dual-database strategy"
+    },
+    {
+      "label": "ADR-0005: Async ORM Strategy",
+      "file_type": "document",
+      "source_file": "adr/0005-async-orm-joinedload.md",
+      "id": "adr_0005",
+      "community": 0,
+      "norm_label": "adr-0005: async orm strategy"
+    },
+    {
+      "label": "ADR-0008: User Management & Monitoring",
+      "file_type": "document",
+      "source_file": "adr/0008-user-management-monitoring.md",
+      "id": "adr_0008",
+      "community": 10,
+      "norm_label": "adr-0008: user management & monitoring"
+    }
+  ],
+  "links": [
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "00-core-prompt.md",
+      "source": "00_core_prompt",
+      "target": "backend_main"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "03-project-structure.md",
+      "source": "03_project_structure",
+      "target": "backend_auth"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "03-project-structure.md",
+      "source": "03_project_structure",
+      "target": "backend_inspection"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "04-architecture.md",
+      "source": "04_architecture",
+      "target": "adr_0001"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "04-architecture.md",
+      "source": "04_architecture",
+      "target": "adr_0003"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "05-implementation-tracking.md",
+      "source": "05_implementation_tracking",
+      "target": "backend_auth"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "07-background-jobs-gaps.md",
+      "source": "07_background_jobs_gaps",
+      "target": "backend_background"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "08-context-audit.md",
+      "source": "08_context_audit",
+      "target": "backend_media"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "09-context-gaps-implementation.md",
+      "source": "09_context_gaps_implementation",
+      "target": "backend_media"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "android-to-be-api-contract.md",
+      "source": "android_to_be_api_contract",
+      "target": "backend_auth"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "web-admin/",
+      "source": "web_admin",
+      "target": "backend_auth"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "backend/app/modules/inspection/",
+      "source": "backend_inspection",
+      "target": "adr_0002"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "backend/app/modules/inspection/",
+      "source": "backend_inspection",
+      "target": "adr_0005"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/app/modules/background/",
+      "source": "backend_background",
+      "target": "backend_analytics"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "backend_modules",
+      "label": "Backend Domain Modules",
+      "nodes": [
+        "backend_auth",
+        "backend_master",
+        "backend_inspection",
+        "backend_media",
+        "backend_analytics",
+        "backend_background"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "id": "audit_remediation_flow",
+      "label": "Audit and Remediation Flow",
+      "nodes": [
+        "08_context_audit",
+        "09_context_gaps_implementation",
+        "07_background_jobs_gaps"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ],
+  "built_at_commit": "a07a2672a84b45b4dd48db305ff44d452e5dbdfd"
+}

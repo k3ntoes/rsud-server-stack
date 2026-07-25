@@ -1,0 +1,158 @@
+{
+  "communities": {
+    "0": [
+      "03_project_structure",
+      "adr_0002",
+      "adr_0005",
+      "backend_inspection"
+    ],
+    "1": [
+      "05_implementation_tracking",
+      "android_to_be_api_contract",
+      "backend_auth",
+      "web_admin"
+    ],
+    "2": [
+      "04_architecture",
+      "adr_0001",
+      "adr_0003"
+    ],
+    "3": [
+      "07_background_jobs_gaps",
+      "backend_analytics",
+      "backend_background"
+    ],
+    "4": [
+      "08_context_audit",
+      "09_context_gaps_implementation",
+      "backend_media"
+    ],
+    "5": [
+      "00_core_prompt",
+      "backend_main"
+    ],
+    "6": [
+      "01_database_schema"
+    ],
+    "7": [
+      "02_prd_server"
+    ],
+    "8": [
+      "06_refactoring_tracker"
+    ],
+    "9": [
+      "adr_0004"
+    ],
+    "10": [
+      "adr_0008"
+    ],
+    "11": [
+      "backend_master"
+    ]
+  },
+  "cohesion": {
+    "0": 0.5,
+    "1": 0.5,
+    "2": 0.6666666666666666,
+    "3": 0.6666666666666666,
+    "4": 0.6666666666666666,
+    "5": 1.0,
+    "6": 1.0,
+    "7": 1.0,
+    "8": 1.0,
+    "9": 1.0,
+    "10": 1.0,
+    "11": 1.0
+  },
+  "gods": [
+    {
+      "id": "03_project_structure",
+      "label": "Project Structure",
+      "degree": 2
+    },
+    {
+      "id": "04_architecture",
+      "label": "Architecture Overview",
+      "degree": 2
+    },
+    {
+      "id": "00_core_prompt",
+      "label": "Core Prompt: RSUD Ajibarang Server Stack",
+      "degree": 1
+    },
+    {
+      "id": "05_implementation_tracking",
+      "label": "Implementation Tracking",
+      "degree": 1
+    },
+    {
+      "id": "07_background_jobs_gaps",
+      "label": "Background Jobs Gap Fix Tracking",
+      "degree": 1
+    },
+    {
+      "id": "08_context_audit",
+      "label": "Comprehensive CONTEXT Audit",
+      "degree": 1
+    },
+    {
+      "id": "09_context_gaps_implementation",
+      "label": "CONTEXT Audit GAP Fixes Tracking",
+      "degree": 1
+    },
+    {
+      "id": "android_to_be_api_contract",
+      "label": "Android to Backend API Contract",
+      "degree": 1
+    },
+    {
+      "id": "backend_main",
+      "label": "FastAPI Entry Point",
+      "degree": 1
+    },
+    {
+      "id": "adr_0001",
+      "label": "ADR-0001: React + Vite Frontend Stack",
+      "degree": 1
+    }
+  ],
+  "surprises": [
+    {
+      "source": "Core Prompt: RSUD Ajibarang Server Stack",
+      "target": "FastAPI Entry Point",
+      "source_files": [
+        "00-core-prompt.md",
+        "backend/app/main.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "crosses file types (doc \u2194 code); connects across different repos/directories"
+    },
+    {
+      "source": "Architecture Overview",
+      "target": "ADR-0001: React + Vite Frontend Stack",
+      "source_files": [
+        "04-architecture.md",
+        "adr/0001-react-vite-frontend-stack.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "Architecture Overview",
+      "target": "ADR-0003: JWT Auth Architecture",
+      "source_files": [
+        "04-architecture.md",
+        "adr/0003-jwt-auth-architecture.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    }
+  ],
+  "tokens": {
+    "input": 29921,
+    "output": 1555
+  }
+}

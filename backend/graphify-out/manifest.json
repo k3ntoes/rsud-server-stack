@@ -258,5 +258,35 @@
     "mtime": 1784732018.8101783,
     "ast_hash": "658c301d42064b279de3f2f11c1c82c3",
     "semantic_hash": "658c301d42064b279de3f2f11c1c82c3"
+  },
+  "app/modules/analytics/CONTEXT.md": {
+    "mtime": 1784734072.928672,
+    "ast_hash": "884ee4a305ce21d0fe71849c0d397f29",
+    "semantic_hash": "884ee4a305ce21d0fe71849c0d397f29"
+  },
+  "app/modules/auth/CONTEXT.md": {
+    "mtime": 1784734061.805079,
+    "ast_hash": "a2d3679bba07a82574e63aae92abe7a6",
+    "semantic_hash": "a2d3679bba07a82574e63aae92abe7a6"
+  },
+  "app/modules/background/CONTEXT.md": {
+    "mtime": 1784728027.1898825,
+    "ast_hash": "0955d1c8612946343efc316e62469ac3",
+    "semantic_hash": "0955d1c8612946343efc316e62469ac3"
+  },
+  "app/modules/inspection/CONTEXT.md": {
+    "mtime": 1784723084.8868594,
+    "ast_hash": "9be6a5c07519cf695f28831eaa228d42",
+    "semantic_hash": "9be6a5c07519cf695f28831eaa228d42"
+  },
+  "app/modules/master/CONTEXT.md": {
+    "mtime": 1784723084.8880882,
+    "ast_hash": "579d464ceacce1d940053e73afa984d2",
+    "semantic_hash": "579d464ceacce1d940053e73afa984d2"
+  },
+  "app/modules/media/CONTEXT.md": {
+    "mtime": 1784723084.8908076,
+    "ast_hash": "215559ec13d6eda070504a3f2481fde1",
+    "semantic_hash": "215559ec13d6eda070504a3f2481fde1"
   }
 }

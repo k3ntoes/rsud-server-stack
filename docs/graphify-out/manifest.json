@@ -1,0 +1,87 @@
+{
+  "00-core-prompt.md": {
+    "mtime": 1784728782.5024836,
+    "ast_hash": "8d6da8d932db7d1be001467d928e6f60",
+    "semantic_hash": "8d6da8d932db7d1be001467d928e6f60"
+  },
+  "01-database-schema.md": {
+    "mtime": 1784728789.866524,
+    "ast_hash": "3f95e03534453465e16d0160f490e772",
+    "semantic_hash": "3f95e03534453465e16d0160f490e772"
+  },
+  "02-prd-server.md": {
+    "mtime": 1784655434.1055615,
+    "ast_hash": "f9b59ca4213a8e6533177696ba1a1819",
+    "semantic_hash": "f9b59ca4213a8e6533177696ba1a1819"
+  },
+  "03-project-structure.md": {
+    "mtime": 1784723454.3790865,
+    "ast_hash": "dbe690366a02335693819ac3fbd930b3",
+    "semantic_hash": "dbe690366a02335693819ac3fbd930b3"
+  },
+  "04-architecture.md": {
+    "mtime": 1784723777.664299,
+    "ast_hash": "5fa1d27fdc5c35723b402b285b974d2d",
+    "semantic_hash": "5fa1d27fdc5c35723b402b285b974d2d"
+  },
+  "05-implementation-tracking.md": {
+    "mtime": 1784731852.4629464,
+    "ast_hash": "f65726575d46b35587bde707aff33497",
+    "semantic_hash": "f65726575d46b35587bde707aff33497"
+  },
+  "06-refactoring-tracker.md": {
+    "mtime": 1784725127.445963,
+    "ast_hash": "813b338b58e240eccf79212879ea48cf",
+    "semantic_hash": "813b338b58e240eccf79212879ea48cf"
+  },
+  "07-background-jobs-gaps.md": {
+    "mtime": 1784728216.1901562,
+    "ast_hash": "ea83443786de756f2e34548b013e3261",
+    "semantic_hash": "ea83443786de756f2e34548b013e3261"
+  },
+  "08-context-audit.md": {
+    "mtime": 1784731023.6858783,
+    "ast_hash": "e04f22936a41e5854993d96a2f0bb5eb",
+    "semantic_hash": "e04f22936a41e5854993d96a2f0bb5eb"
+  },
+  "09-context-gaps-implementation.md": {
+    "mtime": 1784731016.2017312,
+    "ast_hash": "957a42481ac4d4ae5d80ac7f5babaae3",
+    "semantic_hash": "957a42481ac4d4ae5d80ac7f5babaae3"
+  },
+  "adr/0001-react-vite-frontend-stack.md": {
+    "mtime": 1784652518.7508087,
+    "ast_hash": "d96d9dd32bb117d1070cd72a8e408397",
+    "semantic_hash": "d96d9dd32bb117d1070cd72a8e408397"
+  },
+  "adr/0002-multi-photo-schema.md": {
+    "mtime": 1784652416.5042226,
+    "ast_hash": "dfa0a56d5adcc69f90d29fc1d4848567",
+    "semantic_hash": "dfa0a56d5adcc69f90d29fc1d4848567"
+  },
+  "adr/0003-jwt-auth-architecture.md": {
+    "mtime": 1784652424.8191905,
+    "ast_hash": "d4b8b479e61c33fe4d630bb983be64e8",
+    "semantic_hash": "d4b8b479e61c33fe4d630bb983be64e8"
+  },
+  "adr/0004-sqlite-dev-postgresql-prod.md": {
+    "mtime": 1784655864.1887498,
+    "ast_hash": "0715df766d9860d0568d0127fe73ef70",
+    "semantic_hash": "0715df766d9860d0568d0127fe73ef70"
+  },
+  "adr/0005-async-orm-joinedload.md": {
+    "mtime": 1784722834.484245,
+    "ast_hash": "e42d284750221e591bafe56576898ce9",
+    "semantic_hash": "e42d284750221e591bafe56576898ce9"
+  },
+  "adr/0008-user-management-monitoring.md": {
+    "mtime": 1784734092.8257117,
+    "ast_hash": "7d54d7d0d30381e3a0ef59b06b9cf464",
+    "semantic_hash": "7d54d7d0d30381e3a0ef59b06b9cf464"
+  },
+  "android-to-be-api-contract.md": {
+    "mtime": 1784992038.0816605,
+    "ast_hash": "a7b0995a743566277e763bb18f8b5242",
+    "semantic_hash": "a7b0995a743566277e763bb18f8b5242"
+  }
+}
