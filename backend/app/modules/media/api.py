@@ -15,9 +15,15 @@ router = APIRouter(prefix="/api", tags=["media"])
 
 @router.post("/upload")
 async def upload_file(
-    file: UploadFile = File(...),
+    file: UploadFile | None = File(None),
     _: User = Depends(get_current_user),
 ):
+    if file is None:
+        return error_response(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="File field 'file' is required in multipart/form-data",
+            code="MISSING_FILE",
+        )
     try:
         filename, file_size = await save_upload(file)
     except ValueError as e:
