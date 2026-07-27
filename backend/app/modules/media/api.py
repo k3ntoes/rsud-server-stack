@@ -20,7 +20,7 @@ async def upload_file(
 ):
     if file is None:
         return error_response(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="File field 'file' is required in multipart/form-data",
             code="MISSING_FILE",
         )

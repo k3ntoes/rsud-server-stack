@@ -28,7 +28,7 @@ async def create_inspection(
         return await submit_inspection(db, current_user.id, body)
     except ValueError as e:
         return error_response(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=str(e),
             code="VALIDATION_ERROR",
         )
