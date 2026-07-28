@@ -40,5 +40,7 @@ This file maps the domain contexts in this repository. Each context has its own 
 | ADR-0006 | ✅ Accepted | Test Strategy — pytest-asyncio + In-Memory SQLite |
 | ADR-0007 | ✅ Accepted | Frontend Auth Pattern — SessionStorage + Auto-Refresh Token |
 | ADR-0008 | ✅ Accepted | User Management & Monitoring — User CRUD, Change Password, Inspector Performance |
+| ADR-0009 | ✅ Accepted | Room-Item Many-to-Many Relationship — per-room inspection items via pivot table |
+| ADR-0010 | ✅ Accepted | User-Room Assignment — inspector & supervisor assignment to rooms via pivot table |
 
 System-wide ADRs: `docs/adr/`

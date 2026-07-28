@@ -53,6 +53,15 @@ Admin PPI tidak bisa mereset password user lain dari halaman manajemen saat ini 
 **401 vs 403**:
 FastAPI HTTPBearer returns **401 Unauthorized** (not 403 Forbidden) when Authorization header is missing or token is invalid. 403 digunakan untuk role-based authorization (user authenticated tapi tidak punya akses).
 
+**User-Room Assignment**:
+Relasi many-to-many antara User dan Room melalui tabel pivot `user_rooms`. User dengan role `inspector` dan `supervisor` di-assign ke room tertentu — menentukan room mana yang bisa mereka inspeksi/approve. Admin PPI tidak perlu di-assign.
+
+**Inspector Room Scope**:
+Daftar room yang di-assign ke seorang inspector — hanya room ini yang bisa di-inspeksi oleh petugas tersebut.
+
+**Supervisor Room Scope**:
+Daftar room yang di-assign ke seorang supervisor — default filter di halaman approval hanya menampilkan inspeksi dari room ini. Supervisor bisa toggle "Lihat semua room" untuk backup approval.
+
 ## Key Decisions
 
 - JWT stateless layered auth (Access + Refresh Token)
@@ -67,6 +76,10 @@ FastAPI HTTPBearer returns **401 Unauthorized** (not 403 Forbidden) when Authori
 - **Soft-delete pada user**: status `is_active = False` menonaktifkan user tanpa menghapus data historis inspeksi
 - **Pemisahan User CRUD dan Change Password**: Admin mengelola user, user mengelola passwordnya sendiri — prinsip separation of concern
 - **`list_users` mengembalikan semua user** (tidak filter `is_active`) — admin perlu melihat user yang dinonaktifkan (berbeda dengan `list_rooms` yang filter `is_active`)
+- **User-Room Assignment**: Relasi many-to-many via tabel `user_rooms` terpisah — hanya untuk role `inspector` dan `supervisor`
+- **Validasi submission**: Inspector hanya bisa submit inspeksi untuk room yang di-assign
+- **Filter approval default**: Supervisor hanya melihat inspeksi untuk room yang di-assign (bisa toggle `show_all`)
+- **Migrasi auto-assign**: Semua user inspector & supervisor yang ada akan di-assign ke semua room aktif
 
 ## ADRs
 
@@ -74,3 +87,4 @@ See `docs/adr/` for auth-specific decisions:
 - ADR-0003: JWT Layered Auth
 - ADR-0004: SQLite Development (PYTHONPATH context)
 - ADR-0008: User Management & Monitoring
+- ADR-0010: User-Room Assignment
