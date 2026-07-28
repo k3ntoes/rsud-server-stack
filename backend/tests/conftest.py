@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from app.core.database import Base, get_db
 from app.core.security import hash_password, create_access_token
 from app.main import app
-from app.modules.auth.models import User
-from app.modules.master.models import Room, InspectionItem
+from app.modules.auth.models import User, UserRoom
+from app.modules.master.models import Room, InspectionItem, RoomItem
 
 TEST_DB_URL = "sqlite+aiosqlite://"
 
@@ -84,3 +84,17 @@ async def seed_item(session: AsyncSession, name: str) -> InspectionItem:
     await session.commit()
     await session.refresh(item)
     return item
+
+
+async def assign_item_to_room(session: AsyncSession, room_id: int, item_id: int) -> None:
+    """Assign an item to a room for testing."""
+    ri = RoomItem(room_id=room_id, item_id=item_id)
+    session.add(ri)
+    await session.commit()
+
+
+async def assign_user_to_room(session: AsyncSession, user_id: int, room_id: int) -> None:
+    """Assign a user to a room for testing."""
+    ur = UserRoom(user_id=user_id, room_id=room_id)
+    session.add(ur)
+    await session.commit()

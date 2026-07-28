@@ -10,11 +10,14 @@ from app.modules.auth.models import User
 from app.modules.master.schemas import (
     RoomCreate, RoomUpdate, RoomOut,
     ItemCreate, ItemUpdate, ItemOut,
+    RoomItemOut, RoomItemAssign,
     SyncResponse,
 )
 from app.modules.master.services import (
     list_rooms, get_room, create_room, update_room, delete_room,
     list_items, get_item, create_item, update_item, delete_item,
+    list_room_items, list_items_by_room, list_rooms_by_item,
+    assign_item_to_room, unassign_item_from_room,
 )
 
 router = APIRouter(prefix="/api", tags=["master"])
@@ -148,3 +151,106 @@ async def delete_item_endpoint(
 ):
     if not await delete_item(db, item_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+
+# ── Room-Items (pivot) ──
+
+
+@router.get("/room-items")
+async def get_room_items(
+    since: str | None = Query(None, description="Sync timestamp ISO 8601"),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    dt = datetime.fromisoformat(since) if since else None
+    data = await list_room_items(db, dt)
+    return SyncResponse(
+        data=[RoomItemOut.model_validate(r).model_dump() for r in data],
+        synced_at=datetime.now(timezone.utc),
+    )
+
+
+# Room → Items
+
+
+@router.get("/rooms/{room_id}/items")
+async def get_room_items_by_room(
+    room_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    room = await get_room(db, room_id)
+    if room is None or not room.is_active:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Room not found")
+    data = await list_items_by_room(db, room_id)
+    return [RoomItemOut.model_validate(r) for r in data]
+
+
+@router.post("/rooms/{room_id}/items", status_code=status.HTTP_201_CREATED)
+async def assign_item_to_room_endpoint(
+    room_id: int,
+    body: RoomItemAssign,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    if body.item_id is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="item_id required")
+    try:
+        ri = await assign_item_to_room(db, room_id, body.item_id)
+        return RoomItemOut.model_validate(ri)
+    except Exception:
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="Already assigned or invalid room/item")
+
+
+@router.delete("/rooms/{room_id}/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unassign_item_from_room_endpoint(
+    room_id: int,
+    item_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    if not await unassign_item_from_room(db, room_id, item_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Assignment not found")
+
+
+# Item → Rooms
+
+
+@router.get("/inspection-items/{item_id}/rooms")
+async def get_rooms_by_item(
+    item_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    item = await get_item(db, item_id)
+    if item is None or not item.is_active:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Item not found")
+    data = await list_rooms_by_item(db, item_id)
+    return [RoomItemOut.model_validate(r) for r in data]
+
+
+@router.post("/inspection-items/{item_id}/rooms", status_code=status.HTTP_201_CREATED)
+async def assign_room_to_item_endpoint(
+    item_id: int,
+    body: RoomItemAssign,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    if body.room_id is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="room_id required")
+    try:
+        ri = await assign_item_to_room(db, body.room_id, item_id)
+        return RoomItemOut.model_validate(ri)
+    except Exception:
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="Already assigned or invalid room/item")
+
+
+@router.delete("/inspection-items/{item_id}/rooms/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unassign_room_from_item_endpoint(
+    item_id: int,
+    room_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    if not await unassign_item_from_room(db, room_id, item_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Assignment not found")

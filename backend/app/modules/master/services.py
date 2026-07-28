@@ -51,6 +51,58 @@ async def delete_room(db: AsyncSession, room_id: int) -> bool:
     return True
 
 
+# ── Room-Items (pivot) ──
+
+
+async def list_room_items(db: AsyncSession, since: datetime | None = None) -> list:
+    from app.modules.master.models import RoomItem
+    query = select(RoomItem).order_by(RoomItem.room_id, RoomItem.item_id)
+    if since:
+        query = query.where(RoomItem.created_at >= since)
+    result = await db.execute(query)
+    return list(result.scalars().all())
+
+
+async def list_items_by_room(db: AsyncSession, room_id: int) -> list:
+    from app.modules.master.models import RoomItem
+    result = await db.execute(
+        select(RoomItem).where(RoomItem.room_id == room_id)
+    )
+    return list(result.scalars().all())
+
+
+async def list_rooms_by_item(db: AsyncSession, item_id: int) -> list:
+    from app.modules.master.models import RoomItem
+    result = await db.execute(
+        select(RoomItem).where(RoomItem.item_id == item_id)
+    )
+    return list(result.scalars().all())
+
+
+async def assign_item_to_room(db: AsyncSession, room_id: int, item_id: int):
+    from app.modules.master.models import RoomItem
+    ri = RoomItem(room_id=room_id, item_id=item_id)
+    db.add(ri)
+    await db.commit()
+    await db.refresh(ri)
+    return ri
+
+
+async def unassign_item_from_room(db: AsyncSession, room_id: int, item_id: int) -> bool:
+    from app.modules.master.models import RoomItem
+    result = await db.execute(
+        select(RoomItem).where(
+            RoomItem.room_id == room_id, RoomItem.item_id == item_id
+        )
+    )
+    ri = result.scalar_one_or_none()
+    if ri is None:
+        return False
+    await db.delete(ri)
+    await db.commit()
+    return True
+
+
 async def list_items(db: AsyncSession, since: datetime | None = None) -> list[InspectionItem]:
     query = select(InspectionItem).where(InspectionItem.is_active == True).order_by(InspectionItem.name)
     if since:

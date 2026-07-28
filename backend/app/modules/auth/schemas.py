@@ -35,6 +35,7 @@ class UserListOut(BaseModel):
     role: str
     is_active: bool
     created_at: datetime
+    room_ids: list[int] = []
 
     model_config = {"from_attributes": True}
 
@@ -50,6 +51,20 @@ class AdminResetPasswordRequest(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str | None = None
+
+
+class UserRoomOut(BaseModel):
+    id: int
+    user_id: int
+    room_id: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class UserRoomAssign(BaseModel):
+    user_id: int | None = None
+    room_id: int | None = None
 
 
 class TokenResponse(BaseModel):

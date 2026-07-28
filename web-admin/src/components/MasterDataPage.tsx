@@ -22,6 +22,7 @@ interface MasterDataPageProps<T extends Entity> {
   emptySearchText?: string;
   editLabel?: string;
   deleteLabel?: string;
+  renderActions?: (item: T) => React.ReactNode;
   // Hooks
   useList: () => {
     data: T[] | undefined;
@@ -47,6 +48,7 @@ export default function MasterDataPage<T extends Entity>({
   emptySearchText = "Tidak ada hasil.",
   editLabel = "Edit",
   deleteLabel = "Hapus",
+  renderActions,
   useList,
   useCreate,
   useUpdate,
@@ -162,6 +164,7 @@ export default function MasterDataPage<T extends Entity>({
                       )}
                     </td>
                     <td className="text-right">
+                      {renderActions?.(item)}
                       <button
                         onClick={() => openEdit(item.id, item.name)}
                         className="btn-ghost text-xs"

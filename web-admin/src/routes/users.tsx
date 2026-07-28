@@ -8,9 +8,13 @@ import {
   useUpdateUser,
   useDeleteUser,
   useAdminResetPassword,
+  useUserRooms,
+  useAssignUserToRoom,
+  useUnassignUserFromRoom,
   type User,
   ROLES,
 } from "../hooks/useUsers";
+import { useRooms } from "../hooks/useMasterData";
 
 export const Route = createRoute({
   getParentRoute: () => protectedRoute,
@@ -29,11 +33,14 @@ function UsersPage() {
   const create = useCreateUser();
   const update = useUpdateUser();
   const del = useDeleteUser();
+  const assignUserRoom = useAssignUserToRoom();
+  const unassignUserRoom = useUnassignUserFromRoom();
 
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [resetPwUser, setResetPwUser] = useState<User | null>(null);
+  const [roomAssignUser, setRoomAssignUser] = useState<User | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("inspector");
@@ -157,6 +164,14 @@ function UsersPage() {
                       )}
                     </td>
                     <td className="text-right">
+                      {u.role !== "admin_ppi" && (
+                        <button
+                          onClick={() => setRoomAssignUser(u)}
+                          className="btn-ghost text-xs"
+                        >
+                          Ruangan
+                        </button>
+                      )}
                       <button onClick={() => openEdit(u)} className="btn-ghost text-xs">
                         Edit
                       </button>
@@ -276,7 +291,72 @@ function UsersPage() {
         user={resetPwUser}
         onClose={() => setResetPwUser(null)}
       />
+
+      {/* ═══ Room Assignment Modal ═══ */}
+      <UserRoomModal
+        user={roomAssignUser}
+        onClose={() => setRoomAssignUser(null)}
+      />
     </div>
+  );
+}
+
+function UserRoomModal({
+  user,
+  onClose,
+}: {
+  user: User | null;
+  onClose: () => void;
+}) {
+  const { data: allRooms } = useRooms();
+  const { data: userRooms } = useUserRooms(user?.id ?? 0);
+  const assignRoom = useAssignUserToRoom();
+  const unassignRoom = useUnassignUserFromRoom();
+
+  const assignedRoomIds = new Set(userRooms?.map((ur) => ur.room_id) ?? []);
+
+  const handleToggle = async (roomId: number) => {
+    if (!user) return;
+    if (assignedRoomIds.has(roomId)) {
+      await unassignRoom.mutateAsync({ userId: user.id, roomId });
+    } else {
+      await assignRoom.mutateAsync({ userId: user.id, roomId });
+    }
+  };
+
+  if (!user) return null;
+
+  return (
+    <Modal
+      open={!!user}
+      onClose={onClose}
+      title={`Ruangan — ${user.username}`}
+    >
+      <p className="mb-4 text-sm text-ink-muted">
+        Centang ruangan yang menjadi tanggung jawab pengguna ini.
+      </p>
+      <div className="max-h-80 space-y-2 overflow-y-auto">
+        {allRooms?.map((room) => (
+          <label
+            key={room.id}
+            className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-navy-50"
+          >
+            <input
+              type="checkbox"
+              checked={assignedRoomIds.has(room.id)}
+              onChange={() => handleToggle(room.id)}
+              className="h-4 w-4 rounded border-navy-300 text-teal-600 focus:ring-teal-500"
+            />
+            <span className="text-sm text-ink">{room.name}</span>
+          </label>
+        ))}
+        {!allRooms?.length && (
+          <p className="py-8 text-center text-sm text-ink-subtle">
+            Belum ada ruangan.
+          </p>
+        )}
+      </div>
+    </Modal>
   );
 }
 

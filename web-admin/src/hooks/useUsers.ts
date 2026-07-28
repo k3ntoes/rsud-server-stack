@@ -96,4 +96,57 @@ export function useInspectorPerformance(yearMonth?: string) {
   });
 }
 
+// ── User-Room (pivot) ──
+
+export interface UserRoom {
+  id: number;
+  user_id: number;
+  room_id: number;
+  created_at: string;
+}
+
+export function useUserRooms(userId: number) {
+  return useQuery({
+    queryKey: ["user-rooms", "user", userId],
+    queryFn: () => apiRequest<UserRoom[]>(`/api/auth/users/${userId}/rooms`),
+    enabled: !!userId,
+  });
+}
+
+export function useRoomUsers(roomId: number) {
+  return useQuery({
+    queryKey: ["user-rooms", "room", roomId],
+    queryFn: () => apiRequest<UserRoom[]>(`/api/rooms/${roomId}/users`),
+    enabled: !!roomId,
+  });
+}
+
+export function useAssignUserToRoom() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, roomId }: { userId: number; roomId: number }) =>
+      apiRequest<UserRoom>(`/api/rooms/${roomId}/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["user-rooms"] });
+      qc.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
+
+export function useUnassignUserFromRoom() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, roomId }: { userId: number; roomId: number }) =>
+      apiRequest<void>(`/api/rooms/${roomId}/users/${userId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["user-rooms"] });
+      qc.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
+
 export { ROLES };

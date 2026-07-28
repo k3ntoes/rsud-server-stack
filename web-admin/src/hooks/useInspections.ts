@@ -42,6 +42,7 @@ interface ListParams {
   status?: string;
   room_id?: number;
   business_date?: string;
+  show_all?: string;
 }
 
 export function useInspections(params: ListParams = {}) {
@@ -49,6 +50,7 @@ export function useInspections(params: ListParams = {}) {
   if (params.status) qs.set("status", params.status);
   if (params.room_id) qs.set("room_id", String(params.room_id));
   if (params.business_date) qs.set("business_date", params.business_date);
+  if (params.show_all) qs.set("show_all", params.show_all);
   const query = qs.toString();
 
   return useQuery({

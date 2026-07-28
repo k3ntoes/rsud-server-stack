@@ -12,7 +12,7 @@ from app.core.security import (
     create_refresh_token,
     verify_token,
 )
-from app.modules.auth.models import User, UserSession
+from app.modules.auth.models import User, UserSession, UserRoom
 
 
 async def list_users(db: AsyncSession) -> list[User]:
@@ -20,6 +20,60 @@ async def list_users(db: AsyncSession) -> list[User]:
         select(User).order_by(User.username)
     )
     return list(result.scalars().all())
+
+
+# ── User-Room (pivot) ──
+
+
+async def list_user_rooms(db: AsyncSession, user_id: int) -> list[UserRoom]:
+    result = await db.execute(
+        select(UserRoom).where(UserRoom.user_id == user_id)
+    )
+    return list(result.scalars().all())
+
+
+async def list_rooms_by_user(db: AsyncSession, user_id: int) -> list[UserRoom]:
+    result = await db.execute(
+        select(UserRoom).where(UserRoom.user_id == user_id)
+    )
+    return list(result.scalars().all())
+
+
+async def list_users_by_room(db: AsyncSession, room_id: int) -> list[UserRoom]:
+    result = await db.execute(
+        select(UserRoom).where(UserRoom.room_id == room_id)
+    )
+    return list(result.scalars().all())
+
+
+async def assign_user_to_room(db: AsyncSession, user_id: int, room_id: int) -> UserRoom:
+    ur = UserRoom(user_id=user_id, room_id=room_id)
+    db.add(ur)
+    await db.commit()
+    await db.refresh(ur)
+    return ur
+
+
+async def unassign_user_from_room(db: AsyncSession, user_id: int, room_id: int) -> bool:
+    result = await db.execute(
+        select(UserRoom).where(
+            UserRoom.user_id == user_id, UserRoom.room_id == room_id
+        )
+    )
+    ur = result.scalar_one_or_none()
+    if ur is None:
+        return False
+    await db.delete(ur)
+    await db.commit()
+    return True
+
+
+async def get_user_room_ids(db: AsyncSession, user_id: int) -> list[int]:
+    """Get list of room IDs assigned to a user."""
+    result = await db.execute(
+        select(UserRoom.room_id).where(UserRoom.user_id == user_id)
+    )
+    return [r for r in result.scalars().all()]
 
 
 async def update_user(

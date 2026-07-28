@@ -45,14 +45,18 @@ async def get_inspections(
     status_filter: str | None = Query(None, alias="status"),
     room_id: int | None = Query(None),
     business_date: str | None = Query(None),
+    show_all: bool = Query(False, description="Show all rooms (supervisor only)"),
     limit: int = Query(50, le=200),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_supervisor_user),
+    current_user: User = Depends(get_supervisor_user),
 ):
     from datetime import date as date_type
     bd = date_type.fromisoformat(business_date) if business_date else None
-    inspections, _ = await list_inspections(db, status_filter, room_id, bd, limit, offset)
+    inspections, _ = await list_inspections(
+        db, status_filter, room_id, bd, limit, offset,
+        show_all=show_all, user_id=current_user.id,
+    )
     return [
         InspectionListItem(
             id=i.id,

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,16 +10,19 @@ from app.core.dependencies import get_current_user
 from app.core.errors import error_response
 from app.core.security import create_access_token
 from app.modules.auth.dependencies import get_admin_user
-from app.modules.auth.models import User, UserSession
+from app.modules.auth.models import User, UserSession, UserRoom
 from app.modules.auth.schemas import (
     LoginRequest, TokenResponse, UserOut,
     UserCreate, UserUpdate, UserListOut, ChangePasswordRequest,
     AdminResetPasswordRequest, RefreshRequest,
+    UserRoomOut, UserRoomAssign,
 )
 from app.modules.auth.services import (
     authenticate, create_session, refresh_session, create_user,
     list_users, update_user, deactivate_user, change_password,
     admin_reset_password,
+    list_user_rooms, list_rooms_by_user, list_users_by_room,
+    assign_user_to_room, unassign_user_from_room, get_user_room_ids,
 )
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -136,7 +141,19 @@ async def get_users(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_admin_user),
 ):
-    return await list_users(db)
+    users = await list_users(db)
+    result = []
+    for u in users:
+        room_ids = await get_user_room_ids(db, u.id)
+        result.append(UserListOut(
+            id=u.id,
+            username=u.username,
+            role=u.role,
+            is_active=u.is_active,
+            created_at=u.created_at,
+            room_ids=room_ids,
+        ))
+    return result
 
 
 @router.post("/users", response_model=UserOut, status_code=status.HTTP_201_CREATED)
@@ -191,6 +208,127 @@ async def admin_reset_password_endpoint(
     if user is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
     return {"message": "Password reset successfully"}
+
+
+# ── User-Room (pivot) ──
+
+
+@router.get("/me/rooms")
+async def get_my_rooms(
+    since: str | None = Query(None, description="Sync timestamp ISO 8601"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List room assignments for current user (Android sync)."""
+    from app.modules.master.models import Room
+    from app.modules.master.schemas import SyncResponse, RoomOut
+
+    result = await db.execute(
+        select(UserRoom).where(UserRoom.user_id == current_user.id)
+    )
+    ur_rows = result.scalars().all()
+    room_ids = [ur.room_id for ur in ur_rows]
+
+    if since and room_ids:
+        dt = datetime.fromisoformat(since)
+        rooms_result = await db.execute(
+            select(Room).where(
+                Room.id.in_(room_ids), Room.updated_at >= dt
+            )
+        )
+    elif room_ids:
+        rooms_result = await db.execute(
+            select(Room).where(Room.id.in_(room_ids))
+        )
+    else:
+        data = []
+        return SyncResponse(data=data, synced_at=datetime.now(timezone.utc))
+
+    data = rooms_result.scalars().all()
+    return SyncResponse(
+        data=[RoomOut.model_validate(r).model_dump() for r in data],
+        synced_at=datetime.now(timezone.utc),
+    )
+
+
+# Admin: Room → Users
+
+
+@router.get("/rooms/{room_id}/users")
+async def get_room_users(
+    room_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    data = await list_users_by_room(db, room_id)
+    return [UserRoomOut.model_validate(r) for r in data]
+
+
+@router.post("/rooms/{room_id}/users", status_code=status.HTTP_201_CREATED)
+async def assign_user_to_room_endpoint(
+    room_id: int,
+    body: UserRoomAssign,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    if body.user_id is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="user_id required")
+    try:
+        ur = await assign_user_to_room(db, body.user_id, room_id)
+        return UserRoomOut.model_validate(ur)
+    except Exception:
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="Already assigned or invalid user/room")
+
+
+@router.delete("/rooms/{room_id}/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unassign_user_from_room_endpoint(
+    room_id: int,
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    if not await unassign_user_from_room(db, user_id, room_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Assignment not found")
+
+
+# Admin: User → Rooms
+
+
+@router.get("/users/{user_id}/rooms")
+async def get_user_rooms(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    data = await list_rooms_by_user(db, user_id)
+    return [UserRoomOut.model_validate(r) for r in data]
+
+
+@router.post("/users/{user_id}/rooms", status_code=status.HTTP_201_CREATED)
+async def assign_room_to_user_endpoint(
+    user_id: int,
+    body: UserRoomAssign,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    if body.room_id is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="room_id required")
+    try:
+        ur = await assign_user_to_room(db, user_id, body.room_id)
+        return UserRoomOut.model_validate(ur)
+    except Exception:
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="Already assigned or invalid user/room")
+
+
+@router.delete("/users/{user_id}/rooms/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unassign_room_from_user_endpoint(
+    user_id: int,
+    room_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    if not await unassign_user_from_room(db, user_id, room_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Assignment not found")
 
 
 # ── Change Password (any authenticated user) ──

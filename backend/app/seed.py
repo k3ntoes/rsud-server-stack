@@ -14,8 +14,8 @@ from sqlalchemy import select
 
 from app.core.database import async_session
 from app.core.security import hash_password
-from app.modules.auth.models import User
-from app.modules.master.models import Room, InspectionItem
+from app.modules.auth.models import User, UserRoom
+from app.modules.master.models import Room, InspectionItem, RoomItem
 from app.modules.inspection.models import Inspection, InspectionDetail
 
 
@@ -103,6 +103,36 @@ async def seed():
             item_objects.append(item)
         await db.flush()
         print(f"  ✅ {len(item_objects)} inspection items ready")
+
+        # ── Room-Item assignments (all active items → all active rooms) ──
+        for room in room_objects:
+            for item in item_objects:
+                existing = await db.execute(
+                    select(RoomItem).where(
+                        RoomItem.room_id == room.id,
+                        RoomItem.item_id == item.id,
+                    )
+                )
+                if existing.scalar_one_or_none() is None:
+                    db.add(RoomItem(room_id=room.id, item_id=item.id))
+        await db.commit()
+        print(f"  ✅ Room-Item assignments created ({len(room_objects)} rooms × {len(item_objects)} items)")
+
+        # ── User-Room assignments (all inspector/supervisor → all active rooms) ──
+        users_all = (await db.execute(select(User))).scalars().all()
+        for user in users_all:
+            if user.role in ("inspector", "supervisor"):
+                for room in room_objects:
+                    existing = await db.execute(
+                        select(UserRoom).where(
+                            UserRoom.user_id == user.id,
+                            UserRoom.room_id == room.id,
+                        )
+                    )
+                    if existing.scalar_one_or_none() is None:
+                        db.add(UserRoom(user_id=user.id, room_id=room.id))
+        await db.commit()
+        print(f"  ✅ User-Room assignments created")
 
         # ── Get reference objects ──
         users = {

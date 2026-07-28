@@ -4,7 +4,10 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.conftest import create_user, auth_header, seed_room, seed_item
+from tests.conftest import (
+    create_user, auth_header, seed_room, seed_item,
+    assign_item_to_room, assign_user_to_room,
+)
 
 
 def _submit_body(room_id: int, item_ids: list[int]) -> dict:
@@ -24,11 +27,13 @@ async def test_submit_inspection(client: AsyncClient, db_session: AsyncSession):
     inspector = await create_user(db_session, "insp", "pass", "inspector")
     room = await seed_room(db_session, "UGD")
     item = await seed_item(db_session, "Kebersihan Tangan")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_item_to_room(db_session, room.id, item.id)
     headers = auth_header(inspector)
 
     body = _submit_body(room.id, [item.id])
     resp = await client.post("/api/inspections", json=body, headers=headers)
-    assert resp.status_code == 201
+    assert resp.status_code == 201, resp.text
     data = resp.json()
     assert data["status"] == "PENDING"
     assert data["room_id"] == room.id
@@ -42,6 +47,8 @@ async def test_submit_inspection_duplicate(client: AsyncClient, db_session: Asyn
     inspector = await create_user(db_session, "insp", "pass", "inspector")
     room = await seed_room(db_session, "ICU")
     item = await seed_item(db_session, "APD")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_item_to_room(db_session, room.id, item.id)
     headers = auth_header(inspector)
 
     body = _submit_body(room.id, [item.id])
@@ -57,6 +64,9 @@ async def test_list_inspections_as_supervisor(client: AsyncClient, db_session: A
     supervisor = await create_user(db_session, "sup", "pass", "supervisor")
     room = await seed_room(db_session, "Rawat Inap")
     item = await seed_item(db_session, "Item A")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_user_to_room(db_session, supervisor.id, room.id)
+    await assign_item_to_room(db_session, room.id, item.id)
     headers = auth_header(inspector)
 
     body = _submit_body(room.id, [item.id])
@@ -84,6 +94,10 @@ async def test_get_inspection_detail(client: AsyncClient, db_session: AsyncSessi
     supervisor = await create_user(db_session, "sup", "pass", "supervisor")
     room = await seed_room(db_session, "Poliklinik")
     items = [await seed_item(db_session, f"Item {i}") for i in range(2)]
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_user_to_room(db_session, supervisor.id, room.id)
+    for item in items:
+        await assign_item_to_room(db_session, room.id, item.id)
     headers = auth_header(inspector)
 
     body = _submit_body(room.id, [i.id for i in items])
@@ -103,6 +117,8 @@ async def test_approve_inspection(client: AsyncClient, db_session: AsyncSession)
     supervisor = await create_user(db_session, "sup", "pass", "supervisor")
     room = await seed_room(db_session, "UGD")
     item = await seed_item(db_session, "APD")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_item_to_room(db_session, room.id, item.id)
     headers = auth_header(inspector)
 
     body = _submit_body(room.id, [item.id])
@@ -121,6 +137,8 @@ async def test_reject_inspection(client: AsyncClient, db_session: AsyncSession):
     supervisor = await create_user(db_session, "sup", "pass", "supervisor")
     room = await seed_room(db_session, "ICU")
     item = await seed_item(db_session, "Limbah")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_item_to_room(db_session, room.id, item.id)
     headers = auth_header(inspector)
 
     body = _submit_body(room.id, [item.id])
@@ -145,6 +163,8 @@ async def test_approve_already_approved(client: AsyncClient, db_session: AsyncSe
     supervisor = await create_user(db_session, "sup", "pass", "supervisor")
     room = await seed_room(db_session, "UGD")
     item = await seed_item(db_session, "Item X")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_item_to_room(db_session, room.id, item.id)
     headers = auth_header(inspector)
 
     body = _submit_body(room.id, [item.id])
@@ -164,6 +184,8 @@ async def test_inspector_cannot_approve(client: AsyncClient, db_session: AsyncSe
     inspector2 = await create_user(db_session, "insp2", "pass", "inspector")
     room = await seed_room(db_session, "Room")
     item = await seed_item(db_session, "Item")
+    await assign_user_to_room(db_session, inspector1.id, room.id)
+    await assign_item_to_room(db_session, room.id, item.id)
     headers = auth_header(inspector1)
 
     body = _submit_body(room.id, [item.id])

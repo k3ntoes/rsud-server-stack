@@ -37,6 +37,20 @@ class ItemOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class RoomItemOut(BaseModel):
+    id: int
+    room_id: int
+    item_id: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class RoomItemAssign(BaseModel):
+    item_id: int | None = None
+    room_id: int | None = None
+
+
 class SyncResponse(BaseModel):
     data: list
     synced_at: datetime

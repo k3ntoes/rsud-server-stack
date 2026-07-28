@@ -20,9 +20,11 @@ const STATUS_LABELS: Record<string, string> = {
 
 function InspectionsPage() {
   const [statusFilter, setStatusFilter] = useState("PENDING");
-  const { data: inspections, isLoading, error } = useInspections(
-    statusFilter ? { status: statusFilter } : {},
-  );
+  const [showAll, setShowAll] = useState(false);
+  const { data: inspections, isLoading, error } = useInspections({
+    ...(statusFilter ? { status: statusFilter } : {}),
+    show_all: showAll ? "true" : undefined,
+  });
   const { data: rooms } = useRooms();
   const navigate = useNavigate();
 
@@ -57,7 +59,8 @@ function InspectionsPage() {
       </div>
 
       {/* Status filter tabs */}
-      <div className="mb-4 tab-group">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="tab-group">
         {STATUSES.map((s) => (
           <button
             key={s}
@@ -66,7 +69,17 @@ function InspectionsPage() {
           >
             {STATUS_LABELS[s]}
           </button>
-        ))}
+        )        )}
+        </div>
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-muted">
+          <input
+            type="checkbox"
+            checked={showAll}
+            onChange={(e) => setShowAll(e.target.checked)}
+            className="h-4 w-4 rounded border-navy-300 text-teal-600 focus:ring-teal-500"
+          />
+          Lihat semua ruangan
+        </label>
       </div>
 
       <div className="card-plan overflow-hidden">

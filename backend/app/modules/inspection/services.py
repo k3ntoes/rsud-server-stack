@@ -6,7 +6,8 @@ from sqlalchemy.orm import joinedload
 
 from app.modules.inspection.models import Inspection, InspectionDetail, InspectionPhoto
 from app.modules.inspection.schemas import InspectionSubmit
-from app.modules.master.models import InspectionItem
+from app.modules.auth.models import UserRoom
+from app.modules.master.models import InspectionItem, RoomItem
 
 
 def _base_inspection_query() -> select:
@@ -35,16 +36,25 @@ async def submit_inspection(
 ) -> Inspection:
     # Ponytail: composite unique catches duplicates. Let DB do the work.
 
-    # Validate all active items are scored
-    # ponytail: full item scan, cache item count if submission volume grows
-    all_items = await db.execute(
-        select(InspectionItem).where(InspectionItem.is_active == True)
+    # Validate inspector is assigned to this room
+    assignment = await db.execute(
+        select(UserRoom).where(
+            UserRoom.user_id == inspector_id,
+            UserRoom.room_id == data.room_id,
+        )
     )
-    active_ids = {item.id for item in all_items.scalars().all()}
+    if assignment.scalar_one_or_none() is None:
+        raise ValueError(f"Room {data.room_id} is not assigned to you")
+
+    # Validate all items assigned to this room are scored
+    room_items = await db.execute(
+        select(RoomItem).where(RoomItem.room_id == data.room_id)
+    )
+    room_item_ids = {ri.item_id for ri in room_items.scalars().all()}
     submitted_ids = {d.item_id for d in data.details}
-    missing = active_ids - submitted_ids
+    missing = room_item_ids - submitted_ids
     if missing:
-        raise ValueError(f"Missing items: {sorted(missing)}")
+        raise ValueError(f"Missing items for room: {sorted(missing)}")
 
     inspection = Inspection(
         room_id=data.room_id,
@@ -100,6 +110,8 @@ async def list_inspections(
     business_date: date | None = None,
     limit: int = 50,
     offset: int = 0,
+    show_all: bool = False,
+    user_id: int | None = None,
 ) -> tuple[list[Inspection], int]:
     query = select(Inspection).order_by(Inspection.created_at.desc())
     count_query = select(func.count(Inspection.id))
@@ -113,6 +125,16 @@ async def list_inspections(
     if business_date:
         query = query.where(Inspection.business_date == business_date)
         count_query = count_query.where(Inspection.business_date == business_date)
+
+    # Filter by assigned rooms for supervisor (unless show_all)
+    if user_id is not None and not show_all:
+        assigned = await db.execute(
+            select(UserRoom.room_id).where(UserRoom.user_id == user_id)
+        )
+        room_ids = [r for r in assigned.scalars().all()]
+        if room_ids:
+            query = query.where(Inspection.room_id.in_(room_ids))
+            count_query = count_query.where(Inspection.room_id.in_(room_ids))
 
     total = (await db.execute(count_query)).scalar() or 0
 

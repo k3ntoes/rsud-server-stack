@@ -75,3 +75,84 @@ export function useItems() {
 export const useCreateItem = () => useCreateMutation<Item>("/api/inspection-items", ["items"]);
 export const useUpdateItem = () => useUpdateMutation<Item>("/api/inspection-items", ["items"]);
 export const useDeleteItem = () => useDeleteMutation("/api/inspection-items", ["items"]);
+
+// ── Room-Items (pivot) ──
+
+export interface RoomItem {
+  id: number;
+  room_id: number;
+  item_id: number;
+  created_at: string;
+}
+
+export function useRoomItemsByRoom(roomId: number) {
+  return useQuery({
+    queryKey: ["room-items", "room", roomId],
+    queryFn: () => apiRequest<RoomItem[]>(`/api/rooms/${roomId}/items`),
+    enabled: !!roomId,
+  });
+}
+
+export function useRoomsByItem(itemId: number) {
+  return useQuery({
+    queryKey: ["room-items", "item", itemId],
+    queryFn: () => apiRequest<RoomItem[]>(`/api/inspection-items/${itemId}/rooms`),
+    enabled: !!itemId,
+  });
+}
+
+export function useAssignItemToRoom() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roomId, itemId }: { roomId: number; itemId: number }) =>
+      apiRequest<RoomItem>(`/api/rooms/${roomId}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ item_id: itemId }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["room-items"] });
+      qc.invalidateQueries({ queryKey: ["rooms"] });
+    },
+  });
+}
+
+export function useUnassignItemFromRoom() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roomId, itemId }: { roomId: number; itemId: number }) =>
+      apiRequest<void>(`/api/rooms/${roomId}/items/${itemId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["room-items"] });
+      qc.invalidateQueries({ queryKey: ["rooms"] });
+    },
+  });
+}
+
+export function useAssignRoomToItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, roomId }: { itemId: number; roomId: number }) =>
+      apiRequest<RoomItem>(`/api/inspection-items/${itemId}/rooms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room_id: roomId }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["room-items"] });
+      qc.invalidateQueries({ queryKey: ["items"] });
+    },
+  });
+}
+
+export function useUnassignRoomFromItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, roomId }: { itemId: number; roomId: number }) =>
+      apiRequest<void>(`/api/inspection-items/${itemId}/rooms/${roomId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["room-items"] });
+      qc.invalidateQueries({ queryKey: ["items"] });
+    },
+  });
+}
