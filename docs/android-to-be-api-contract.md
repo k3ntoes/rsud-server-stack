@@ -97,13 +97,13 @@ Android mengirim kedua token agar BE bisa menghapus dari whitelist `user_session
 
 ### Perubahan 2.1: Versioning / Sync Support
 
-**Endpoint**: `GET /api/master/rooms` dan `GET /api/master/inspection-items`
+**Endpoint**: `GET /api/rooms` dan `GET /api/inspection-items`
 
 Android butuh sync incremental. Tambahkan `updated_at` di response.
 
 **Request query params baru:**
 ```
-GET /api/master/rooms?since=2026-07-23T00:00:00Z
+GET /api/rooms?since=2026-07-23T00:00:00Z
 ```
 
 **Response:**
@@ -128,12 +128,90 @@ GET /api/master/rooms?since=2026-07-23T00:00:00Z
 
 Di-update otomatis saat Admin PPI mengubah data via web dashboard.
 
-### Alur Sync Android:
+---
 
-1. Android simpan `last_sync_timestamp` di SharedPreferences/Room
-2. Saat sync, kirim `?since=<last_sync_timestamp>`
-3. Server return hanya data yang berubah sejak timestamp tersebut
-4. Android upsert ke Room lokal
+## 2.2. Room-Item Relations Sync
+
+**Endpoint**: `GET /api/room-items`
+
+Mengembalikan semua relasi room↔item. Android membangun mapping lokal (`roomId → [itemId, ...]`) untuk validasi offline.
+
+**Request query params:**
+```
+GET /api/room-items?since=2026-07-28T00:00:00Z
+```
+
+**Response:**
+```json
+{
+  "data": [
+    { "id": 1, "room_id": 1, "item_id": 1, "created_at": "2026-07-28T10:00:00Z" },
+    { "id": 2, "room_id": 1, "item_id": 2, "created_at": "2026-07-28T10:00:00Z" },
+    { "id": 3, "room_id": 2, "item_id": 1, "created_at": "2026-07-28T10:00:00Z" }
+  ],
+  "synced_at": "2026-07-28T12:00:00Z"
+}
+```
+
+**Format data per-item:**
+| Field | Tipe | Deskripsi |
+|-------|------|-----------|
+| `id` | int | Primary key relasi |
+| `room_id` | int | ID room |
+| `item_id` | int | ID inspection item |
+| `created_at` | string ISO 8601 | Waktu assignment |
+
+**Alur Sync Room-Items di Android:**
+
+1. Setelah sync rooms & inspection-items, Android panggil `GET /api/room-items`
+2. Bangun struktur data lokal:
+   ```kotlin
+   val roomItemMap: Map<Int, List<Int>> // key: roomId, value: list of itemIds
+   ```
+3. Saat submit inspeksi offline, gunakan mapping ini untuk validasi item yang wajib di-score
+4. Simpan `synced_at` untuk sync periodik berikutnya
+
+> **Catatan**: Endpoint ini **selalu** mengembalikan `SyncResponse` (wrapper `{ data, synced_at }`) — tidak seperti `/api/rooms` dan `/api/inspection-items` yang mengembalikan array biasa tanpa query `?since=`.
+
+---
+
+## 2.3. User-Room Relations Sync (Assigned Rooms)
+
+**Endpoint**: `GET /api/auth/me/rooms`
+
+Mengembalikan daftar room yang di-assign ke user yang sedang login (berdasarkan `user_rooms` pivot). Android hanya menampilkan room yang relevan untuk petugas tersebut.
+
+**Request query params:**
+```
+GET /api/auth/me/rooms?since=2026-07-28T00:00:00Z
+```
+
+**Response:**
+```json
+{
+  "data": [
+    { "id": 1, "name": "UGD", "is_active": true, "updated_at": "2026-07-28T10:00:00Z" }
+  ],
+  "synced_at": "2026-07-28T12:00:00Z"
+}
+```
+
+**Format data per-room:**
+| Field | Tipe | Deskripsi |
+|-------|------|-----------|
+| `id` | int | ID room |
+| `name` | string | Nama room |
+| `is_active` | boolean | Status aktif |
+| `updated_at` | string ISO 8601 | Waktu update terakhir |
+
+> **Perbedaan dengan `/api/rooms`**: Endpoint ini hanya mengembalikan room yang di-assign ke user yang login. Android tidak perlu filter manual.
+
+**Alur di Android:**
+
+1. Login → dapat `user.id` dan `user.role`
+2. Sync rooms: panggil `GET /api/auth/me/rooms?since=...`
+3. Simpan daftar room lokal — hanya room ini yang tampil di dropdown/list pemilihan room
+4. Jika user adalah `admin_ppi`, endpoint tetap bisa dipanggil (return empty list — admin PPI dapat full list via `/api/rooms`)
 
 ---
 
@@ -223,6 +301,7 @@ Gunakan kombinasi: **Nginx** untuk first line defense + **Middleware** untuk apl
 {
   "room_id": 1,
   "local_timestamp": "2026-07-23T08:30:00Z",
+  "business_date": "2026-07-23",
   "details": [
     {
       "item_id": 1,
@@ -238,11 +317,12 @@ Gunakan kombinasi: **Nginx** untuk first line defense + **Middleware** untuk apl
 }
 ```
 
-Tidak ada perubahan besar — BE sudah mendukung struktur ini. Konfirmasi bahwa:
+> **Catatan**: `business_date` bersifat opsional — jika tidak dikirim, BE akan mengisi dengan tanggal hari ini. Format: `YYYY-MM-DD`.
 
-1. `local_timestamp` diterima sebagai string ISO 8601
-2. `details[].photos` adalah array string (`photo_file_name` dari upload endpoint)
-3. Idempotency key `(room_id, local_timestamp, inspector_id)` terekstrak dari JWT + body
+Validasi sisi server:
+1. `room_id` harus di-assign ke user yang login (via `user_rooms`)
+2. Semua item yang terasosiasi dengan room (via `room_items`) harus di-score — **tidak boleh ada yang terlewat**
+3. Idempotency key `(room_id, local_timestamp, inspector_id)` — cegah duplikat dari retry
 
 ### Perubahan 4.2: Submit Inspection Response
 
@@ -251,17 +331,64 @@ Tidak ada perubahan besar — BE sudah mendukung struktur ini. Konfirmasi bahwa:
 {
   "id": 42,
   "status": "PENDING",
+  "detail_count": 10,
   "message": "Inspeksi berhasil dikirim"
 }
 ```
 
-Android perlu `id` untuk tracking status di HistoryScreen.
+| Field | Tipe | Deskripsi |
+|-------|------|-----------|
+| `id` | int | ID inspeksi (untuk tracking di HistoryScreen) |
+| `status` | string | `"PENDING"` / `"APPROVED"` / `"REJECTED"` |
+| `detail_count` | int | Jumlah detail item yang di-score |
+| `message` | string | Pesan sukses |
 
-> 📌 **Idempotency Key**: `(room_id, local_timestamp, inspector_id)` — `inspector_id` diambil dari `user.id` yang didapat saat login. Pastikan `inspector_id` di JWT claims atau tersedia di login response.
+> 📌 **Idempotency Key**: `(room_id, local_timestamp, inspector_id)` — `inspector_id` diambil dari `user.id` yang didapat saat login.
+
+### Perubahan 4.3: List Inspections
+
+**Endpoint**: `GET /api/inspections`
+
+**Request query params:**
+```
+GET /api/inspections?status=PENDING&show_all=true
+```
+
+| Parameter | Tipe | Default | Deskripsi |
+|-----------|------|---------|-----------|
+| `status` | string | (all) | Filter status: `PENDING`, `APPROVED`, `REJECTED` |
+| `show_all` | bool | `false` | Untuk supervisor — jika `true`, tampilkan semua room (tidak hanya yang di-assign) |
+
+### Perubahan 4.4: Get Inspection Detail
+
+**Endpoint**: `GET /api/inspections/{id}`
+
+**Response:**
+```json
+{
+  "id": 42,
+  "room_id": 1,
+  "room_name": "UGD",
+  "inspector_name": "petugas01",
+  "status": "PENDING",
+  "business_date": "2026-07-23",
+  "local_timestamp": "2026-07-23T08:30:00Z",
+  "detail_count": 10,
+  "details": [
+    {
+      "id": 1,
+      "item_name_snapshot": "Kebersihan Tangan",
+      "score": 2,
+      "photos": ["uuid-photo-1.jpg"]
+    }
+  ],
+  "rejection_reason": null
+}
+```
 
 ---
 
-## 4.3. Standard Error Response Format
+## 4.5. Standard Error Response Format
 
 Android Interceptor perlu mendeteksi 401 untuk trigger auto-refresh. Gunakan format error response yang konsisten:
 
@@ -297,6 +424,14 @@ Android Interceptor perlu mendeteksi 401 untuk trigger auto-refresh. Gunakan for
 }
 ```
 
+**409 Conflict (duplicate assignment):**
+```json
+{
+  "detail": "Already assigned or invalid room/item",
+  "code": "DUPLICATE_ASSIGNMENT"
+}
+```
+
 > Android menggunakan `code` field (bukan `detail`) untuk logika Interceptor — lebih stabil daripada parsing string.
 
 ---
@@ -308,12 +443,25 @@ Android Interceptor perlu mendeteksi 401 untuk trigger auto-refresh. Gunakan for
 | POST | `/api/auth/login` | Setiap buka app | None | Return `access_token` + `refresh_token` |
 | POST | `/api/auth/refresh` | Tiap 15 menit | Bearer | Cookie (web) + body `{ refresh_token }` (Android) |
 | POST | `/api/auth/logout` | Logout manual | Bearer | Kirim `refresh_token` di body |
-| GET | `/api/master/rooms` | Periodik | Bearer | Dukung `?since=` |
-| GET | `/api/master/inspection-items` | Periodik | Bearer | Dukung `?since=` |
+| GET | `/api/rooms` | Periodik | Bearer | Dukung `?since=` |
+| GET | `/api/inspection-items` | Periodik | Bearer | Dukung `?since=` |
+| **GET** | **`/api/room-items`** | **Periodik** | **Bearer** | **Sync relasi room↔item — selalu `?since=`** |
+| **GET** | **`/api/auth/me/rooms`** | **Periodik** | **Bearer** | **Room yg di-assign ke user login — dukung `?since=`** |
 | POST | `/api/upload` | Per foto (≤ 300KB) | Bearer | Multipart/form-data |
-| POST | `/api/inspections` | Per inspeksi selesai | Bearer | Idempotency key |
-| GET | `/api/inspections` | Riwayat | Bearer | ?status= untuk filter |
+| POST | `/api/inspections` | Per inspeksi selesai | Bearer | Validasi room_items + user_rooms |
+| GET | `/api/inspections` | Riwayat | Bearer | `?status=` filter, `?show_all=` untuk supervisor |
 | GET | `/api/inspections/{id}` | Detail | Bearer | Untuk HistoryScreen |
+
+**Alur Sync Master Data (urutan benar):**
+
+```
+1. GET /api/rooms?since=<ts>         → data rooms
+2. GET /api/inspection-items?since=<ts> → data items
+3. GET /api/room-items?since=<ts>    → mapping room ↔ item (built lokal: roomId → [itemIds])
+4. GET /api/auth/me/rooms?since=<ts> → room yg di-assign ke user (filter UI)
+```
+
+> **Catatan**: `GET /api/rooms` mengembalikan **semua** room aktif. `GET /api/auth/me/rooms` mengembalikan **hanya** room yang di-assign ke user login. Android sync keduanya — gunakan `/api/auth/me/rooms` untuk filter UI, gunakan `/api/rooms` untuk mapping nama room di data historis.
 
 ---
 
@@ -323,7 +471,10 @@ Android Interceptor perlu mendeteksi 401 untuk trigger auto-refresh. Gunakan for
 |-----------|------|--------|--------|
 | **P1** | Login + Refresh dual delivery | Sedang | **Blocking** — Android tidak bisa login/token refresh |
 | **P1** | Logout dengan body token | Kecil | Blocking untuk logout flow |
+| **P2** | Room-Items sync (`/api/room-items`) | Kecil | Android perlu mapping room→item untuk validasi offline |
+| **P2** | User-Rooms sync (`/api/auth/me/rooms`) | Kecil | Android perlu filter room per petugas |
 | **P2** | Master Data `updated_at` + `since` | Kecil | Optimasi sync, bisa ditunda (full download dulu) |
+| **P3** | Submit inspeksi dengan validasi room_items + user_rooms | Kecil | Backend sudah implementasi — Android perlu update body request |
 | **P3** | File size limit (10MB) | Kecil | Safety net, bisa ditunda |
 | **P3** | Upload response tambahan | Kecil | Informasi tambahan, tidak blocking |
 
@@ -338,6 +489,22 @@ Dokumentasi perubahan di ADR BE:
 Tambahkan baris di Key Decisions:
 > **Dual Delivery Refresh Token** — Web menerima Refresh Token via httpOnly cookie, Android menerima via response body dan mengirim via Authorization header / request body.
 
+### ADR-0009 — Room-Item Many-to-Many (Phase 9A)
+
+Endpoint sync room-items untuk Android:
+- `GET /api/room-items?since=...` — semua relasi room↔item
+- `GET /api/rooms/{id}/items` — items per room
+- `GET /api/inspection-items/{id}/rooms` — rooms per item
+
+Validasi submission berubah: dari "semua active items" → "items yang terasosiasi dengan room".
+
+### ADR-0010 — User-Room Assignment (Phase 9B)
+
+Endpoint sync untuk assigned rooms per user:
+- `GET /api/auth/me/rooms?since=...` — room yang di-assign ke user login
+- Inspector hanya bisa submit ke room yang di-assign
+- Supervisor hanya melihat room yang di-assign secara default (`?show_all=true` untuk override)
+
 ### ADR Baru: Dual Delivery Auth
 
-Jika diperlukan, buat ADR-0009 dengan judul *"Dual Delivery Refresh Token — Cookie for Web, Header for Android"*.
+Jika diperlukan, buat ADR-0011 dengan judul *"Dual Delivery Refresh Token — Cookie for Web, Body for Android"*.
