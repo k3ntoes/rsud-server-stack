@@ -9,18 +9,12 @@ export const Route = createRoute({
   component: DashboardPage,
 });
 
-function useDashboardStats() {
+function DashboardPage() {
   const { data: pendingList } = useInspections({ status: "PENDING" });
   const { data: rooms } = useRooms();
 
-  return {
-    pendingCount: pendingList?.length ?? "—",
-    roomCount: rooms?.length ?? "—",
-  };
-}
-
-function DashboardPage() {
-  const stats = useDashboardStats();
+  const pendingCount = pendingList?.length ?? "—";
+  const roomCount = rooms?.length ?? "—";
 
   return (
     <div className="animate-fade-in">
@@ -44,7 +38,7 @@ function DashboardPage() {
             <div>
               <p className="stat-label">Menunggu Persetujuan</p>
               <p className="stat-value text-warning">
-                {stats.pendingCount}
+                {pendingCount}
               </p>
             </div>
           </div>
@@ -58,7 +52,7 @@ function DashboardPage() {
             </div>
             <div>
               <p className="stat-label">Total Ruangan</p>
-              <p className="stat-value text-navy-600">{stats.roomCount}</p>
+              <p className="stat-value text-navy-600">{roomCount}</p>
             </div>
           </div>
         </div>

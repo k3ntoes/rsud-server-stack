@@ -1,8 +1,6 @@
 import json
 import logging
 import os
-from datetime import date
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,7 +52,8 @@ async def recalculate_analytics(db: AsyncSession, inspection_id: int) -> None:
         return
 
     # Extract year_month from business_date
-    ym = _year_month(inspection.business_date)
+    d = inspection.business_date
+    ym = f"{d.year:04d}-{d.month:02d}"
 
     # Calculate scores
     result = await db.execute(
@@ -176,6 +175,3 @@ async def process_one_job(db: AsyncSession, job: BackgroundJob) -> bool:
         await mark_job(db, job.id, "FAILED")
         return False
 
-
-def _year_month(d: date) -> str:
-    return f"{d.year:04d}-{d.month:02d}"
