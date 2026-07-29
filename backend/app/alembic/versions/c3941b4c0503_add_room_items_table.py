@@ -32,9 +32,9 @@ def upgrade() -> None:
     # Auto-assign all active items to all active rooms (backward compat)
     op.execute("""
         INSERT INTO room_items (room_id, item_id, created_at)
-        SELECT r.id, i.id, datetime('now')
+        SELECT r.id, i.id, CURRENT_TIMESTAMP
         FROM rooms r, inspection_items i
-        WHERE r.is_active = 1 AND i.is_active = 1
+        WHERE r.is_active = TRUE AND i.is_active = TRUE
     """)
 
 

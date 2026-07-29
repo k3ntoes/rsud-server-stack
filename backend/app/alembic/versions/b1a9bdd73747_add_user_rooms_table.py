@@ -32,11 +32,11 @@ def upgrade() -> None:
     # Auto-assign all active inspector/supervisor users to all active rooms
     op.execute("""
         INSERT INTO user_rooms (user_id, room_id, created_at)
-        SELECT u.id, r.id, datetime('now')
+        SELECT u.id, r.id, CURRENT_TIMESTAMP
         FROM users u, rooms r
         WHERE u.role IN ('inspector', 'supervisor')
-          AND u.is_active = 1
-          AND r.is_active = 1
+          AND u.is_active = TRUE
+          AND r.is_active = TRUE
     """)
 
 
