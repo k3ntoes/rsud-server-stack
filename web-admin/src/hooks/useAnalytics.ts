@@ -18,11 +18,7 @@ export interface IssueFrequency {
 }
 
 export function currentWeekMonth() {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
-  const monday = new Date(d.setDate(diff));
-  return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}`;
+  return new Date().toISOString().slice(0, 7);
 }
 
 export function useLowestRooms(yearMonth?: string, limit = 3) {

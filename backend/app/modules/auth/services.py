@@ -25,13 +25,6 @@ async def list_users(db: AsyncSession) -> list[User]:
 # ── User-Room (pivot) ──
 
 
-async def list_user_rooms(db: AsyncSession, user_id: int) -> list[UserRoom]:
-    result = await db.execute(
-        select(UserRoom).where(UserRoom.user_id == user_id)
-    )
-    return list(result.scalars().all())
-
-
 async def list_rooms_by_user(db: AsyncSession, user_id: int) -> list[UserRoom]:
     result = await db.execute(
         select(UserRoom).where(UserRoom.user_id == user_id)
@@ -203,9 +196,3 @@ async def refresh_session(
     new_access = create_access_token({"sub": str(user.id)})
     return new_access, new_session.refresh_token, user
 
-
-async def revoke_session(db: AsyncSession, session_id: int) -> None:
-    session = await db.get(UserSession, session_id)
-    if session:
-        session.is_active = False
-        await db.commit()

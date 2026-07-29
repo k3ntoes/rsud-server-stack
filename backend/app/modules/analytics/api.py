@@ -12,11 +12,6 @@ from app.modules.analytics.services import get_lowest_rooms, get_top_issues, get
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 
-def _resolve_year_month(year_month: str | None) -> str:
-    """Return year_month or default to current YYYY-MM."""
-    return year_month or datetime.now().strftime("%Y-%m")
-
-
 @router.get("/lowest-rooms", response_model=list[RoomScoreOut])
 async def lowest_rooms(
     year_month: str | None = Query(None, description="YYYY-MM, defaults to current"),
@@ -24,7 +19,7 @@ async def lowest_rooms(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_supervisor_user),
 ):
-    rows = await get_lowest_rooms(db, _resolve_year_month(year_month), limit)
+    rows = await get_lowest_rooms(db, year_month or datetime.now().strftime("%Y-%m"), limit)
     return [
         RoomScoreOut(
             room_id=r.room_id,
@@ -45,7 +40,7 @@ async def top_issues(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_supervisor_user),
 ):
-    return await get_top_issues(db, _resolve_year_month(year_month), limit)
+    return await get_top_issues(db, year_month or datetime.now().strftime("%Y-%m"), limit)
 
 
 @router.get("/inspector-performance", response_model=list[InspectorPerformanceOut])
@@ -54,4 +49,4 @@ async def inspector_performance(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_supervisor_user),
 ):
-    return await get_inspector_performance(db, _resolve_year_month(year_month))
+    return await get_inspector_performance(db, year_month or datetime.now().strftime("%Y-%m"))

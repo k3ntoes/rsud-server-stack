@@ -11,6 +11,8 @@ from app.core.errors import error_response
 from app.core.security import create_access_token
 from app.modules.auth.dependencies import get_admin_user
 from app.modules.auth.models import User, UserSession, UserRoom
+from app.modules.master.models import Room
+from app.modules.master.schemas import SyncResponse, RoomOut
 from app.modules.auth.schemas import (
     LoginRequest, TokenResponse, UserOut,
     UserCreate, UserUpdate, UserListOut, ChangePasswordRequest,
@@ -21,7 +23,7 @@ from app.modules.auth.services import (
     authenticate, create_session, refresh_session, create_user,
     list_users, update_user, deactivate_user, change_password,
     admin_reset_password,
-    list_user_rooms, list_rooms_by_user, list_users_by_room,
+    list_rooms_by_user, list_users_by_room,
     assign_user_to_room, unassign_user_from_room, get_user_room_ids,
 )
 
@@ -220,9 +222,6 @@ async def get_my_rooms(
     current_user: User = Depends(get_current_user),
 ):
     """List room assignments for current user (Android sync)."""
-    from app.modules.master.models import Room
-    from app.modules.master.schemas import SyncResponse, RoomOut
-
     result = await db.execute(
         select(UserRoom).where(UserRoom.user_id == current_user.id)
     )

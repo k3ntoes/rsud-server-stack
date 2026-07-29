@@ -20,13 +20,13 @@ def _base_inspection_query() -> select:
     )
 
 
-async def _refetch_inspection(
-    db: AsyncSession, inspection_id: int
-) -> Inspection | None:
-    result = await db.execute(
-        _base_inspection_query().where(Inspection.id == inspection_id)
-    )
-    return result.unique().scalar_one_or_none()
+async def _refresh_inspection(
+    db: AsyncSession, inspection: Inspection
+) -> Inspection:
+    await db.refresh(inspection, ["details"])
+    for detail in inspection.details:
+        await db.refresh(detail, ["photos"])
+    return inspection
 
 
 async def submit_inspection(
@@ -89,8 +89,7 @@ async def submit_inspection(
     await db.commit()
 
     # Re-fetch with relationships loaded — needed for details/photos access
-    fetched = await _refetch_inspection(db, inspection.id)
-    assert fetched is not None
+    fetched = await _refresh_inspection(db, inspection)
 
     # Create thumbnail generation jobs for each uploaded photo
     from app.modules.background.services import create_job
@@ -144,7 +143,10 @@ async def list_inspections(
 
 
 async def get_inspection(db: AsyncSession, inspection_id: int) -> Inspection | None:
-    return await _refetch_inspection(db, inspection_id)
+    result = await db.execute(
+        _base_inspection_query().where(Inspection.id == inspection_id)
+    )
+    return result.unique().scalar_one_or_none()
 
 
 async def approve_inspection(db: AsyncSession, inspection_id: int) -> Inspection | None:
@@ -157,9 +159,9 @@ async def approve_inspection(db: AsyncSession, inspection_id: int) -> Inspection
     from app.modules.background.services import create_job
     await create_job(db, "recalculate_analytics", inspection_id)
 
+    inspection = await _refresh_inspection(db, inspection)
     await db.commit()
-    # Re-fetch with relationships for response serialization
-    return await _refetch_inspection(db, inspection_id)
+    return inspection
 
 
 async def reject_inspection(
@@ -170,6 +172,6 @@ async def reject_inspection(
         return None
     inspection.status = "REJECTED"
     inspection.rejection_reason = reason
+    inspection = await _refresh_inspection(db, inspection)
     await db.commit()
-    # Re-fetch with relationships for response serialization
-    return await _refetch_inspection(db, inspection_id)
+    return inspection

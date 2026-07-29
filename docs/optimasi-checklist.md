@@ -26,9 +26,9 @@ flowchart LR
 
 | # | Issue ID | Title | Status | Est. | Files |
 |---|----------|-------|--------|:----:|-------|
-| 1 | `rsud-server-stack-imw` | **Optimasi Backend — Hapus Dead Code & Duplikat Fungsi** | 🔴 Open | 5 menit | `auth/services.py` |
-| 2 | `rsud-server-stack-74t` | **Optimasi FE — Hapus Dead Code: `useRoomUsers`** | 🔴 Open | 2 menit | `useUsers.ts` |
-| 3 | `rsud-server-stack-41h` | **Optimasi Media — Hapus Token Endpoints & Simplify PhotoThumb** | 🔴 Open | 15 menit | `media/api.py`, `inspection-detail.tsx` |
+| 1 | `rsud-server-stack-imw` | **Optimasi Backend — Hapus Dead Code & Duplikat Fungsi** | 🟢 Done | 5 menit | `auth/services.py` |
+| 2 | `rsud-server-stack-74t` | **Optimasi FE — Hapus Dead Code: `useRoomUsers`** | 🟢 Done | 2 menit | `useUsers.ts` |
+| 3 | `rsud-server-stack-41h` | **Optimasi Media — Hapus Token Endpoints & Simplify PhotoThumb** | 🟢 Done | 15 menit | `media/api.py`, `inspection-detail.tsx` |
 
 **Ketergantungan:**
 - `41h` menunggu `6j8` (jika ada conflict dengan lazy imports)
@@ -37,17 +37,17 @@ flowchart LR
 
 | # | Issue ID | Title | Status | Est. | Files |
 |---|----------|-------|--------|:----:|-------|
-| 4 | `rsud-server-stack-4kx` | **Optimasi FE — Simplify MasterDataPage & Inline CRUD** | 🔴 Open | 15 menit | `MasterDataPage.tsx`, `rooms.tsx`, `items.tsx` |
-| 5 | `rsud-server-stack-dzb` | **Optimasi FE — Dedup & Simplify Komponen (`statusBadge`, `Bar`, `useCallback`)** | 🔴 Open | 10 menit | `inspections.tsx`, `inspection-detail.tsx`, `analytics.tsx`, `useAuth.tsx`, `users.tsx` |
-| 6 | `rsud-server-stack-6j8` | **Optimasi Backend — Code Cleanup (Inline Helpers & Top-Level Imports)** | 🔴 Open | 10 menit | `master/services.py`, `analytics/api.py`, `auth/api.py` |
-| 7 | `rsud-server-stack-r10` | **Optimasi Inspection — Ganti `_refetch_inspection` dengan `db.refresh()`** | 🔴 Open | 20 menit | `inspection/services.py` |
+| 4 | `rsud-server-stack-4kx` | **Optimasi FE — Simplify MasterDataPage & Inline CRUD** | 🟢 Done | 15 menit | `MasterDataPage.tsx`, `rooms.tsx`, `items.tsx` |
+| 5 | `rsud-server-stack-dzb` | **Optimasi FE — Dedup & Simplify Komponen (`statusBadge`, `Bar`, `useCallback`)** | 🟢 Done | 10 menit | `inspections.tsx`, `inspection-detail.tsx`, `analytics.tsx`, `useAuth.tsx`, `users.tsx` |
+| 6 | `rsud-server-stack-6j8` | **Optimasi Backend — Code Cleanup (Inline Helpers & Top-Level Imports)** | 🟢 Done | 10 menit | `master/services.py`, `analytics/api.py`, `auth/api.py` |
+| 7 | `rsud-server-stack-r10` | **Optimasi Inspection — Ganti `_refetch_inspection` dengan `db.refresh()`** | 🟢 Done | 20 menit | `inspection/services.py` |
 
 ### 🟢 Prioritas 3 (P3) — Low Impact, Quick Wins
 
 | # | Issue ID | Title | Status | Est. | Files |
 |---|----------|-------|--------|:----:|-------|
-| 8 | `rsud-server-stack-u9w` | **Optimasi Frontend — Fix `currentWeekMonth` & `generatePassword`** | 🔴 Open | 5 menit | `useAnalytics.ts`, `users.tsx` |
-| 9 | `rsud-server-stack-hit` | **Optimasi Schema — Ketatkan tipe `SyncResponse.data`** | 🔴 Open | 2 menit | `master/schemas.py` |
+| 8 | `rsud-server-stack-u9w` | **Optimasi Frontend — Fix `currentWeekMonth` & `generatePassword`** | 🟢 Done | 5 menit | `useAnalytics.ts`, `users.tsx` |
+| 9 | `rsud-server-stack-hit` | **Optimasi Schema — Ketatkan tipe `SyncResponse.data`** | 🟢 Done | 2 menit | `master/schemas.py` |
 
 ---
 

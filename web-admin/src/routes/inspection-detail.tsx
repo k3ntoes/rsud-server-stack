@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { createRoute, useParams, useNavigate } from "@tanstack/react-router";
 import { protectedRoute } from "./_protected";
 import Modal from "../components/Modal";
-import { apiRequest } from "../lib/api";
 import {
   useInspection,
   useApproveInspection,
@@ -11,18 +10,23 @@ import {
 import { useRooms } from "../hooks/useMasterData";
 
 function PhotoThumb({ filename }: { filename: string }) {
-  const [token, setToken] = useState<string | null>(null);
+  const [src, setSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    apiRequest<{ token: string }>(
-      `/api/media/token?filename=${encodeURIComponent(filename)}`,
-      { method: "POST" },
-    )
-      .then((data) => {
-        if (!cancelled) {
-          setToken(data.token);
+    const token = sessionStorage.getItem("auth_token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    fetch(`/api/media/${encodeURIComponent(filename)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => (r.ok ? r.blob() : null))
+      .then((blob) => {
+        if (!cancelled && blob) {
+          setSrc(URL.createObjectURL(blob));
           setLoading(false);
         }
       })
@@ -38,23 +42,28 @@ function PhotoThumb({ filename }: { filename: string }) {
     return <div className="h-10 w-10 animate-pulse rounded border bg-navy-100" />;
   }
 
-  if (!token) {
+  if (!src) {
     return (
-      <span className="text-[10px] text-ink-subtle">
+      <a
+        href={`/api/media/${encodeURIComponent(filename)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[10px] text-teal-600 underline hover:text-teal-700"
+      >
         {filename.slice(0, 12)}…
-      </span>
+      </a>
     );
   }
 
   return (
     <a
-      href={`/api/media/access/${token}`}
+      href={src}
       target="_blank"
       rel="noopener noreferrer"
       className="group relative inline-block"
     >
       <img
-        src={`/api/media/access/${token}`}
+        src={src}
         alt=""
         className="h-10 w-10 rounded object-cover ring-1 ring-navy-200/50 transition-shadow group-hover:ring-2 group-hover:ring-teal-400"
         loading="lazy"
@@ -69,7 +78,7 @@ export const Route = createRoute({
   component: InspectionDetailPage,
 });
 
-function statusBadge(status: string) {
+export function statusBadge(status: string) {
   switch (status) {
     case "PENDING":
       return (

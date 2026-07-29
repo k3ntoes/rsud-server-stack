@@ -113,13 +113,6 @@ export function useUserRooms(userId: number) {
   });
 }
 
-export function useRoomUsers(roomId: number) {
-  return useQuery({
-    queryKey: ["user-rooms", "room", roomId],
-    queryFn: () => apiRequest<UserRoom[]>(`/api/rooms/${roomId}/users`),
-    enabled: !!roomId,
-  });
-}
 
 export function useAssignUserToRoom() {
   const qc = useQueryClient();

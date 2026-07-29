@@ -3,6 +3,7 @@ import { createRoute, useNavigate } from "@tanstack/react-router";
 import { protectedRoute } from "./_protected";
 import { useInspections } from "../hooks/useInspections";
 import { useRooms } from "../hooks/useMasterData";
+import { statusBadge } from "./inspection-detail";
 
 export const Route = createRoute({
   getParentRoute: () => protectedRoute,
@@ -29,23 +30,6 @@ function InspectionsPage() {
   const navigate = useNavigate();
 
   const roomMap = new Map(rooms?.map((r) => [r.id, r.name]) ?? []);
-
-  const statusBadge = (s: string) => {
-    switch (s) {
-      case "PENDING":
-        return <span className="badge-pending">Menunggu</span>;
-      case "APPROVED":
-        return <span className="badge-approved">Disetujui</span>;
-      case "REJECTED":
-        return <span className="badge-rejected">Ditolak</span>;
-      default:
-        return (
-          <span className="inline-flex items-center rounded-full bg-navy-100/40 px-2.5 py-0.5 text-xs font-medium text-navy-500 ring-1 ring-inset ring-navy-200/50">
-            {s}
-          </span>
-        );
-    }
-  };
 
   return (
     <div className="animate-fade-in">

@@ -3,11 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.master.models import Room, InspectionItem
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
+from app.modules.master.models import Room, InspectionItem, RoomItem
 
 
 async def list_rooms(db: AsyncSession, since: datetime | None = None) -> list[Room]:
@@ -23,7 +19,7 @@ async def get_room(db: AsyncSession, room_id: int) -> Room | None:
 
 
 async def create_room(db: AsyncSession, name: str) -> Room:
-    room = Room(name=name, updated_at=_now())
+    room = Room(name=name, updated_at=datetime.now(timezone.utc))
     db.add(room)
     await db.commit()
     await db.refresh(room)
@@ -35,7 +31,7 @@ async def update_room(db: AsyncSession, room_id: int, name: str) -> Room | None:
     if room is None or not room.is_active:
         return None
     room.name = name
-    room.updated_at = _now()
+    room.updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(room)
     return room
@@ -46,7 +42,7 @@ async def delete_room(db: AsyncSession, room_id: int) -> bool:
     if room is None or not room.is_active:
         return False
     room.is_active = False
-    room.updated_at = _now()
+    room.updated_at = datetime.now(timezone.utc)
     await db.commit()
     return True
 
@@ -55,7 +51,6 @@ async def delete_room(db: AsyncSession, room_id: int) -> bool:
 
 
 async def list_room_items(db: AsyncSession, since: datetime | None = None) -> list:
-    from app.modules.master.models import RoomItem
     query = select(RoomItem).order_by(RoomItem.room_id, RoomItem.item_id)
     if since:
         query = query.where(RoomItem.created_at >= since)
@@ -64,7 +59,6 @@ async def list_room_items(db: AsyncSession, since: datetime | None = None) -> li
 
 
 async def list_items_by_room(db: AsyncSession, room_id: int) -> list:
-    from app.modules.master.models import RoomItem
     result = await db.execute(
         select(RoomItem).where(RoomItem.room_id == room_id)
     )
@@ -72,7 +66,6 @@ async def list_items_by_room(db: AsyncSession, room_id: int) -> list:
 
 
 async def list_rooms_by_item(db: AsyncSession, item_id: int) -> list:
-    from app.modules.master.models import RoomItem
     result = await db.execute(
         select(RoomItem).where(RoomItem.item_id == item_id)
     )
@@ -80,7 +73,6 @@ async def list_rooms_by_item(db: AsyncSession, item_id: int) -> list:
 
 
 async def assign_item_to_room(db: AsyncSession, room_id: int, item_id: int):
-    from app.modules.master.models import RoomItem
     ri = RoomItem(room_id=room_id, item_id=item_id)
     db.add(ri)
     await db.commit()
@@ -89,7 +81,6 @@ async def assign_item_to_room(db: AsyncSession, room_id: int, item_id: int):
 
 
 async def unassign_item_from_room(db: AsyncSession, room_id: int, item_id: int) -> bool:
-    from app.modules.master.models import RoomItem
     result = await db.execute(
         select(RoomItem).where(
             RoomItem.room_id == room_id, RoomItem.item_id == item_id
@@ -116,7 +107,7 @@ async def get_item(db: AsyncSession, item_id: int) -> InspectionItem | None:
 
 
 async def create_item(db: AsyncSession, name: str) -> InspectionItem:
-    item = InspectionItem(name=name, updated_at=_now())
+    item = InspectionItem(name=name, updated_at=datetime.now(timezone.utc))
     db.add(item)
     await db.commit()
     await db.refresh(item)
@@ -128,7 +119,7 @@ async def update_item(db: AsyncSession, item_id: int, name: str) -> InspectionIt
     if item is None or not item.is_active:
         return None
     item.name = name
-    item.updated_at = _now()
+    item.updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(item)
     return item
@@ -139,6 +130,6 @@ async def delete_item(db: AsyncSession, item_id: int) -> bool:
     if item is None or not item.is_active:
         return False
     item.is_active = False
-    item.updated_at = _now()
+    item.updated_at = datetime.now(timezone.utc)
     await db.commit()
     return True

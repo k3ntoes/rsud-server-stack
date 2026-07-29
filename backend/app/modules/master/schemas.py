@@ -52,5 +52,5 @@ class RoomItemAssign(BaseModel):
 
 
 class SyncResponse(BaseModel):
-    data: list
+    data: list[dict]
     synced_at: datetime

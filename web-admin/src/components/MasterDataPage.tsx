@@ -19,9 +19,6 @@ interface MasterDataPageProps<T extends Entity> {
   modalAddTitle: string;
   emptyIcon: string;
   emptyText: string;
-  emptySearchText?: string;
-  editLabel?: string;
-  deleteLabel?: string;
   renderActions?: (item: T) => React.ReactNode;
   // Hooks
   useList: () => {
@@ -45,9 +42,6 @@ export default function MasterDataPage<T extends Entity>({
   modalAddTitle,
   emptyIcon,
   emptyText,
-  emptySearchText = "Tidak ada hasil.",
-  editLabel = "Edit",
-  deleteLabel = "Hapus",
   renderActions,
   useList,
   useCreate,
@@ -137,7 +131,7 @@ export default function MasterDataPage<T extends Entity>({
           <div className="empty-state">
             <span className="empty-state-icon">{search ? "🔍" : emptyIcon}</span>
             <p className="empty-state-text">
-              {search ? emptySearchText : emptyText}
+              {search ? "Tidak ada hasil." : emptyText}
             </p>
           </div>
         ) : (
@@ -169,7 +163,7 @@ export default function MasterDataPage<T extends Entity>({
                         onClick={() => openEdit(item.id, item.name)}
                         className="btn-ghost text-xs"
                       >
-                        {editLabel}
+                        Edit
                       </button>
                       <button
                         onClick={() => {
@@ -181,7 +175,7 @@ export default function MasterDataPage<T extends Entity>({
                         }}
                         className="btn-ghost text-xs text-ink-muted hover:text-danger"
                       >
-                        {deleteLabel}
+                        Hapus
                       </button>
                     </td>
                   </tr>

@@ -33,8 +33,6 @@ function UsersPage() {
   const create = useCreateUser();
   const update = useUpdateUser();
   const del = useDeleteUser();
-  const assignUserRoom = useAssignUserToRoom();
-  const unassignUserRoom = useUnassignUserFromRoom();
 
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
