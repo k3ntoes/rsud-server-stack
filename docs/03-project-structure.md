@@ -43,11 +43,11 @@ rsud-server-stack/
 │
 ├── web-admin/                      # React + Vite Frontend (SPA)
 │   ├── src/
-│   │   ├── components/             # Layout.tsx (sidebar+header), Modal.tsx (native <dialog>)
-│   │   ├── routes/                 # TanStack Router: login, dashboard, rooms, items, inspections, analytics
-│   │   ├── hooks/                  # useAuth, useMasterData, useInspections, useAnalytics
-│   │   ├── lib/                    # api.ts (kustom fetch wrapper + auto-refresh)
-│   │   ├── main.tsx                # Entry point (Router + Query + Auth setup)
+│   │   ├── components/             # Layout.tsx (sidebar+header), Modal.tsx (native <dialog>), DataTable.tsx (paginated table), MasterDataPage.tsx (CRUD), Icons.tsx
+│   │   ├── routes/                 # TanStack Router: login, dashboard, rooms, items, inspections, inspection-detail, users, inspectors, analytics
+│   │   ├── hooks/                  # useAuth, useMasterData, useInspections, useAnalytics, useUsers, useDebounce
+│   │   ├── lib/                    # api.ts (kustom fetch wrapper + auto-refresh JWT)
+│   │   ├── main.tsx                # Entry point (Router + Query + Auth + ReactQueryDevtools)
 │   │   └── index.css               # Tailwind + Planograph utility classes
 │   ├── CONTEXT.md                  # Frontend domain context
 │   ├── package.json

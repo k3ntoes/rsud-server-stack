@@ -1,7 +1,10 @@
 import { useState, useCallback } from "react";
 import { createRoute } from "@tanstack/react-router";
+import type { PaginationState, SortingState, ColumnDef, OnChangeFn } from "@tanstack/react-table";
 import { protectedRoute } from "./_protected";
 import Modal from "../components/Modal";
+import DataTable from "../components/DataTable";
+import { useDebounce } from "../hooks/useDebounce";
 import {
   useUsers,
   useCreateUser,
@@ -14,7 +17,7 @@ import {
   type User,
   ROLES,
 } from "../hooks/useUsers";
-import { useRooms } from "../hooks/useMasterData";
+import { useRoomsAll } from "../hooks/useMasterData";
 
 export const Route = createRoute({
   getParentRoute: () => protectedRoute,
@@ -29,12 +32,32 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 function UsersPage() {
-  const { data: users, isLoading, error } = useUsers();
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 20,
+  });
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
+  const activeSort = sorting[0];
+  const sortBy = activeSort?.id;
+  const sortOrder = activeSort?.desc ? "desc" : "asc";
+  const { data: result, isLoading, error } = useUsers(
+    pagination.pageIndex,
+    pagination.pageSize,
+    debouncedSearch,
+    sortBy,
+    sortOrder,
+  );
+
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    setSorting(updater);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  };
   const create = useCreateUser();
   const update = useUpdateUser();
   const del = useDeleteUser();
 
-  const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [resetPwUser, setResetPwUser] = useState<User | null>(null);
@@ -42,6 +65,7 @@ function UsersPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("inspector");
+  const [editActive, setEditActive] = useState(true);
   const [saveError, setSaveError] = useState("");
 
   const openCreate = () => {
@@ -49,6 +73,7 @@ function UsersPage() {
     setUsername("");
     setPassword("");
     setRole("inspector");
+    setEditActive(true);
     setSaveError("");
     setModalOpen(true);
   };
@@ -58,6 +83,7 @@ function UsersPage() {
     setUsername(u.username);
     setPassword("");
     setRole(u.role);
+    setEditActive(u.is_active);
     setSaveError("");
     setModalOpen(true);
   };
@@ -72,7 +98,7 @@ function UsersPage() {
           id: editing.id,
           username: trimmed,
           role,
-          is_active: editing.is_active,
+          is_active: editActive,
         });
       } else {
         if (!password) {
@@ -87,9 +113,74 @@ function UsersPage() {
     }
   };
 
-  const filtered = users?.filter((u) =>
-    u.username.toLowerCase().includes(search.toLowerCase()),
-  );
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: "username",
+      header: "Username",
+      cell: ({ row }) => (
+        <span className="font-medium text-ink">{row.original.username}</span>
+      ),
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      cell: ({ row }) => (
+        <span className="inline-flex items-center rounded-full bg-navy-100/40 px-2.5 py-0.5 text-xs font-medium text-navy-600 ring-1 ring-inset ring-navy-200/50">
+          {ROLE_LABELS[row.original.role] ?? row.original.role}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "is_active",
+      header: "Status",
+      cell: ({ row }) =>
+        row.original.is_active ? (
+          <span className="badge-approved">Aktif</span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-navy-100/40 px-2.5 py-0.5 text-xs font-medium text-navy-500 ring-1 ring-inset ring-navy-200/50">
+            Nonaktif
+          </span>
+        ),
+    },
+    {
+      id: "actions",
+      header: () => <span className="text-right block">Aksi</span>,
+      cell: ({ row }) => {
+        const u = row.original;
+        return (
+          <div className="text-right">
+            {u.role !== "admin_ppi" && (
+              <button
+                onClick={() => setRoomAssignUser(u)}
+                className="btn-ghost text-xs"
+              >
+                Ruangan
+              </button>
+            )}
+            <button onClick={() => openEdit(u)} className="btn-ghost text-xs">
+              Edit
+            </button>
+            <button
+              onClick={() => setResetPwUser(u)}
+              className="btn-ghost text-xs text-ink-muted hover:text-teal-600"
+            >
+              Reset PW
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm(`Nonaktifkan pengguna "${u.username}"?`)) {
+                  del.mutate(u.id);
+                }
+              }}
+              className="btn-ghost text-xs text-ink-muted hover:text-danger"
+            >
+              Hapus
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="animate-fade-in">
@@ -108,94 +199,29 @@ function UsersPage() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPagination((p) => ({ ...p, pageIndex: 0 }));
+            }}
             placeholder="Cari pengguna..."
             className="input-plan max-w-xs"
           />
         </div>
 
-        {isLoading ? (
-          <div className="p-8">
-            <div className="skeleton mb-3 h-5 w-3/4" />
-            <div className="skeleton mb-3 h-5 w-1/2" />
-            <div className="skeleton h-5 w-2/3" />
-          </div>
-        ) : error ? (
-          <div className="empty-state">
-            <span className="empty-state-icon">⚠️</span>
-            <p className="empty-state-text">Gagal memuat data.</p>
-          </div>
-        ) : filtered?.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-state-icon">👤</span>
-            <p className="empty-state-text">
-              {search ? "Tidak ada hasil." : "Belum ada pengguna."}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="table-plan">
-              <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th className="text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered?.map((u) => (
-                  <tr key={u.id}>
-                    <td className="font-medium text-ink">{u.username}</td>
-                    <td>
-                      <span className="inline-flex items-center rounded-full bg-navy-100/40 px-2.5 py-0.5 text-xs font-medium text-navy-600 ring-1 ring-inset ring-navy-200/50">
-                        {ROLE_LABELS[u.role] ?? u.role}
-                      </span>
-                    </td>
-                    <td>
-                      {u.is_active ? (
-                        <span className="badge-approved">Aktif</span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-navy-100/40 px-2.5 py-0.5 text-xs font-medium text-navy-500 ring-1 ring-inset ring-navy-200/50">
-                          Nonaktif
-                        </span>
-                      )}
-                    </td>
-                    <td className="text-right">
-                      {u.role !== "admin_ppi" && (
-                        <button
-                          onClick={() => setRoomAssignUser(u)}
-                          className="btn-ghost text-xs"
-                        >
-                          Ruangan
-                        </button>
-                      )}
-                      <button onClick={() => openEdit(u)} className="btn-ghost text-xs">
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setResetPwUser(u)}
-                        className="btn-ghost text-xs text-ink-muted hover:text-teal-600"
-                      >
-                        Reset PW
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Nonaktifkan pengguna "${u.username}"?`)) {
-                            del.mutate(u.id);
-                          }
-                        }}
-                        className="btn-ghost text-xs text-ink-muted hover:text-danger"
-                      >
-                        Hapus
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <DataTable
+          columns={columns}
+          data={result?.items ?? []}
+          pagination={pagination}
+          totalPages={result?.total_pages ?? 1}
+          total={result?.total ?? 0}
+          onPaginationChange={setPagination}
+          sorting={sorting}
+          onSortingChange={handleSortingChange}
+          isLoading={isLoading}
+          error={error}
+          emptyIcon="👤"
+          emptyText={search ? "Tidak ada hasil." : "Belum ada pengguna."}
+        />
       </div>
 
       <Modal
@@ -234,10 +260,8 @@ function UsersPage() {
             <label className="flex items-center gap-2 text-sm text-ink">
               <input
                 type="checkbox"
-                checked={editing.is_active}
-                onChange={(e) =>
-                  setEditing({ ...editing, is_active: e.target.checked })
-                }
+                checked={editActive}
+                onChange={(e) => setEditActive(e.target.checked)}
                 className="h-4 w-4 rounded border-navy-300 text-teal-600 focus:ring-teal-500"
               />
               Pengguna aktif
@@ -306,7 +330,7 @@ function UserRoomModal({
   user: User | null;
   onClose: () => void;
 }) {
-  const { data: allRooms } = useRooms();
+  const { data: allRooms } = useRoomsAll();
   const { data: userRooms } = useUserRooms(user?.id ?? 0);
   const assignRoom = useAssignUserToRoom();
   const unassignRoom = useUnassignUserFromRoom();

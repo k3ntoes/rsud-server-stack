@@ -9,9 +9,10 @@ This file maps the domain contexts in this repository. Each context has its own 
 | 🔐 **auth** | `backend/app/modules/auth/CONTEXT.md` | User authentication, JWT tokens, sessions, roles & permissions |
 | 📋 **inspection** | `backend/app/modules/inspection/CONTEXT.md` | Core inspection workflow: submit, approve, reject, scoring |
 | 🏗️ **master** | `backend/app/modules/master/CONTEXT.md` | Master data: rooms, inspection items, soft-delete management |
-| 📊 **analytics** | `backend/app/modules/analytics/CONTEXT.md` | CQRS analytics, dashboard stats (weekly default), reporting |
+| 📊 **analytics** | `backend/app/modules/analytics/CONTEXT.md` | CQRS analytics, dashboard stats, reporting |
 | 🖼️ **media** | `backend/app/modules/media/CONTEXT.md` | Image upload, thumbnail generation, one-time token access |
 | ⚙️ **background** | `backend/app/modules/background/CONTEXT.md` | Background jobs, outbox pattern, state machine |
+| 🔧 **core** | `backend/app/core/CONTEXT.md` | Cross-cutting utilities: pagination, sorting, database, security, error responses, config |
 | 🖥️ **web-admin** | `web-admin/CONTEXT.md` | Frontend SPA: auth patterns, hooks, routing, Planograph UI |
 
 ## Cross-cutting concerns
@@ -25,7 +26,7 @@ This file maps the domain contexts in this repository. Each context has its own 
 - **Photos**: Multi-photo per item via `inspection_photos` table, local storage (Docker volume)
 - **Scoring**: 0 (Berisiko+wajib foto), 1 (Minor Defect), 2 (Sesuai Standar)
 - **Dev Port**: Backend di port 8100 (8000 digunakan oleh Portainer di host). Sesuaikan di `.env` jika perlu.
-- **Testing**: 35 unit test (pytest-asyncio + in-memory SQLite), `PYTHONPATH=.` untuk `uv run`. Lihat ADR-0006.
+- **Testing**: 68+ unit test (pytest-asyncio + in-memory SQLite), `PYTHONPATH=.` untuk `uv run`. Lihat ADR-0006.
 - **Tooling**: `PYTHONPATH=.` diperlukan untuk semua command `uv run` (uv tidak menambahkan cwd ke Python path secara default)
 
 ## ADR Index
@@ -42,5 +43,16 @@ This file maps the domain contexts in this repository. Each context has its own 
 | ADR-0008 | ✅ Accepted | User Management & Monitoring — User CRUD, Change Password, Inspector Performance |
 | ADR-0009 | ✅ Accepted | Room-Item Many-to-Many Relationship — per-room inspection items via pivot table |
 | ADR-0010 | ✅ Accepted | User-Room Assignment — inspector & supervisor assignment to rooms via pivot table |
+| ADR-0011 | ✅ Accepted | Dashboard Dedicated Endpoint — satu endpoint untuk 4 card statistik dashboard |
 
 System-wide ADRs: `docs/adr/`
+
+## Recent Updates
+
+| Tanggal | Perubahan |
+|---------|-----------|
+| 29 Jul 2026 | ADR-0011: Dashboard Dedicated Endpoint |
+| 29 Jul 2026 | ADR-0009, ADR-0010, ADR-0011 added to ADR index |
+| 29 Jul 2026 | Cross-cutting: User-Rooms bulk sync endpoint `GET /api/auth/user-rooms` |
+| 29 Jul 2026 | Cross-cutting: per_page limit master data dinaikkan ke 10000 |
+| 29 Jul 2026 | Web Admin: React Query DevTools, @tanstack/react-table, DataTable component |

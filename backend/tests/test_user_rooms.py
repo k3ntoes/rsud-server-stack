@@ -391,10 +391,11 @@ async def test_list_users_includes_room_ids(client: AsyncClient, db_session: Asy
     resp = await client.get("/api/auth/users", headers=headers)
     assert resp.status_code == 200
     data = resp.json()
-    insp_data = next(u for u in data if u["id"] == inspector.id)
+    items = data["items"]
+    insp_data = next(u for u in items if u["id"] == inspector.id)
     assert "room_ids" in insp_data
     assert sorted(insp_data["room_ids"]) == sorted([room_a.id, room_b.id])
 
     # Admin with no rooms should have empty list
-    admin_data = next(u for u in data if u["id"] == admin.id)
+    admin_data = next(u for u in items if u["id"] == admin.id)
     assert admin_data["room_ids"] == []

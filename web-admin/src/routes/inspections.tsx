@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { createRoute, useNavigate } from "@tanstack/react-router";
+import type { PaginationState, SortingState, ColumnDef, OnChangeFn } from "@tanstack/react-table";
 import { protectedRoute } from "./_protected";
-import { useInspections } from "../hooks/useInspections";
-import { useRooms } from "../hooks/useMasterData";
+import DataTable from "../components/DataTable";
+import { useInspections, type InspectionListItem } from "../hooks/useInspections";
+import { useRoomsAll } from "../hooks/useMasterData";
+import { useDebounce } from "../hooks/useDebounce";
 import { statusBadge } from "./inspection-detail";
 
 export const Route = createRoute({
@@ -22,14 +25,92 @@ const STATUS_LABELS: Record<string, string> = {
 function InspectionsPage() {
   const [statusFilter, setStatusFilter] = useState("PENDING");
   const [showAll, setShowAll] = useState(false);
-  const { data: inspections, isLoading, error } = useInspections({
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 20,
+  });
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
+
+  const params = {
     ...(statusFilter ? { status: statusFilter } : {}),
     show_all: showAll ? "true" : undefined,
-  });
-  const { data: rooms } = useRooms();
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+  };
+
+  const activeSort = sorting[0];
+  const sortBy = activeSort?.id;
+  const sortOrder = activeSort?.desc ? "desc" : "asc";
+
+  const { data: result, isLoading, error } = useInspections(
+    params,
+    pagination.pageIndex,
+    pagination.pageSize,
+    sortBy,
+    sortOrder,
+  );
+
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    setSorting(updater);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  };
+  const { data: rooms } = useRoomsAll();
   const navigate = useNavigate();
 
   const roomMap = new Map(rooms?.map((r) => [r.id, r.name]) ?? []);
+
+  const columns: ColumnDef<InspectionListItem>[] = [
+    {
+      accessorKey: "business_date",
+      header: "Tanggal",
+      cell: ({ row }) => (
+        <span className="text-ink-muted">{row.original.business_date}</span>
+      ),
+    },
+    {
+      id: "room_name",
+      header: "Ruangan",
+      cell: ({ row }) => (
+        <span className="font-medium text-ink">
+          {roomMap.get(row.original.room_id) ?? `Ruangan #${row.original.room_id}`}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => statusBadge(row.original.status),
+    },
+    {
+      accessorKey: "detail_count",
+      header: () => <span className="text-center block">Item</span>,
+      cell: ({ row }) => (
+        <span className="block text-center text-ink-muted">
+          {row.original.detail_count}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <span className="text-right block">Aksi</span>,
+      cell: ({ row }) => (
+        <div className="text-right">
+          <button
+            onClick={() =>
+              navigate({
+                to: "/inspections/$inspectionId",
+                params: { inspectionId: String(row.original.id) },
+              })
+            }
+            className="btn-ghost text-xs"
+          >
+            Detail
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="animate-fade-in">
@@ -48,7 +129,10 @@ function InspectionsPage() {
         {STATUSES.map((s) => (
           <button
             key={s}
-            onClick={() => setStatusFilter(s)}
+            onClick={() => {
+              setStatusFilter(s);
+              setPagination((p) => ({ ...p, pageIndex: 0 }));
+            }}
             className={statusFilter === s ? "tab-item-active" : "tab-item"}
           >
             {STATUS_LABELS[s]}
@@ -59,7 +143,10 @@ function InspectionsPage() {
           <input
             type="checkbox"
             checked={showAll}
-            onChange={(e) => setShowAll(e.target.checked)}
+            onChange={(e) => {
+              setShowAll(e.target.checked);
+              setPagination((p) => ({ ...p, pageIndex: 0 }));
+            }}
             className="h-4 w-4 rounded border-navy-300 text-teal-600 focus:ring-teal-500"
           />
           Lihat semua ruangan
@@ -67,70 +154,36 @@ function InspectionsPage() {
       </div>
 
       <div className="card-plan overflow-hidden">
-        {isLoading ? (
-          <div className="p-8">
-            <div className="skeleton mb-3 h-5 w-full" />
-            <div className="skeleton mb-3 h-5 w-3/4" />
-            <div className="skeleton h-5 w-5/6" />
-          </div>
-        ) : error ? (
-          <div className="empty-state">
-            <span className="empty-state-icon">⚠️</span>
-            <p className="empty-state-text">Gagal memuat data.</p>
-          </div>
-        ) : !inspections?.length ? (
-          <div className="empty-state">
-            <span className="empty-state-icon">✅</span>
-            <p className="empty-state-text">
-              {statusFilter === "PENDING"
-                ? "Tidak ada inspeksi menunggu."
-                : "Belum ada data inspeksi."}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="table-plan">
-              <thead>
-                <tr>
-                  <th>Tanggal</th>
-                  <th>Ruangan</th>
-                  <th>Status</th>
-                  <th className="text-center">Item</th>
-                  <th className="text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inspections.map((i) => (
-                  <tr key={i.id}>
-                    <td className="text-ink-muted">{i.business_date}</td>
-                    <td className="font-medium text-ink">
-                      {roomMap.get(i.room_id) ?? `Ruangan #${i.room_id}`}
-                    </td>
-                    <td>{statusBadge(i.status)}</td>
-                    <td className="text-center text-ink-muted">
-                      {i.detail_count}
-                    </td>
-                    <td className="text-right">
-                      <button
-                        onClick={() =>
-                          navigate({
-                            to: "/inspections/$inspectionId",
-                            params: {
-                              inspectionId: String(i.id),
-                            },
-                          })
-                        }
-                        className="btn-ghost text-xs"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="border-b border-navy-100/50 px-4 py-3">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPagination((p) => ({ ...p, pageIndex: 0 }));
+            }}
+            placeholder="Cari inspeksi..."
+            className="input-plan max-w-xs"
+          />
+        </div>
+        <DataTable
+          columns={columns}
+          data={result?.items ?? []}
+          pagination={pagination}
+          totalPages={result?.total_pages ?? 1}
+          total={result?.total ?? 0}
+          onPaginationChange={setPagination}
+          sorting={sorting}
+          onSortingChange={handleSortingChange}
+          isLoading={isLoading}
+          error={error}
+          emptyIcon="✅"
+          emptyText={
+            statusFilter === "PENDING"
+              ? "Tidak ada inspeksi menunggu."
+              : "Belum ada data inspeksi."
+          }
+        />
       </div>
     </div>
   );

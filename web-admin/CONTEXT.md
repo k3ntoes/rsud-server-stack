@@ -13,7 +13,7 @@ Provide a responsive web dashboard for Admin PPI and Supervisor roles to manage 
 | Routing | TanStack Router | Type-safe routes, preload |
 | Data Fetching | TanStack Query | Caching, auto-refetch, mutations |
 | Styling | Tailwind CSS 3 + Planograph Theme | Design system |
-| Components | Custom (Modal via native `<dialog>`) | No UI library dependency |
+| Components | Custom (Modal via native `<dialog>`), DataTable via `@tanstack/react-table` | Minimal dependensi eksternal |
 
 ## Language
 
@@ -32,6 +32,24 @@ React Context (`AuthProvider`) yang menyediakan `user`, `isLoading`, `isAuthenti
 **TanStack Query Mutation Pattern**:
 Setiap mutation hook (create/update/delete) mengikuti pola: `useMutation({ mutationFn, onSuccess: () => queryClient.invalidateQueries([key]) })`. Konsisten di semua hooks.
 
+**DataTable** (`components/DataTable.tsx`):
+Komponen tabel generik berbasis `@tanstack/react-table` yang mendukung: pagination (client-side), sorting multi-kolom, global search, selection, column visibility. Digunakan oleh halaman rooms, items, users, inspectors.
+
+**MasterDataPage** (`components/MasterDataPage.tsx`):
+Komponen generic untuk CRUD halaman master data (rooms, items) yang menggunakan DataTable di dalamnya. Menerima props: `useList`, `useCreate`, `useUpdate`, `useDelete` hooks + `renderActions` + `renderBadges`.
+
+**renderBadges**:
+Prop opsional pada MasterDataPage untuk menampilkan badge di setiap row — digunakan di halaman rooms (badge item names), items (badge room names), dan bisa di-extend untuk halaman lain.
+
+**useDebounce** (`hooks/useDebounce.ts`):
+Hook untuk debounce input pencarian — digunakan bersama DataTable untuk mengurangi frekuensi fetch saat user mengetik.
+
+**Data fetching hooks**:
+- `useMasterData.ts` — `useRoomsAll()`, `useItemsAll()`, `useAllRoomItems()` + CRUD mutations
+- `useUsers.ts` — `useUsers()`, `useAllUserRooms()` + CRUD + password reset
+- `useInspections.ts` — list/detail/approve/reject
+- `useAnalytics.ts` — `useDashboardData()` (1 hook menggantikan 3 hook), `useDashboardSummary()`, `useLowestRooms()`, `useTopIssues()`, `useInspectorPerformance()`
+
 **Page Route**:
 Halaman didefinisikan sebagai TanStack Router route dengan `createRoute()`, dipasang ke route tree di `main.tsx`.
 
@@ -44,22 +62,23 @@ Design system kustom dengan palet warna: Canvas (latar, 60%), Navy (sidebar/head
 **Native Modal**:
 Komponen `Modal` menggunakan elemen HTML `<dialog>` native — tidak perlu library modal eksternal.
 
+**React Query DevTools**:
+Diaktifkan hanya di mode development (`import.meta.env.DEV`) — floating button 🔥 di pojok kiri bawah halaman. Berguna untuk debugging query cache, status loading/fresh/stale, invalidasi. Tidak ditampilkan di production.
+
 ## Pages
 
 | Route | Page | Auth | Description |
 |-------|------|------|-------------|
 | `/` | `index.tsx` | — | Redirect ke `/login` atau `/dashboard` |
 | `/login` | `login.tsx` | Public | Form login dengan validasi client-side |
-| `/dashboard` | `dashboard.tsx` | Protected | Stat cards: pending count, rooms, month inspections |
-| `/rooms` | `rooms.tsx` | Protected | CRUD table dengan search, create/edit modal |
-| `/items` | `items.tsx` | Protected | CRUD table dengan search, create/edit modal |
-| `/inspections` | `inspections.tsx` | Protected | List dengan tab filter (Semua/Menunggu/Disetujui/Ditolak) |
+| `/dashboard` | `dashboard.tsx` | Protected | Stat cards: pending count, rooms, month inspections, avg score (1 endpoint) |
+| `/rooms` | `rooms.tsx` | Protected | CRUD table (DataTable + MasterDataPage) dengan badge items per room + search + pagination |
+| `/items` | `items.tsx` | Protected | CRUD table (DataTable + MasterDataPage) dengan badge rooms per item + search + pagination |
+| `/inspections` | `inspections.tsx` | Protected | List dengan tab filter (Semua/Menunggu/Disetujui/Ditolak) paginated |
 | `/inspections/$id` | `inspection-detail.tsx` | Protected | Detail inspeksi + approve/reject |
-| `/inspectors` | `inspectors.tsx` | Protected | Kinerja inspector — jumlah inspeksi per inspector |
-| `/users` | `users.tsx` | Protected | CRUD pengguna + admin reset password per baris |
+| `/inspectors` | `inspectors.tsx` | Protected | Kinerja inspector + badge rooms per inspector |
+| `/users` | `users.tsx` | Protected | CRUD pengguna + admin reset password per baris + room_ids badges |
 | `/analytics` | `analytics.tsx` | Protected | Bar chart: ruangan terendah + item bermasalah |
-| `/users` | `users.tsx` | Protected | CRUD manajemen pengguna: table + create/edit modal (role selector, password on create) |
-| `/inspectors` | `inspectors.tsx` | Protected | Bar chart: jumlah inspeksi approved per inspector per bulan |
 
 ### Feature: Change Password
 
@@ -83,11 +102,16 @@ Button "Ganti Password" di header Layout — membuka modal native `<dialog>` unt
 |-------|-----------|-----------------|
 | `lib/api.ts` | — | Digunakan oleh semua hooks |
 | `hooks/useAuth.tsx` | `lib/api.ts` | AuthContext menyediakan user state ke seluruh app |
-| `hooks/useMasterData.ts` | `lib/api.ts` | Rooms + Items CRUD |
+| `hooks/useMasterData.ts` | `lib/api.ts` | Rooms + Items CRUD + useRoomsAll + useAllRoomItems |
+| `hooks/useUsers.ts` | `lib/api.ts` | Users CRUD + password reset + useAllUserRooms |
 | `hooks/useInspections.ts` | `lib/api.ts` | Inspection list/detail/approve/reject |
-| `hooks/useAnalytics.ts` | `lib/api.ts` | Dashboard analytics data |
+| `hooks/useAnalytics.ts` | `lib/api.ts` | Dashboard + analytics data |
+| `hooks/useDebounce.ts` | — | Debounce input pencarian, digunakan oleh MasterDataPage |
 | `components/Layout.tsx` | `hooks/useAuth.tsx` | Redirect ke login jika tidak terautentikasi |
-| `components/Modal.tsx` | — | Native `<dialog>` wrapper, digunakan di rooms.tsx + items.tsx |
+| `components/Modal.tsx` | — | Native `<dialog>` wrapper |
+| `components/DataTable.tsx` | `@tanstack/react-table` | Tabel generik dengan sorting, pagination, search |
+| `components/MasterDataPage.tsx` | `DataTable`, hooks | Generic CRUD page untuk master data |
+| `components/Icons.tsx` | — | SVG icons reusable |
 
 ## ADRs
 

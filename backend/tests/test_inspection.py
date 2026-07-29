@@ -76,8 +76,9 @@ async def test_list_inspections_as_supervisor(client: AsyncClient, db_session: A
     resp = await client.get("/api/inspections", headers=sup_headers)
     assert resp.status_code == 200
     data = resp.json()
-    assert len(data) >= 1
-    assert data[0]["detail_count"] == 1
+    assert data["total"] >= 1
+    assert len(data["items"]) >= 1
+    assert data["items"][0]["detail_count"] == 1
 
 
 @pytest.mark.asyncio

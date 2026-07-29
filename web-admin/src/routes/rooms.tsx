@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createRoute } from "@tanstack/react-router";
 import { protectedRoute } from "./_protected";
 import MasterDataPage from "../components/MasterDataPage";
@@ -8,7 +8,8 @@ import {
   useCreateRoom,
   useUpdateRoom,
   useDeleteRoom,
-  useItems,
+  useItemsAll,
+  useAllRoomItems,
   useRoomItemsByRoom,
   useAssignItemToRoom,
   useUnassignItemFromRoom,
@@ -20,12 +21,32 @@ function RoomsPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin_ppi";
   const [itemModalRoom, setItemModalRoom] = useState<Room | null>(null);
-  const { data: allItems } = useItems();
+  const { data: allItems } = useItemsAll();
+  const { data: allRoomItems } = useAllRoomItems();
   const { data: roomItems } = useRoomItemsByRoom(itemModalRoom?.id ?? 0);
   const assignItem = useAssignItemToRoom();
   const unassignItem = useUnassignItemFromRoom();
 
   const assignedItemIds = new Set(roomItems?.map((ri) => ri.item_id) ?? []);
+
+  // Build map: roomId → item names
+  const itemNameMap = useMemo(() => {
+    const items = allItems ?? [];
+    const itemById = new Map(items.map((i) => [i.id, i.name]));
+
+    const roomItemMap = new Map<number, string[]>();
+    for (const ri of allRoomItems ?? []) {
+      const name = itemById.get(ri.item_id);
+      if (!name) continue;
+      const list = roomItemMap.get(ri.room_id);
+      if (list) {
+        list.push(name);
+      } else {
+        roomItemMap.set(ri.room_id, [name]);
+      }
+    }
+    return roomItemMap;
+  }, [allItems, allRoomItems]);
 
   const handleToggleItem = async (itemId: number) => {
     if (!itemModalRoom) return;
@@ -62,6 +83,16 @@ function RoomsPage() {
               Item
             </button>
           )
+        }
+        renderBadges={(room) =>
+          (itemNameMap.get(room.id) ?? []).map((name) => (
+            <span
+              key={name}
+              className="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-200/60"
+            >
+              {name}
+            </span>
+          ))
         }
       />
 

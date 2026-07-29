@@ -131,8 +131,9 @@ async def test_list_users_as_admin(client: AsyncClient, db_session: AsyncSession
     resp = await client.get("/api/auth/users", headers=headers)
     assert resp.status_code == 200
     data = resp.json()
-    assert len(data) == 3
-    usernames = {u["username"] for u in data}
+    assert data["total"] == 3
+    assert len(data["items"]) == 3
+    usernames = {u["username"] for u in data["items"]}
     assert "insp1" in usernames
     assert "insp2" in usernames
     assert "admin" in usernames
@@ -260,7 +261,7 @@ async def test_delete_user_soft_delete(client: AsyncClient, db_session: AsyncSes
 
     # Verify user is no longer active
     user_list_resp = await client.get("/api/auth/users", headers=headers)
-    users = user_list_resp.json()
+    users = user_list_resp.json()["items"]
     deleted = next(u for u in users if u["id"] == user.id)
     assert deleted["is_active"] is False
 

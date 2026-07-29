@@ -92,7 +92,7 @@ function AnalyticsPage() {
     isLoading: loadingIssues,
   } = useTopIssues(month, 10);
 
-  const roomMap = new Map(rooms?.map((r) => [r.id, r.name]) ?? []);
+  const roomMap = new Map(rooms?.items?.map((r) => [r.id, r.name]) ?? []);
   const maxIssue = Math.max(
     ...(topIssues?.map((i) => i.score_zero_count) ?? [0]),
     1,

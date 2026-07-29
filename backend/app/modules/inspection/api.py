@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.core.errors import error_response
+from app.core.pagination import paginate
 from app.modules.auth.dependencies import get_supervisor_user
 from app.modules.auth.models import User
 from app.modules.inspection.schemas import (
@@ -40,24 +41,28 @@ async def create_inspection(
         )
 
 
-@router.get("/inspections", response_model=list[InspectionListItem])
+@router.get("/inspections")
 async def get_inspections(
     status_filter: str | None = Query(None, alias="status"),
     room_id: int | None = Query(None),
     business_date: str | None = Query(None),
     show_all: bool = Query(False, description="Show all rooms (supervisor only)"),
-    limit: int = Query(50, le=200),
-    offset: int = Query(0, ge=0),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None, description="Global search across status"),
+    sort_by: str | None = Query(None),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_supervisor_user),
 ):
     from datetime import date as date_type
     bd = date_type.fromisoformat(business_date) if business_date else None
-    inspections, _ = await list_inspections(
-        db, status_filter, room_id, bd, limit, offset,
+    inspections, total = await list_inspections(
+        db, status_filter, room_id, bd, page=page, per_page=per_page,
         show_all=show_all, user_id=current_user.id,
+        sort_by=sort_by, sort_order=sort_order, search=search,
     )
-    return [
+    items = [
         InspectionListItem(
             id=i.id,
             room_id=i.room_id,
@@ -69,6 +74,7 @@ async def get_inspections(
         )
         for i in inspections
     ]
+    return paginate(items, total, page, per_page)
 
 
 @router.get("/inspections/{inspection_id}", response_model=InspectionOut)

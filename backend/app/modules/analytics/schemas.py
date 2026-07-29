@@ -27,3 +27,15 @@ class InspectorPerformanceOut(BaseModel):
     total_inspections: int
 
     model_config = {"from_attributes": True}
+
+
+class DashboardSummaryOut(BaseModel):
+    monthly_inspection_count: int
+    avg_score_pct: float
+
+
+class DashboardOut(BaseModel):
+    pending_count: int
+    total_rooms: int
+    monthly_inspection_count: int
+    avg_score_pct: float

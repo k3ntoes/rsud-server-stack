@@ -10,8 +10,8 @@
 | **Database** | SQLite (dev) / PostgreSQL (prod) | SQLite via aiosqlite untuk dev cepat, PostgreSQL via asyncpg untuk produksi |
 | **Migration** | Alembic | Auto-generate dari SQLAlchemy models |
 | **Auth** | JWT (Access + Refresh) | httpOnly cookie, whitelist `user_sessions` |
-| **Frontend** | React + Vite | TanStack Router + TanStack Query + Planograph UI (custom Tailwind) |
-| **Container** | Docker + docker-compose | Multi-stage build, reverse proxy (TBD) |
+| **Frontend** | React + Vite | TanStack Router + TanStack Query + React Query DevTools (dev) + Planograph UI (custom Tailwind) |
+| **Container** | Docker + docker-compose | Multi-stage build, reverse proxy Nginx |
 
 ---
 
@@ -117,8 +117,8 @@ backend/
 │   │   │   ├── api.py
 │   │   │   └── services.py
 │   │   │
-│   │   ├── analytics/              # 📊 Dashboard (read-only)
-│   │   │   ├── api.py
+│   │   ├── analytics/              # 📊 Dashboard & Analytics (read-only)
+│   │   │   ├── api.py              #   Endpoints: /lowest-rooms, /top-issues, /inspector-performance, /dashboard, /summary
 │   │   │   ├── models.py           #   RoomMonthlyStats, IssueFrequencyStats
 │   │   │   └── services.py
 │   │   │
@@ -264,7 +264,14 @@ Mencegah Docker build meng-copy environment lokal dan file tidak perlu, memperce
 | 0006 | Test Strategy — pytest-asyncio + In-Memory SQLite |
 | 0007 | Frontend Auth Pattern — SessionStorage + Auto-Refresh Token |
 
-Lihat `docs/adr/` untuk detail setiap keputusan.
+### Related Architecture Docs
+
+| Doc | Judul |
+|-----|-------|
+| [10-pagination-architecture.md](10-pagination-architecture.md) | Server-Driven Pagination — Backend `offset/limit` + Frontend `@tanstack/react-table` |
+| [00-core-prompt.md](00-core-prompt.md) | Core Prompt — aturan absolut sistem |
+
+Lihat `docs/adr/` untuk detail setiap keputusan ADR.
 
 ---
 

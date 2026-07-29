@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "../lib/api";
+import type { PaginatedResult } from "../components/DataTable";
 
 export interface InspectionPhoto {
   id: number;
@@ -43,19 +44,25 @@ interface ListParams {
   room_id?: number;
   business_date?: string;
   show_all?: string;
+  search?: string;
 }
 
-export function useInspections(params: ListParams = {}) {
+export function useInspections(params: ListParams = {}, page = 0, perPage = 20, sortBy?: string, sortOrder?: string) {
   const qs = new URLSearchParams();
   if (params.status) qs.set("status", params.status);
   if (params.room_id) qs.set("room_id", String(params.room_id));
   if (params.business_date) qs.set("business_date", params.business_date);
   if (params.show_all) qs.set("show_all", params.show_all);
+  if (params.search) qs.set("search", params.search);
+  qs.set("page", String(page + 1));
+  qs.set("per_page", String(perPage));
+  if (sortBy) qs.set("sort_by", sortBy);
+  if (sortOrder) qs.set("sort_order", sortOrder);
   const query = qs.toString();
 
   return useQuery({
-    queryKey: ["inspections", params],
-    queryFn: () => apiRequest<InspectionListItem[]>(`/api/inspections${query ? `?${query}` : ""}`),
+    queryKey: ["inspections", params, page, perPage, sortBy, sortOrder],
+    queryFn: () => apiRequest<PaginatedResult<InspectionListItem>>(`/api/inspections?${query}`),
   });
 }
 

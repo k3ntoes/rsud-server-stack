@@ -42,3 +42,37 @@ export function useTopIssues(yearMonth?: string, limit = 10) {
       ),
   });
 }
+
+export interface DashboardSummary {
+  monthly_inspection_count: number;
+  avg_score_pct: number;
+}
+
+export function useDashboardSummary(yearMonth?: string) {
+  const ym = yearMonth || currentWeekMonth();
+  return useQuery({
+    queryKey: ["analytics", "summary", ym],
+    queryFn: () =>
+      apiRequest<DashboardSummary>(
+        `/api/analytics/summary?year_month=${ym}`,
+      ),
+  });
+}
+
+export interface DashboardAll {
+  pending_count: number;
+  total_rooms: number;
+  monthly_inspection_count: number;
+  avg_score_pct: number;
+}
+
+export function useDashboardData(yearMonth?: string) {
+  const ym = yearMonth || currentWeekMonth();
+  return useQuery({
+    queryKey: ["dashboard", ym],
+    queryFn: () =>
+      apiRequest<DashboardAll>(
+        `/api/analytics/dashboard?year_month=${ym}`,
+      ),
+  });
+}

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "../lib/api";
+import type { PaginatedResult } from "../components/DataTable";
 
 export interface Room {
   id: number;
@@ -52,10 +53,25 @@ function useDeleteMutation(path: string, queryKey: string[]) {
 
 // ── Rooms ──
 
-export function useRooms() {
+export function useRooms(page = 0, perPage = 20, search = "", sortBy?: string, sortOrder?: string) {
+  const qs = new URLSearchParams();
+  qs.set("page", String(page + 1));
+  qs.set("per_page", String(perPage));
+  if (search) qs.set("search", search);
+  if (sortBy) qs.set("sort_by", sortBy);
+  if (sortOrder) qs.set("sort_order", sortOrder);
+
   return useQuery({
-    queryKey: ["rooms"],
-    queryFn: () => apiRequest<Room[]>("/api/rooms"),
+    queryKey: ["rooms", page, perPage, search, sortBy, sortOrder],
+    queryFn: () => apiRequest<PaginatedResult<Room>>(`/api/rooms?${qs}`),
+  });
+}
+
+export function useRoomsAll() {
+  return useQuery({
+    queryKey: ["rooms-all"],
+    queryFn: () => apiRequest<PaginatedResult<Room>>("/api/rooms?per_page=10000"),
+    select: (data) => data.items,
   });
 }
 
@@ -65,10 +81,25 @@ export const useDeleteRoom = () => useDeleteMutation("/api/rooms", ["rooms"]);
 
 // ── Inspection Items ──
 
-export function useItems() {
+export function useItems(page = 0, perPage = 20, search = "", sortBy?: string, sortOrder?: string) {
+  const qs = new URLSearchParams();
+  qs.set("page", String(page + 1));
+  qs.set("per_page", String(perPage));
+  if (search) qs.set("search", search);
+  if (sortBy) qs.set("sort_by", sortBy);
+  if (sortOrder) qs.set("sort_order", sortOrder);
+
   return useQuery({
-    queryKey: ["items"],
-    queryFn: () => apiRequest<Item[]>("/api/inspection-items"),
+    queryKey: ["items", page, perPage, search, sortBy, sortOrder],
+    queryFn: () => apiRequest<PaginatedResult<Item>>(`/api/inspection-items?${qs}`),
+  });
+}
+
+export function useItemsAll() {
+  return useQuery({
+    queryKey: ["items-all"],
+    queryFn: () => apiRequest<PaginatedResult<Item>>("/api/inspection-items?per_page=10000"),
+    select: (data) => data.items,
   });
 }
 
@@ -90,6 +121,19 @@ export function useRoomItemsByRoom(roomId: number) {
     queryKey: ["room-items", "room", roomId],
     queryFn: () => apiRequest<RoomItem[]>(`/api/rooms/${roomId}/items`),
     enabled: !!roomId,
+  });
+}
+
+interface SyncResponse<T> {
+  data: T[];
+  synced_at: string;
+}
+
+export function useAllRoomItems() {
+  return useQuery({
+    queryKey: ["room-items", "all"],
+    queryFn: () =>
+      apiRequest<SyncResponse<RoomItem>>("/api/room-items").then((r) => r.data),
   });
 }
 

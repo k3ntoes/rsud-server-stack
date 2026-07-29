@@ -8,6 +8,7 @@ from app.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.core.errors import error_response
+from app.core.pagination import paginate
 from app.core.security import create_access_token
 from app.modules.auth.dependencies import get_admin_user
 from app.modules.auth.models import User, UserSession, UserRoom
@@ -23,7 +24,7 @@ from app.modules.auth.services import (
     authenticate, create_session, refresh_session, create_user,
     list_users, update_user, deactivate_user, change_password,
     admin_reset_password,
-    list_rooms_by_user, list_users_by_room,
+    list_all_user_rooms, list_rooms_by_user, list_users_by_room,
     assign_user_to_room, unassign_user_from_room, get_user_room_ids,
 )
 
@@ -138,16 +139,21 @@ async def me(current_user: User = Depends(get_current_user)):
 # ── User Management (admin only) ──
 
 
-@router.get("/users", response_model=list[UserListOut])
+@router.get("/users")
 async def get_users(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None),
+    sort_by: str | None = Query(None),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_admin_user),
 ):
-    users = await list_users(db)
-    result = []
+    users, total = await list_users(db, page, per_page, search, sort_by, sort_order)
+    items = []
     for u in users:
         room_ids = await get_user_room_ids(db, u.id)
-        result.append(UserListOut(
+        items.append(UserListOut(
             id=u.id,
             username=u.username,
             role=u.role,
@@ -155,7 +161,7 @@ async def get_users(
             created_at=u.created_at,
             room_ids=room_ids,
         ))
-    return result
+    return paginate(items, total, page, per_page)
 
 
 @router.post("/users", response_model=UserOut, status_code=status.HTTP_201_CREATED)
@@ -213,6 +219,21 @@ async def admin_reset_password_endpoint(
 
 
 # ── User-Room (pivot) ──
+
+
+@router.get("/user-rooms")
+async def get_user_rooms_bulk(
+    since: str | None = Query(None, description="Sync timestamp ISO 8601"),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    """Bulk sync all user-room associations (Android)."""
+    dt = datetime.fromisoformat(since) if since else None
+    data = await list_all_user_rooms(db, dt)
+    return SyncResponse(
+        data=[UserRoomOut.model_validate(r).model_dump() for r in data],
+        synced_at=datetime.now(timezone.utc),
+    )
 
 
 @router.get("/me/rooms")

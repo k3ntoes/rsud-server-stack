@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 import secrets
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -12,14 +12,32 @@ from app.core.security import (
     create_refresh_token,
     verify_token,
 )
+from app.core.sorting import apply_sorting
 from app.modules.auth.models import User, UserSession, UserRoom
 
 
-async def list_users(db: AsyncSession) -> list[User]:
-    result = await db.execute(
-        select(User).order_by(User.username)
-    )
-    return list(result.scalars().all())
+async def list_users(
+    db: AsyncSession, page: int = 1, per_page: int = 20, search: str | None = None,
+    sort_by: str | None = None, sort_order: str = "asc",
+) -> tuple[list[User], int]:
+    if sort_by:
+        query = apply_sorting(select(User), User, sort_by, sort_order).order_by(User.id)
+    else:
+        query = select(User).order_by(User.username)
+    count_query = select(func.count(User.id))
+
+    if search:
+        pattern = f"%{search}%"
+        query = query.where(
+            User.username.ilike(pattern) | User.role.ilike(pattern)
+        )
+        count_query = count_query.where(
+            User.username.ilike(pattern) | User.role.ilike(pattern)
+        )
+
+    total = (await db.execute(count_query)).scalar() or 0
+    result = await db.execute(query.offset((page - 1) * per_page).limit(per_page))
+    return list(result.scalars().all()), total
 
 
 # ── User-Room (pivot) ──
@@ -59,6 +77,15 @@ async def unassign_user_from_room(db: AsyncSession, user_id: int, room_id: int) 
     await db.delete(ur)
     await db.commit()
     return True
+
+
+async def list_all_user_rooms(db: AsyncSession, since: datetime | None = None) -> list[UserRoom]:
+    """Get all user-room associations (Android bulk sync)."""
+    query = select(UserRoom).order_by(UserRoom.user_id, UserRoom.room_id)
+    if since:
+        query = query.where(UserRoom.created_at >= since)
+    result = await db.execute(query)
+    return list(result.scalars().all())
 
 
 async def get_user_room_ids(db: AsyncSession, user_id: int) -> list[int]:

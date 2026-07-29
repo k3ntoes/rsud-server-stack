@@ -1,17 +1,47 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.sorting import apply_sorting
 from app.modules.master.models import Room, InspectionItem, RoomItem
 
 
-async def list_rooms(db: AsyncSession, since: datetime | None = None) -> list[Room]:
-    query = select(Room).where(Room.is_active == True).order_by(Room.name)
+async def list_rooms(
+    db: AsyncSession, since: datetime | None = None,
+    page: int = 1, per_page: int = 20, search: str | None = None,
+    sort_by: str | None = None, sort_order: str = "asc",
+) -> tuple[list[Room], int] | list[Room]:
+    """
+    If `since` is provided, returns unpaginated list (Android sync mode).
+    Otherwise returns (paginated_list, total_count).
+    """
+    if sort_by:
+        query = apply_sorting(
+            select(Room).where(Room.is_active == True), Room, sort_by, sort_order
+        ).order_by(Room.id)
+    else:
+        query = select(Room).where(Room.is_active == True).order_by(Room.name)
+
     if since:
         query = query.where(Room.updated_at >= since)
-    result = await db.execute(query)
-    return list(result.scalars().all())
+        result = await db.execute(query)
+        return list(result.scalars().all())
+
+    # Web admin: paginated
+    if search:
+        pattern = f"%{search}%"
+        query = query.where(Room.name.ilike(pattern))
+
+    # Clone query for count (without order_by for performance)
+    count_query = select(func.count(Room.id)).where(Room.is_active == True)
+    if search:
+        pattern = f"%{search}%"
+        count_query = count_query.where(Room.name.ilike(pattern))
+    total = (await db.execute(count_query)).scalar() or 0
+
+    result = await db.execute(query.offset((page - 1) * per_page).limit(per_page))
+    return list(result.scalars().all()), total
 
 
 async def get_room(db: AsyncSession, room_id: int) -> Room | None:
@@ -94,12 +124,41 @@ async def unassign_item_from_room(db: AsyncSession, room_id: int, item_id: int) 
     return True
 
 
-async def list_items(db: AsyncSession, since: datetime | None = None) -> list[InspectionItem]:
-    query = select(InspectionItem).where(InspectionItem.is_active == True).order_by(InspectionItem.name)
+async def list_items(
+    db: AsyncSession, since: datetime | None = None,
+    page: int = 1, per_page: int = 20, search: str | None = None,
+    sort_by: str | None = None, sort_order: str = "asc",
+) -> tuple[list[InspectionItem], int] | list[InspectionItem]:
+    """
+    If `since` is provided, returns unpaginated list (Android sync mode).
+    Otherwise returns (paginated_list, total_count).
+    """
+    if sort_by:
+        query = apply_sorting(
+            select(InspectionItem).where(InspectionItem.is_active == True),
+            InspectionItem, sort_by, sort_order,
+        ).order_by(InspectionItem.id)
+    else:
+        query = select(InspectionItem).where(InspectionItem.is_active == True).order_by(InspectionItem.name)
+
     if since:
         query = query.where(InspectionItem.updated_at >= since)
-    result = await db.execute(query)
-    return list(result.scalars().all())
+        result = await db.execute(query)
+        return list(result.scalars().all())
+
+    # Web admin: paginated
+    if search:
+        pattern = f"%{search}%"
+        query = query.where(InspectionItem.name.ilike(pattern))
+
+    count_query = select(func.count(InspectionItem.id)).where(InspectionItem.is_active == True)
+    if search:
+        pattern = f"%{search}%"
+        count_query = count_query.where(InspectionItem.name.ilike(pattern))
+    total = (await db.execute(count_query)).scalar() or 0
+
+    result = await db.execute(query.offset((page - 1) * per_page).limit(per_page))
+    return list(result.scalars().all()), total
 
 
 async def get_item(db: AsyncSession, item_id: int) -> InspectionItem | None:

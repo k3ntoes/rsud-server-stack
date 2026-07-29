@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createRoute } from "@tanstack/react-router";
 import { protectedRoute } from "./_protected";
 import MasterDataPage from "../components/MasterDataPage";
@@ -8,7 +8,8 @@ import {
   useCreateItem,
   useUpdateItem,
   useDeleteItem,
-  useRooms,
+  useRoomsAll,
+  useAllRoomItems,
   useRoomsByItem,
   useAssignRoomToItem,
   useUnassignRoomFromItem,
@@ -20,8 +21,23 @@ function ItemsPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin_ppi";
   const [roomModalItem, setRoomModalItem] = useState<Item | null>(null);
-  const { data: allRooms } = useRooms();
+  const { data: allRooms } = useRoomsAll();
+  const { data: allRoomItems } = useAllRoomItems();
   const { data: itemRooms } = useRoomsByItem(roomModalItem?.id ?? 0);
+
+  // Build map: itemId → room names
+  const roomNameMap = useMemo(() => {
+    const roomById = new Map(allRooms?.map((r) => [r.id, r.name]) ?? []);
+    const map = new Map<number, string[]>();
+    for (const ri of allRoomItems ?? []) {
+      const name = roomById.get(ri.room_id);
+      if (!name) continue;
+      const list = map.get(ri.item_id);
+      if (list) list.push(name);
+      else map.set(ri.item_id, [name]);
+    }
+    return map;
+  }, [allRooms, allRoomItems]);
   const assignRoom = useAssignRoomToItem();
   const unassignRoom = useUnassignRoomFromItem();
 
@@ -68,6 +84,16 @@ function ItemsPage() {
               Ruangan
             </button>
           )
+        }
+        renderBadges={(item) =>
+          (roomNameMap.get(item.id) ?? []).map((name) => (
+            <span
+              key={name}
+              className="inline-flex items-center rounded-full bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-700 ring-1 ring-inset ring-navy-200/60"
+            >
+              {name}
+            </span>
+          ))
         }
       />
 

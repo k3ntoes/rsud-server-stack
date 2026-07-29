@@ -1,7 +1,6 @@
 import { createRoute } from "@tanstack/react-router";
 import { protectedRoute } from "./_protected";
-import { useInspections } from "../hooks/useInspections";
-import { useRooms } from "../hooks/useMasterData";
+import { useDashboardData } from "../hooks/useAnalytics";
 
 export const Route = createRoute({
   getParentRoute: () => protectedRoute,
@@ -10,11 +9,12 @@ export const Route = createRoute({
 });
 
 function DashboardPage() {
-  const { data: pendingList } = useInspections({ status: "PENDING" });
-  const { data: rooms } = useRooms();
+  const { data } = useDashboardData();
 
-  const pendingCount = pendingList?.length ?? "—";
-  const roomCount = rooms?.length ?? "—";
+  const pendingCount = data?.pending_count ?? "—";
+  const roomCount = data?.total_rooms ?? "—";
+  const monthlyCount = data?.monthly_inspection_count ?? "—";
+  const avgScore = data?.avg_score_pct != null ? `${data.avg_score_pct}%` : "—";
 
   return (
     <div className="animate-fade-in">
@@ -65,7 +65,7 @@ function DashboardPage() {
             </div>
             <div>
               <p className="stat-label">Inspeksi Bulan Ini</p>
-              <p className="stat-value text-teal-600">—</p>
+              <p className="stat-value text-teal-600">{monthlyCount}</p>
             </div>
           </div>
         </div>
@@ -78,7 +78,7 @@ function DashboardPage() {
             </div>
             <div>
               <p className="stat-label">Skor Rata-rata Bulan Ini</p>
-              <p className="stat-value text-navy-600">—</p>
+              <p className="stat-value text-navy-600">{avgScore}</p>
             </div>
           </div>
         </div>

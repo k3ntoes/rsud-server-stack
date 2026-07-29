@@ -326,22 +326,66 @@ Validasi sisi server:
 
 ### Perubahan 4.2: Submit Inspection Response
 
-**Response baru:**
+**Response (sesuai `InspectionOut` schema):**
 ```json
 {
   "id": 42,
+  "room_id": 1,
+  "inspector_id": 1,
   "status": "PENDING",
-  "detail_count": 10,
-  "message": "Inspeksi berhasil dikirim"
+  "business_date": "2026-07-23",
+  "local_timestamp": "2026-07-23T08:30:00Z",
+  "rejection_reason": null,
+  "created_at": "2026-07-23T08:30:00Z",
+  "details": [
+    {
+      "id": 1,
+      "item_id": 1,
+      "item_name_snapshot": "Kebersihan Tangan",
+      "score": 2,
+      "photos": [
+        {
+          "id": 1,
+          "photo_file_name": "uuid-photo-1.jpg",
+          "thumbnail_file_name": null,
+          "sort_order": 0
+        }
+      ]
+    }
+  ]
 }
 ```
 
 | Field | Tipe | Deskripsi |
 |-------|------|-----------|
 | `id` | int | ID inspeksi (untuk tracking di HistoryScreen) |
+| `room_id` | int | ID room tempat inspeksi |
+| `inspector_id` | int | ID petugas yang melakukan inspeksi |
 | `status` | string | `"PENDING"` / `"APPROVED"` / `"REJECTED"` |
-| `detail_count` | int | Jumlah detail item yang di-score |
-| `message` | string | Pesan sukses |
+| `business_date` | string | Tanggal bisnis inspeksi (`YYYY-MM-DD`) |
+| `local_timestamp` | string ISO 8601 | Timestamp lokal dari Android |
+| `rejection_reason` | string/null | Alasan reject (null jika belum di-reject) |
+| `created_at` | string ISO 8601 | Waktu inspeksi dibuat di server |
+| `details` | array | Array detail item yang di-score |
+
+**Detail Item:**
+| Field | Tipe | Deskripsi |
+|-------|------|-----------|
+| `id` | int | Primary key detail |
+| `item_id` | int | ID inspection item |
+| `item_name_snapshot` | string | Nama item saat inspeksi (snapshot) |
+| `score` | int | Score: 0=risky, 1=minor, 2=standard |
+| `photos` | array | Array foto |
+
+**Detail Photo:**
+| Field | Tipe | Deskripsi |
+|-------|------|-----------|
+| `id` | int | Primary key foto |
+| `photo_file_name` | string | Nama file foto |
+| `thumbnail_file_name` | string/null | Nama file thumbnail (null jika belum digenerate) |
+| `sort_order` | int | Urutan tampilan |
+
+> ⚠️ **Tidak ada field `message` atau `detail_count` di response submit** — `detail_count` hanya ada di `InspectionListItem` (response list). Gunakan `details.length` untuk menghitung jumlah item di Android.
 
 > 📌 **Idempotency Key**: `(room_id, local_timestamp, inspector_id)` — `inspector_id` diambil dari `user.id` yang didapat saat login.
 
@@ -363,28 +407,53 @@ GET /api/inspections?status=PENDING&show_all=true
 
 **Endpoint**: `GET /api/inspections/{id}`
 
-**Response:**
+**Response (sesuai `InspectionOut` schema):**
 ```json
 {
   "id": 42,
   "room_id": 1,
-  "room_name": "UGD",
-  "inspector_name": "petugas01",
+  "inspector_id": 5,
   "status": "PENDING",
   "business_date": "2026-07-23",
   "local_timestamp": "2026-07-23T08:30:00Z",
-  "detail_count": 10,
+  "rejection_reason": null,
+  "created_at": "2026-07-23T08:30:00Z",
   "details": [
     {
       "id": 1,
+      "item_id": 1,
       "item_name_snapshot": "Kebersihan Tangan",
       "score": 2,
-      "photos": ["uuid-photo-1.jpg"]
+      "photos": [
+        {
+          "id": 1,
+          "photo_file_name": "uuid-photo-1.jpg",
+          "thumbnail_file_name": null,
+          "sort_order": 0
+        }
+      ]
     }
-  ],
-  "rejection_reason": null
+  ]
 }
 ```
+
+| Field | Tipe | Deskripsi |
+|-------|------|-----------|
+| `id` | int | ID inspeksi |
+| `room_id` | int | ID room |
+| `inspector_id` | int | ID petugas |
+| `status` | string | `"PENDING"` / `"APPROVED"` / `"REJECTED"` |
+| `business_date` | string | Tanggal bisnis (`YYYY-MM-DD`) |
+| `local_timestamp` | string ISO 8601 | Timestamp dari Android |
+| `rejection_reason` | string/null | Alasan reject |
+| `created_at` | string ISO 8601 | Waktu dibuat di server |
+| `details` | array | Detail item yang di-score |
+
+> ⚠️ **Tidak ada field `room_name`, `inspector_name`, atau `detail_count` di response ini.**  
+> Android harus melakukan lookup dari data yang sudah di-sync secara lokal:
+> - `room_name` → lookup dari `rooms` (key: `room_id`)  
+> - `inspector_name` → lookup dari `users` (key: `inspector_id`, sync via `GET /api/auth/users`)  
+> - `detail_count` → `details.length`
 
 ---
 

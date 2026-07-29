@@ -24,8 +24,9 @@ async def test_list_rooms(client: AsyncClient, db_session: AsyncSession):
     resp = await client.get("/api/rooms", headers=headers)
     assert resp.status_code == 200
     data = resp.json()
-    assert len(data) == 2
-    names = [r["name"] for r in data]
+    assert data["total"] == 2
+    assert len(data["items"]) == 2
+    names = [r["name"] for r in data["items"]]
     assert "UGD" in names
     assert "ICU" in names
 
@@ -77,7 +78,7 @@ async def test_delete_room(client: AsyncClient, db_session: AsyncSession):
 
     # Should no longer appear in list
     list_resp = await client.get("/api/rooms", headers=headers)
-    assert len(list_resp.json()) == 0
+    assert list_resp.json()["total"] == 0
 
 
 @pytest.mark.asyncio
@@ -90,6 +91,7 @@ async def test_room_non_admin_forbidden(client: AsyncClient, db_session: AsyncSe
     # GET is now public for any authenticated user (Phase 8 — Android sync)
     resp = await client.get("/api/rooms", headers=headers)
     assert resp.status_code == 200
+    assert "items" in resp.json()
 
 
 # ── Inspection Items ──
@@ -112,7 +114,9 @@ async def test_list_items(client: AsyncClient, db_session: AsyncSession):
     headers = auth_header(admin)
     resp = await client.get("/api/inspection-items", headers=headers)
     assert resp.status_code == 200
-    assert len(resp.json()) == 2
+    data = resp.json()
+    assert data["total"] == 2
+    assert len(data["items"]) == 2
 
 
 @pytest.mark.asyncio
@@ -143,7 +147,7 @@ async def test_delete_item(client: AsyncClient, db_session: AsyncSession):
     assert resp.status_code == 204
 
     list_resp = await client.get("/api/inspection-items", headers=headers)
-    assert len(list_resp.json()) == 0
+    assert list_resp.json()["total"] == 0
 
 
 @pytest.mark.asyncio
@@ -156,3 +160,4 @@ async def test_item_non_admin_forbidden(client: AsyncClient, db_session: AsyncSe
     # GET is now public for any authenticated user (Phase 8 — Android sync)
     resp = await client.get("/api/inspection-items", headers=headers)
     assert resp.status_code == 200
+    assert "items" in resp.json()

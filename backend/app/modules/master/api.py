@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
+from app.core.pagination import paginate
 from app.modules.auth.dependencies import get_admin_user
 from app.modules.auth.models import User
 from app.modules.master.schemas import (
@@ -28,17 +29,24 @@ router = APIRouter(prefix="/api", tags=["master"])
 @router.get("/rooms")
 async def get_rooms(
     since: str | None = Query(None, description="Sync timestamp ISO 8601"),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=10000),
+    search: str | None = Query(None),
+    sort_by: str | None = Query(None),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
     dt = datetime.fromisoformat(since) if since else None
-    data = await list_rooms(db, dt)
+    data = await list_rooms(db, since=dt, page=page, per_page=per_page,
+                            search=search, sort_by=sort_by, sort_order=sort_order)
     if since:
         return SyncResponse(
             data=[RoomOut.model_validate(r).model_dump() for r in data],
             synced_at=datetime.now(timezone.utc),
         )
-    return [RoomOut.model_validate(r) for r in data]
+    items, total = data
+    return paginate([RoomOut.model_validate(r) for r in items], total, page, per_page)
 
 
 @router.get("/rooms/{room_id}", response_model=RoomOut)
@@ -93,17 +101,24 @@ async def delete_room_endpoint(
 @router.get("/inspection-items")
 async def get_items(
     since: str | None = Query(None, description="Sync timestamp ISO 8601"),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=10000),
+    search: str | None = Query(None),
+    sort_by: str | None = Query(None),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
     dt = datetime.fromisoformat(since) if since else None
-    data = await list_items(db, dt)
+    data = await list_items(db, since=dt, page=page, per_page=per_page,
+                            search=search, sort_by=sort_by, sort_order=sort_order)
     if since:
         return SyncResponse(
             data=[ItemOut.model_validate(i).model_dump() for i in data],
             synced_at=datetime.now(timezone.utc),
         )
-    return [ItemOut.model_validate(i) for i in data]
+    items, total = data
+    return paginate([ItemOut.model_validate(i) for i in items], total, page, per_page)
 
 
 @router.get("/inspection-items/{item_id}", response_model=ItemOut)

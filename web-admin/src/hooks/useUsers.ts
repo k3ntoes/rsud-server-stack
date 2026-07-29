@@ -1,5 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "../lib/api";
+import type { PaginatedResult } from "../components/DataTable";
+
+interface SyncResponse<T> {
+  data: T[];
+  synced_at: string;
+}
 
 export interface User {
   id: number;
@@ -7,6 +13,7 @@ export interface User {
   role: string;
   is_active: boolean;
   created_at?: string;
+  room_ids?: number[];
 }
 
 const ROLES = [
@@ -15,10 +22,17 @@ const ROLES = [
   { value: "inspector", label: "Inspector" },
 ];
 
-export function useUsers() {
+export function useUsers(page = 0, perPage = 20, search = "", sortBy?: string, sortOrder?: string) {
+  const qs = new URLSearchParams();
+  qs.set("page", String(page + 1));
+  qs.set("per_page", String(perPage));
+  if (search) qs.set("search", search);
+  if (sortBy) qs.set("sort_by", sortBy);
+  if (sortOrder) qs.set("sort_order", sortOrder);
+
   return useQuery({
-    queryKey: ["users"],
-    queryFn: () => apiRequest<User[]>("/api/auth/users"),
+    queryKey: ["users", page, perPage, search, sortBy, sortOrder],
+    queryFn: () => apiRequest<PaginatedResult<User>>(`/api/auth/users?${qs}`),
   });
 }
 
@@ -103,6 +117,14 @@ export interface UserRoom {
   user_id: number;
   room_id: number;
   created_at: string;
+}
+
+export function useAllUserRooms() {
+  return useQuery({
+    queryKey: ["user-rooms", "all"],
+    queryFn: () =>
+      apiRequest<SyncResponse<UserRoom>>("/api/auth/user-rooms").then((r) => r.data),
+  });
 }
 
 export function useUserRooms(userId: number) {

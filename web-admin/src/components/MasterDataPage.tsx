@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type { UseMutationResult } from "@tanstack/react-query";
 import Modal from "./Modal";
+import DataTable, { type PaginatedResult } from "./DataTable";
+import { useDebounce } from "../hooks/useDebounce";
+import type { PaginationState, SortingState, ColumnDef, OnChangeFn } from "@tanstack/react-table";
 
 interface Entity {
   id: number;
@@ -20,9 +23,10 @@ interface MasterDataPageProps<T extends Entity> {
   emptyIcon: string;
   emptyText: string;
   renderActions?: (item: T) => React.ReactNode;
-  // Hooks
-  useList: () => {
-    data: T[] | undefined;
+  renderBadges?: (item: T) => React.ReactNode;
+  // Hooks with pagination support
+  useList: (page: number, perPage: number, search: string, sortBy?: string, sortOrder?: string) => {
+    data: PaginatedResult<T> | undefined;
     isLoading: boolean;
     error: Error | null;
   };
@@ -43,17 +47,38 @@ export default function MasterDataPage<T extends Entity>({
   emptyIcon,
   emptyText,
   renderActions,
+  renderBadges,
   useList,
   useCreate,
   useUpdate,
   useDelete,
 }: MasterDataPageProps<T>) {
-  const { data: items, isLoading, error } = useList();
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 20,
+  });
+  const [search, setSearch] = useState("");
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const debouncedSearch = useDebounce(search, 300);
+  const activeSort = sorting[0];
+  const sortBy = activeSort?.id;
+  const sortOrder = activeSort?.desc ? "desc" : "asc";
+  const { data: result, isLoading, error } = useList(
+    pagination.pageIndex,
+    pagination.pageSize,
+    debouncedSearch,
+    sortBy,
+    sortOrder,
+  );
+
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    setSorting(updater);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  };
   const create = useCreate();
   const update = useUpdate();
   const del = useDelete();
 
-  const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: number; name: string } | null>(null);
   const [nameInput, setNameInput] = useState("");
@@ -89,9 +114,74 @@ export default function MasterDataPage<T extends Entity>({
     }
   };
 
-  const filtered = items?.filter((r) =>
-    r.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const columns: ColumnDef<T>[] = [
+    {
+      accessorKey: "name",
+      header: "Nama",
+      cell: ({ row }) => (
+        <span className="font-medium text-ink">{row.original.name}</span>
+      ),
+    },
+    {
+      accessorKey: "is_active",
+      header: "Status",
+      cell: ({ row }) => {
+        const active = row.original.is_active;
+        return active !== undefined ? (
+          active ? (
+            <span className="badge-approved">Aktif</span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-navy-100/40 px-2.5 py-0.5 text-xs font-medium text-navy-500 ring-1 ring-inset ring-navy-200/50">
+              Nonaktif
+            </span>
+          )
+        ) : null;
+      },
+    },
+    ...(renderBadges
+      ? [
+          {
+            id: "badges",
+            header: "Item Inspeksi",
+            cell: ({ row }: { row: { original: T } }) => (
+              <div className="flex flex-wrap gap-1">
+                {renderBadges(row.original)}
+              </div>
+            ),
+          } as ColumnDef<T>,
+        ]
+      : []),
+    {
+      id: "actions",
+      header: () => <span className="text-right block">Aksi</span>,
+      cell: ({ row }) => {
+        const item = row.original;
+        return (
+          <div className="text-right">
+            {renderActions?.(item)}
+            <button
+              onClick={() => openEdit(item.id, item.name)}
+              className="btn-ghost text-xs"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => {
+                if (
+                  window.confirm(`Hapus ${entityLabel.toLowerCase()} "${item.name}"?`)
+                ) {
+                  del.mutate(item.id);
+                }
+              }}
+              className="btn-ghost text-xs text-ink-muted hover:text-danger"
+            >
+              Hapus
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="animate-fade-in">
@@ -110,80 +200,29 @@ export default function MasterDataPage<T extends Entity>({
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPagination((p) => ({ ...p, pageIndex: 0 }));
+            }}
             placeholder={searchPlaceholder}
             className="input-plan max-w-xs"
           />
         </div>
 
-        {isLoading ? (
-          <div className="p-8">
-            <div className="skeleton mb-3 h-5 w-3/4" />
-            <div className="skeleton mb-3 h-5 w-1/2" />
-            <div className="skeleton h-5 w-2/3" />
-          </div>
-        ) : error ? (
-          <div className="empty-state">
-            <span className="empty-state-icon">⚠️</span>
-            <p className="empty-state-text">Gagal memuat data.</p>
-          </div>
-        ) : filtered?.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-state-icon">{search ? "🔍" : emptyIcon}</span>
-            <p className="empty-state-text">
-              {search ? "Tidak ada hasil." : emptyText}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="table-plan">
-              <thead>
-                <tr>
-                  <th>Nama</th>
-                  <th>Status</th>
-                  <th className="text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered?.map((item) => (
-                  <tr key={item.id}>
-                    <td className="font-medium text-ink">{item.name}</td>
-                    <td>
-                      {item.is_active !== undefined && item.is_active ? (
-                        <span className="badge-approved">Aktif</span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-navy-100/40 px-2.5 py-0.5 text-xs font-medium text-navy-500 ring-1 ring-inset ring-navy-200/50">
-                          Nonaktif
-                        </span>
-                      )}
-                    </td>
-                    <td className="text-right">
-                      {renderActions?.(item)}
-                      <button
-                        onClick={() => openEdit(item.id, item.name)}
-                        className="btn-ghost text-xs"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (
-                            window.confirm(`Hapus ${entityLabel.toLowerCase()} "${item.name}"?`)
-                          ) {
-                            del.mutate(item.id);
-                          }
-                        }}
-                        className="btn-ghost text-xs text-ink-muted hover:text-danger"
-                      >
-                        Hapus
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <DataTable
+          columns={columns}
+          data={result?.items ?? []}
+          pagination={pagination}
+          totalPages={result?.total_pages ?? 1}
+          total={result?.total ?? 0}
+          onPaginationChange={setPagination}
+          sorting={sorting}
+          onSortingChange={handleSortingChange}
+          isLoading={isLoading}
+          error={error}
+          emptyIcon={search ? "🔍" : emptyIcon}
+          emptyText={search ? "Tidak ada hasil." : emptyText}
+        />
       </div>
 
       <Modal

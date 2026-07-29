@@ -33,7 +33,7 @@ The `user_sessions` table that stores active refresh tokens for cross-validation
 Initial admin account created via database migration — no self-registration.
 
 **Admin Reset Password**:
-Admin PPI can reset any user's password without the old password — used when a user forgets their password. Password baru bisa diinput manual atau di-generate acak oleh sistem. Password ditampilkan dalam bentuk plain text agar admin bisa menyampaikannya ke user.
+Admin PPI can reset any user's password via `PUT /api/auth/users/{user_id}/reset-password` without knowing their old password. All active sessions are revoked on reset (user must re-login). New password is sent in request body. Endpoint returns the new password in plain text so admin can convey it to the user.
 
 **User Creation**:
 Admin PPI creates Inspector and Supervisor accounts from the web dashboard.
@@ -45,10 +45,7 @@ Admin action to kill a user's session by removing their refresh token from the w
 Admin PPI can create, list, update, and soft-delete users from the web dashboard. Saat create, admin menentukan username, password initial, dan role (admin_ppi/supervisor/inspector). Saat update, admin bisa mengubah username, role, dan status aktif. Tidak bisa mengubah password user dari halaman manajemen — user harus menggunakan fitur Change Password sendiri.
 
 **Change Password**:
-All authenticated users can change their own password via `POST /api/auth/change-password`. Endpoint memvalidasi old password sebelum mengizinkan perubahan. Tidak ada admin reset password — user harus tahu password lama untuk membuat password baru.
-
-**Admin Reset Password**:
-Admin PPI tidak bisa mereset password user lain dari halaman manajemen saat ini (P1). Jika user lupa password, solusi saat ini: admin bisa membuat user baru dengan password baru, lalu nonaktifkan user lama.
+All authenticated users can change their own password via `POST /api/auth/change-password`. Endpoint memvalidasi old password sebelum mengizinkan perubahan.
 
 **401 vs 403**:
 FastAPI HTTPBearer returns **401 Unauthorized** (not 403 Forbidden) when Authorization header is missing or token is invalid. 403 digunakan untuk role-based authorization (user authenticated tapi tidak punya akses).
@@ -80,6 +77,9 @@ Daftar room yang di-assign ke seorang supervisor — default filter di halaman a
 - **Validasi submission**: Inspector hanya bisa submit inspeksi untuk room yang di-assign
 - **Filter approval default**: Supervisor hanya melihat inspeksi untuk room yang di-assign (bisa toggle `show_all`)
 - **Migrasi auto-assign**: Semua user inspector & supervisor yang ada akan di-assign ke semua room aktif
+- **Bulk sync user-rooms**: Endpoint `GET /api/auth/user-rooms?since=...` mengembalikan semua asosiasi user↔room untuk Android sync (menggunakan `SyncResponse<UserRoomOut>`)
+- **User-Room management bidirectional**: Admin bisa manage asosiasi dari halaman User (via `/api/auth/users/{id}/rooms`) atau dari halaman Room (via `/api/auth/rooms/{id}/users`)
+- **My Rooms endpoint**: `GET /api/auth/me/rooms?since=...` mengembalikan room yang di-assign ke user login (untuk Android filter UI)
 
 ## ADRs
 

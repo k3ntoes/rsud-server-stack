@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { createRoute, useParams, useNavigate } from "@tanstack/react-router";
+import type { ColumnDef } from "@tanstack/react-table";
 import { protectedRoute } from "./_protected";
 import Modal from "../components/Modal";
+import DataTable from "../components/DataTable";
 import {
   useInspection,
   useApproveInspection,
   useRejectInspection,
+  type InspectionDetail,
 } from "../hooks/useInspections";
-import { useRooms } from "../hooks/useMasterData";
+import { useRoomsAll } from "../hooks/useMasterData";
 
 function PhotoThumb({ filename }: { filename: string }) {
   const [src, setSrc] = useState<string | null>(null);
@@ -128,7 +131,7 @@ function InspectionDetailPage() {
   const { inspectionId } = useParams({ from: Route.id });
   const id = Number(inspectionId);
   const { data: insp, isLoading, error } = useInspection(id);
-  const { data: rooms } = useRooms();
+  const { data: rooms } = useRoomsAll();
   const approve = useApproveInspection();
   const reject = useRejectInspection();
   const navigate = useNavigate();
@@ -249,55 +252,12 @@ function InspectionDetailPage() {
         )}
       </div>
 
-      {/* Items table */}
-      <div className="card-plan overflow-hidden">
-        <div className="border-b border-navy-100/50 px-4 py-3 font-medium text-ink">
-          Item Inspeksi ({insp.details.length})
-        </div>
-        {insp.details.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-state-text">Tidak ada item.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="table-plan">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Skor</th>
-                  <th>Foto</th>
-                </tr>
-              </thead>
-              <tbody>
-                {insp.details.map((d) => (
-                  <tr key={d.id}>
-                    <td className="font-medium text-ink">
-                      {d.item_name_snapshot}
-                    </td>
-                    <td>{scoreBadge(d.score)}</td>
-                    <td>
-                      {d.photos.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {d.photos.map((p) => (
-                            <PhotoThumb
-                              key={p.id}
-                              filename={
-                                p.thumbnail_file_name || p.photo_file_name
-                              }
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-ink-subtle">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {/* Items table with DataTable */}
+      <DataTableCard
+        title={`Item Inspeksi (${insp.details.length})`}
+        details={insp.details}
+        emptyText="Tidak ada item."
+      />
 
       {/* Reject modal */}
       <Modal
@@ -330,6 +290,71 @@ function InspectionDetailPage() {
           </button>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+function DataTableCard({
+  title,
+  details,
+  emptyText,
+}: {
+  title: string;
+  details: InspectionDetail[];
+  emptyText: string;
+}) {
+  const [pagination] = useState({ pageIndex: 0, pageSize: details.length || 10 });
+
+  const columns: ColumnDef<InspectionDetail>[] = [
+    {
+      accessorKey: "item_name_snapshot",
+      header: "Item",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="font-medium text-ink">{row.original.item_name_snapshot}</span>
+      ),
+    },
+    {
+      id: "score",
+      header: "Skor",
+      enableSorting: false,
+      cell: ({ row }) => scoreBadge(row.original.score),
+    },
+    {
+      id: "photos",
+      header: "Foto",
+      enableSorting: false,
+      cell: ({ row }) =>
+        row.original.photos.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {row.original.photos.map((p) => (
+              <PhotoThumb
+                key={p.id}
+                filename={p.thumbnail_file_name || p.photo_file_name}
+              />
+            ))}
+          </div>
+        ) : (
+          <span className="text-xs text-ink-subtle">—</span>
+        ),
+    },
+  ];
+
+  return (
+    <div className="card-plan overflow-hidden">
+      <div className="border-b border-navy-100/50 px-4 py-3 font-medium text-ink">
+        {title}
+      </div>
+      <DataTable
+        columns={columns}
+        data={details}
+        pagination={pagination}
+        totalPages={1}
+        total={details.length}
+        onPaginationChange={() => {}}
+        emptyIcon="📋"
+        emptyText={emptyText}
+      />
     </div>
   );
 }
