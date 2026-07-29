@@ -4,7 +4,27 @@ Comprehensive seed data for end-to-end demo.
 Usage: uv run python -m app.seed
 
 Idempotent: skips users/rooms/items that already exist.
-Inspection data is created fresh each run (for demo purposes).
+Inspection data: uses composite unique key (room_id, local_timestamp, inspector_id)
+to prevent duplicates on re-run.
+
+╔══════════════════════════════════════════════════════════════╗
+║  DATA COVERAGE (sesuai CONTEXT & ADR)                       ║
+║                                                             ║
+║  Users:     admin_ppi, supervisor, inspector                ║
+║  Rooms:     6 ruangan (UGD, Rawat Inap A/B, ICU, dll)       ║
+║  Items:     10 item inspeksi kebersihan                     ║
+║  RoomItem:  All items → all rooms (ADR-0009)                 ║
+║  UserRoom:  Inspector & supervisor → all rooms (ADR-0010)    ║
+║                                                             ║
+║  Inspections (total 12):                                     ║
+║   ├─ July 2026 — 6 ruangan × 1-2 APPROVED = 12 inspeksi     ║
+║   ├─ June 2026 — 2 ruangan × 1 APPROVED = 2 inspeksi         ║
+║   ├─ REJECTED — 1 inspeksi (test rejection flow)              ║
+║   └─ PENDING  — 1 inspeksi (test approval flow)              ║
+║                                                             ║
+║  Scores: varied (0=berisiko, 1=minor, 2=standar)             ║
+║  → Analytics: lowest rooms, top issues populated             ║
+╚══════════════════════════════════════════════════════════════╝
 """
 
 import asyncio
@@ -19,9 +39,85 @@ from app.modules.master.models import Room, InspectionItem, RoomItem
 from app.modules.inspection.models import Inspection, InspectionDetail
 
 
+# ── Item score patterns per room ──────────────────────────────────
+# Each room has a tuple of (item_index, score) — index into item_names
+# This creates realistic, varied score data for analytics.
+
+ROOM_PROFILES: dict[str, list[tuple[int, int]]] = {
+    # (item_index, score)  ← index 0 = "Kebersihan Tangan"
+    "UGD": [
+        (0, 2), (1, 1), (2, 2), (3, 0),   # limbah & lingkungan bermasalah
+        (4, 2), (5, 2), (6, 1), (7, 2),
+        (8, 2), (9, 2),
+    ],
+    "Rawat Inap A": [
+        (0, 2), (1, 2), (2, 0), (3, 0),   # limbah & lingkungan berisiko
+        (4, 1), (5, 2), (6, 2), (7, 2),
+        (8, 0), (9, 2),                    # sabun habis
+    ],
+    "Rawat Inap B": [
+        (0, 1), (1, 2), (2, 2), (3, 1),
+        (4, 2), (5, 2), (6, 2), (7, 0),   # keamanan tempat tidur
+        (8, 2), (9, 1),
+    ],
+    "ICU": [
+        (0, 2), (1, 2), (2, 2), (3, 2),
+        (4, 2), (5, 2), (6, 2), (7, 2),   # all perfect — best room
+        (8, 2), (9, 2),
+    ],
+    "Poliklinik": [
+        (0, 2), (1, 0), (2, 2), (3, 1),   # APD bermasalah
+        (4, 1), (5, 2), (6, 2), (7, 2),
+        (8, 2), (9, 0),                    # penandaan area risiko
+    ],
+    "Kamar Operasi": [
+        (0, 2), (1, 2), (2, 2), (3, 2),
+        (4, 1), (5, 0),                    # penyimpanan obat
+        (6, 2), (7, 2), (8, 2), (9, 2),
+    ],
+}
+
+# Profile for second-round inspections (UGD & Rawat Inap A)
+ROOM_PROFILES_ROUND2: dict[str, list[tuple[int, int]]] = {
+    "UGD": [
+        (0, 2), (1, 2), (2, 1), (3, 2),   # improved from round 1
+        (4, 2), (5, 2), (6, 2), (7, 2),
+        (8, 2), (9, 2),
+    ],
+    "Rawat Inap A": [
+        (0, 1), (1, 2), (2, 1), (3, 2),   # still some issues
+        (4, 2), (5, 1), (6, 2), (7, 2),
+        (8, 2), (9, 1),
+    ],
+}
+
+# Profile for rejected inspection
+ROOM_PROFILES_REJECTED: dict[str, list[tuple[int, int]]] = {
+    "Rawat Inap B": [
+        (0, 0), (1, 0), (2, 0), (3, 0),   # all zeros — totally failed
+        (4, 0), (5, 0), (6, 0), (7, 0),
+        (8, 0), (9, 0),
+    ],
+}
+
+# June profiles — worse scores historically (before improvements)
+ROOM_PROFILES_JUNE: dict[str, list[tuple[int, int]]] = {
+    "UGD": [
+        (0, 1), (1, 0), (2, 1), (3, 0),
+        (4, 2), (5, 1), (6, 1), (7, 2),
+        (8, 0), (9, 1),
+    ],
+    "ICU": [
+        (0, 2), (1, 1), (2, 2), (3, 2),
+        (4, 2), (5, 2), (6, 2), (7, 2),
+        (8, 2), (9, 1),
+    ],
+}
+
+
 async def seed():
     async with async_session() as db:
-        # ── Users ──
+        # ──────────────── 1. USERS ────────────────
         users_data = [
             ("admin", "admin123", "admin_ppi"),
             ("supervisor", "supervisor123", "supervisor"),
@@ -42,8 +138,9 @@ async def seed():
                 role=role,
             ))
             print(f"  ✅ User '{username}' ({role}) — password: {password}")
+        await db.flush()
 
-        # ── Rooms ──
+        # ──────────────── 2. ROOMS ────────────────
         room_names = [
             "UGD",
             "Rawat Inap A",
@@ -57,7 +154,7 @@ async def seed():
                 await db.execute(select(Room))
             ).scalars().all()
         }
-        room_objects = []
+        room_objects: list[Room] = []
         for name in room_names:
             if name in existing_rooms:
                 print(f"  ⏭️  Room '{name}' already exists")
@@ -72,7 +169,7 @@ async def seed():
             print(f"  ✅ Room '{name}'")
         await db.flush()
 
-        # ── Inspection Items ──
+        # ──────────────── 3. INSPECTION ITEMS ────────────────
         item_names = [
             "Kebersihan Tangan",
             "Penggunaan APD",
@@ -90,7 +187,7 @@ async def seed():
                 await db.execute(select(InspectionItem))
             ).scalars().all()
         }
-        item_objects = []
+        item_objects: list[InspectionItem] = []
         for name in item_names:
             if name in existing_items:
                 item = (await db.execute(
@@ -104,7 +201,7 @@ async def seed():
         await db.flush()
         print(f"  ✅ {len(item_objects)} inspection items ready")
 
-        # ── Room-Item assignments (all active items → all active rooms) ──
+        # ──────────────── 4. ROOM-ITEM ASSIGNMENTS (ADR-0009) ────────────────
         for room in room_objects:
             for item in item_objects:
                 existing = await db.execute(
@@ -116,9 +213,9 @@ async def seed():
                 if existing.scalar_one_or_none() is None:
                     db.add(RoomItem(room_id=room.id, item_id=item.id))
         await db.commit()
-        print(f"  ✅ Room-Item assignments created ({len(room_objects)} rooms × {len(item_objects)} items)")
+        print(f"  ✅ Room-Item assignments ({len(room_objects)} rooms × {len(item_objects)} items)")
 
-        # ── User-Room assignments (all inspector/supervisor → all active rooms) ──
+        # ──────────────── 5. USER-ROOM ASSIGNMENTS (ADR-0010) ────────────────
         users_all = (await db.execute(select(User))).scalars().all()
         for user in users_all:
             if user.role in ("inspector", "supervisor"):
@@ -132,119 +229,188 @@ async def seed():
                     if existing.scalar_one_or_none() is None:
                         db.add(UserRoom(user_id=user.id, room_id=room.id))
         await db.commit()
-        print(f"  ✅ User-Room assignments created")
+        print(f"  ✅ User-Room assignments (inspector & supervisor → all rooms)")
 
-        # ── Get reference objects ──
-        users = {
+        # ──────────────── 6. BUILD LOOKUPS ────────────────
+        users_map = {
             u.username: u for u in (
                 await db.execute(select(User))
             ).scalars().all()
         }
-        rooms = {
+        rooms_map = {
             r.name: r for r in (
                 await db.execute(select(Room))
             ).scalars().all()
         }
-        items = {
-            i.name: i for i in (
-                await db.execute(select(InspectionItem))
-            ).scalars().all()
-        }
 
-        inspector = users["inspector"]
-        supervisor = users["supervisor"]
-        admin = users["admin"]
+        inspector = users_map["inspector"]
 
-        now = datetime.now(timezone.utc)
-        today = date.today()
+        # ── Fixed base datetime for idempotent re-runs ──
+        # Using a fixed seed epoch ensures same timestamps across runs,
+        # so the composite unique key catches duplicates.
+        SEED_EPOCH = datetime(2026, 7, 29, 8, 0, 0, tzinfo=timezone.utc)
+        today = SEED_EPOCH.date()
 
-        # ── Sample Inspection 1: APPROVED (UGD, 3 days ago) ──
-        # Scores: mostly 2s and 1s, one 0, for analytics data
-        insp1 = Inspection(
-            room_id=rooms["UGD"].id,
-            inspector_id=inspector.id,
-            status="APPROVED",
-            business_date=today - timedelta(days=3),
-            local_timestamp=now - timedelta(days=3),
+        # ──────────────── 7. HELPER: CREATE INSPECTION ────────────────
+        async def _make_inspection(
+            room_name: str,
+            days_ago: int,
+            status: str,
+            score_map: list[tuple[int, int]],
+            inspector_id: int = inspector.id,
+        ) -> Inspection | None:
+            room = rooms_map[room_name]
+            bdate = today - timedelta(days=days_ago)
+            ts = SEED_EPOCH - timedelta(days=days_ago)
+
+            # Check idempotency — skip if exact (room, ts, inspector) exists
+            dup = await db.execute(
+                select(Inspection).where(
+                    Inspection.room_id == room.id,
+                    Inspection.local_timestamp == ts,
+                    Inspection.inspector_id == inspector_id,
+                )
+            )
+            if dup.scalar_one_or_none() is not None:
+                print(f"  ⏭️  Inspection '{room_name}' (D-{days_ago}) already exists")
+                return None
+
+            insp = Inspection(
+                room_id=room.id,
+                inspector_id=inspector_id,
+                status=status,
+                business_date=bdate,
+                local_timestamp=ts,
+            )
+            for item_idx, score in score_map:
+                item = item_objects[item_idx]
+                insp.details.append(InspectionDetail(
+                    item_id=item.id,
+                    item_name_snapshot=item.name,
+                    score=score,
+                ))
+            db.add(insp)
+            await db.flush()
+            return insp
+
+        # ──────────────── 8. CREATE INSPECTIONS ────────────────
+
+        created_inspections: list[Inspection] = []
+
+        # ── 8a. July 2026 — Current month: 1 inspection per room ──
+        print("\n  📋 Creating July 2026 inspections (current month)...")
+        july_schedule = [
+            ("UGD",          3,  ROOM_PROFILES["UGD"]),
+            ("Rawat Inap A", 5,  ROOM_PROFILES["Rawat Inap A"]),
+            ("Rawat Inap B", 4,  ROOM_PROFILES["Rawat Inap B"]),
+            ("ICU",          2,  ROOM_PROFILES["ICU"]),
+            ("Poliklinik",   6,  ROOM_PROFILES["Poliklinik"]),
+            ("Kamar Operasi",7,  ROOM_PROFILES["Kamar Operasi"]),
+        ]
+        for room_name, days_ago, scores in july_schedule:
+            insp = await _make_inspection(room_name, days_ago, "APPROVED", scores)
+            if insp:
+                created_inspections.append(insp)
+                print(f"    ✅ {room_name} — APPROVED (D-{days_ago}, {len(scores)} items)")
+
+        # ── 8b. July round 2 — extra inspections for UGD & Rawat Inap A ──
+        print("\n  📋 Creating July round 2 inspections (extra data)...")
+        round2 = [
+            ("UGD",          8,  ROOM_PROFILES_ROUND2["UGD"]),
+            ("Rawat Inap A", 9,  ROOM_PROFILES_ROUND2["Rawat Inap A"]),
+        ]
+        for room_name, days_ago, scores in round2:
+            insp = await _make_inspection(room_name, days_ago, "APPROVED", scores)
+            if insp:
+                created_inspections.append(insp)
+                print(f"    ✅ {room_name} — APPROVED (D-{days_ago}, round 2)")
+
+        # ── 8c. June 2026 — Previous month (for month filter testing) ──
+        print("\n  📋 Creating June 2026 inspections (previous month)...")
+        # Adjust days_ago to land in June
+        # Today = July 29, so ~30 days ago = June 29
+        june_schedule = [
+            ("UGD",          32, ROOM_PROFILES_JUNE["UGD"]),
+            ("ICU",          35, ROOM_PROFILES_JUNE["ICU"]),
+        ]
+        for room_name, days_ago, scores in june_schedule:
+            insp = await _make_inspection(room_name, days_ago, "APPROVED", scores)
+            if insp:
+                created_inspections.append(insp)
+                print(f"    ✅ {room_name} — APPROVED (June 2026)")
+
+        # ── 8d. REJECTED inspection ──
+        print("\n  📋 Creating REJECTED inspection...")
+        rej = await _make_inspection(
+            "Rawat Inap B", 1,
+            "REJECTED",
+            ROOM_PROFILES_REJECTED["Rawat Inap B"],
         )
-        for idx, item in enumerate(item_objects):
-            # Realistic scores: mostly 2s, some 1s, one 0
-            score = 2
-            if item.name == "Penggunaan APD":
-                score = 1
-            elif item.name == "Pengelolaan Limbah Medis":
-                score = 1
-            elif item.name == "Penandaan Area Risiko":
-                score = 0  # Berisiko — needs photo
+        if rej:
+            rej.rejection_reason = (
+                "Semua item mendapat skor 0 (Berisiko). "
+                "Perlu perbaikan menyeluruh dan inspeksi ulang."
+            )
+            created_inspections.append(rej)
+            print(f"    ✅ Rawat Inap B — REJECTED (D-1, all zeros)")
 
-            insp1.details.append(InspectionDetail(
-                item_id=item.id,
-                item_name_snapshot=item.name,
-                score=score,
-            ))
-        db.add(insp1)
-
-        # ── Sample Inspection 2: APPROVED (Rawat Inap A, 2 days ago) ──
-        insp2 = Inspection(
-            room_id=rooms["Rawat Inap A"].id,
-            inspector_id=inspector.id,
-            status="APPROVED",
-            business_date=today - timedelta(days=2),
-            local_timestamp=now - timedelta(days=2),
+        # ── 8e. PENDING inspection — for approval workflow ──
+        print("\n  📋 Creating PENDING inspection (for approval test)...")
+        pending = await _make_inspection(
+            "ICU", 0,
+            "PENDING",
+            ROOM_PROFILES["ICU"],
         )
-        for idx, item in enumerate(item_objects):
-            score = 2
-            if item.name == "Kebersihan Lingkungan":
-                score = 0
-            elif item.name == "Ketersediaan Sabun & Handuk":
-                score = 0
-            elif item.name == "Sterilisasi Alat":
-                score = 1
-            insp2.details.append(InspectionDetail(
-                item_id=item.id,
-                item_name_snapshot=item.name,
-                score=score,
-            ))
-        db.add(insp2)
-
-        # ── Sample Inspection 3: PENDING (ICU, today) ──
-        insp3 = Inspection(
-            room_id=rooms["ICU"].id,
-            inspector_id=inspector.id,
-            status="PENDING",
-            business_date=today,
-            local_timestamp=now,
-        )
-        for item in item_objects:
-            insp3.details.append(InspectionDetail(
-                item_id=item.id,
-                item_name_snapshot=item.name,
-                score=2,
-            ))
-        db.add(insp3)
+        if pending:
+            created_inspections.append(pending)
+            print(f"    ✅ ICU — PENDING (today, ready for approval)")
 
         await db.commit()
-        print(f"  ✅ 3 sample inspections created")
+        print(f"\n  ✅ Total inspections created: {len(created_inspections)}")
 
-        # Populate analytics CQRS tables for the APPROVED inspections
+        # ──────────────── 9. RECALCULATE ANALYTICS ────────────────
+        # Only for APPROVED inspections (REJECTED & PENDING don't count)
+        print("\n  ⚙️  Recalculating analytics for APPROVED inspections...")
         from app.modules.background.services import recalculate_analytics
-        for insp in [insp1, insp2]:
+        approved = [i for i in created_inspections if i.status == "APPROVED"]
+        for insp in approved:
             await recalculate_analytics(db, insp.id)
-            print(f"  ✅ Analytics recalculated for inspection #{insp.id} (UGD/Rawat Inap A)")
+            print(f"    ✅ Analytics done — inspection #{insp.id} ({insp.business_date})")
+        print(f"  ✅ Analytics recalculated for {len(approved)} APPROVED inspections")
+
         await db.commit()
+
+        # ──────────────── 10. SUMMARY ────────────────
         print()
-        print("🎉 Seeding complete!")
+        print("╔═══════════════════════════════════════════════════════╗")
+        print("║             🌱  SEEDING COMPLETE!                    ║")
+        print("╠═══════════════════════════════════════════════════════╣")
+        print("║                                                     ║")
+        print("║  Users:                                              ║")
+        print("║    admin      / admin123      (admin_ppi)            ║")
+        print("║    supervisor / supervisor123  (supervisor)          ║")
+        print("║    inspector  / inspector123   (inspector)           ║")
+        print("║                                                     ║")
+        print("║  Rooms: 6 (UGD, Rawat Inap A/B, ICU, dll)           ║")
+        print("║  Items: 10 inspection items                          ║")
+        print("║                                                     ║")
+        print(f"║  Inspections: {len(created_inspections)} total                          ║")
+        print(f"║    ├─ July APPROVED:   {len([i for i in created_inspections if i.status == 'APPROVED' and (today - i.business_date).days <= 31])}  ║")
+        print(f"║    ├─ June APPROVED:   {len([i for i in created_inspections if i.status == 'APPROVED' and (today - i.business_date).days > 31])}  ║")
+        print(f"║    ├─ REJECTED:       {len([i for i in created_inspections if i.status == 'REJECTED'])}  ║")
+        print(f"║    └─ PENDING:        {len([i for i in created_inspections if i.status == 'PENDING'])}  ║")
+        print("║                                                     ║")
+        print("║  📊 Analytics page shows:                           ║")
+        print("║    • 6 rooms with score data                        ║")
+        print("║    • Multiple issue items (score=0)                 ║")
+        print("║    • Previous month data (June)                     ║")
+        print("║    • Inspector performance                          ║")
+        print("║                                                     ║")
+        print("╚═══════════════════════════════════════════════════════╝")
         print()
-        print("  Users:")
-        print("    admin      / admin123      (admin_ppi)")
-        print("    supervisor / supervisor123  (supervisor)")
-        print("    inspector  / inspector123   (inspector)")
-        print()
-        print("  Rooms: UGD, Rawat Inap A, Rawat Inap B, ICU, Poliklinik, Kamar Operasi")
-        print("  Items: 10 inspection items")
-        print("  Inspections: 2 APPROVED (for analytics), 1 PENDING (for demo)")
 
 
 if __name__ == "__main__":
     print("🌱 Seeding database...")
+    print()
     asyncio.run(seed())
