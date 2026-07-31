@@ -1,0 +1,21 @@
+# Build context: ./web-admin — buang noise & secrets dari context
+
+# Dependencies (CRITICAL: node_modules 100MB+)
+node_modules/
+
+# Build output (dihasilkan ulang oleh npm run build)
+dist/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Secrets & env
+.env
+.env.*
+
+# Graph output (generated, bukan source)
+graphify-out/
+
+# Docs & logs (tidak dibutuhkan saat build)
+*.md
+*.log

@@ -1,0 +1,36 @@
+# Build context: ./backend — buang noise & secrets dari context
+# (menghemat transfer + menghindari cache-busting layer Docker)
+
+# VCS & tooling
+.git/
+.gitnexus/
+.beads/
+.antigravitycli/
+
+# Python env & cache (CRITICAL: .venv 100MB+)
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets — jangan pernah masuk image
+.env
+.env.*
+
+# Database dev & runtime data
+*.db
+*.sqlite3
+uploads/
+
+# Graph output (generated, bukan source)
+graphify-out/
+
+# Tidak dibutuhkan di image (Dockerfile hanya COPY app/, alembic.ini, uv.lock)
+tests/
+scripts/
+*.md
+*.log

@@ -1,6 +1,8 @@
 {
   "communities": {
     "0": [
+      "web-admin::src_hooks_usedebounce",
+      "web-admin::src_hooks_usedebounce_usedebounce",
       "web-admin::src_hooks_useinspections",
       "web-admin::src_hooks_useinspections_inspectiondetail",
       "web-admin::src_hooks_useinspections_inspectionlistitem",
@@ -862,8 +864,6 @@
       "backend::datetime"
     ],
     "55": [
-      "backend::app_config",
-      "backend::app_config_settings",
       "backend::app_core_dependencies",
       "backend::app_core_dependencies_autherror",
       "backend::app_core_dependencies_autherror_init",
@@ -878,13 +878,6 @@
       "backend::app_core_errors_rationale_7",
       "backend::app_main",
       "backend::app_main_auth_error_handler",
-      "backend::app_modules_media_api",
-      "backend::app_modules_media_api_py_uploadfile",
-      "backend::app_modules_media_api_upload_file",
-      "backend::app_modules_media_services",
-      "backend::app_modules_media_services_py_uploadfile",
-      "backend::app_modules_media_services_save_upload",
-      "backend::basesettings",
       "backend::httpauthorizationcredentials",
       "backend::jsonresponse"
     ],
@@ -919,9 +912,7 @@
       "web-admin::src_components_masterdatapage",
       "web-admin::src_components_masterdatapage_entity",
       "web-admin::src_components_masterdatapage_masterdatapage",
-      "web-admin::src_components_masterdatapage_masterdatapageprops",
-      "web-admin::src_hooks_usedebounce",
-      "web-admin::src_hooks_usedebounce_usedebounce"
+      "web-admin::src_components_masterdatapage_masterdatapageprops"
     ],
     "58": [
       "backend::asyncsession",
@@ -946,6 +937,17 @@
       "web-admin::src_lib_api_setaccesstoken",
       "web-admin::src_lib_api_setonunauthorized",
       "web-admin::src_lib_api_tryrefresh"
+    ],
+    "60": [
+      "backend::app_config",
+      "backend::app_config_settings",
+      "backend::app_modules_media_api",
+      "backend::app_modules_media_api_py_uploadfile",
+      "backend::app_modules_media_api_upload_file",
+      "backend::app_modules_media_services",
+      "backend::app_modules_media_services_py_uploadfile",
+      "backend::app_modules_media_services_save_upload",
+      "backend::basesettings"
     ],
     "61": [
       "web-admin::src_components_layout",
@@ -976,7 +978,7 @@
     ]
   },
   "cohesion": {
-    "0": 0.16666666666666666,
+    "0": 0.1541501976284585,
     "1": 0.1253968253968254,
     "2": 0.07130333138515488,
     "3": 0.06655192197360872,
@@ -1031,11 +1033,12 @@
     "52": 0.10526315789473684,
     "53": 0.24183006535947713,
     "54": 0.19166666666666668,
-    "55": 0.11,
+    "55": 0.15833333333333333,
     "56": 0.23809523809523808,
-    "57": 0.2,
+    "57": 0.21978021978021978,
     "58": 0.28888888888888886,
     "59": 0.3111111111111111,
+    "60": 0.3055555555555556,
     "61": 0.32142857142857145,
     "62": 0.6666666666666666,
     "63": 1.0,
@@ -1155,17 +1158,17 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `User` connect `Pagination and Analytics` to `Test Fixtures and Seeding`, `Security and Password Hashing`, `Database Models and Migrations`, `Database and Auth Core`, `Auth Dependencies and Errors`?",
+      "question": "Why does `User` connect `master/api.py` to `test_room_items.py`, `hash_password`, `env.py`, `auth/models.py`, `media/api.py`?",
       "why": "High betweenness centrality (0.041) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `create_user()` connect `User Management API` to `Analytics Integration Tests`?",
+      "question": "Why does `create_user()` connect `create_user` to `test_analytics.py`?",
       "why": "High betweenness centrality (0.036) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `hash_password()` connect `Security and Password Hashing` to `Database and Auth Core`, `Test Fixtures and Seeding`?",
+      "question": "Why does `hash_password()` connect `hash_password` to `auth/models.py`, `test_room_items.py`?",
       "why": "High betweenness centrality (0.026) - this node is a cross-community bridge."
     },
     {
@@ -1180,12 +1183,12 @@
     },
     {
       "type": "low_cohesion",
-      "question": "Should `Inspection Management API` be split into smaller, more focused modules?",
+      "question": "Should `inspection/api.py` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.1253968253968254 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
-      "question": "Should `Authentication Tests` be split into smaller, more focused modules?",
+      "question": "Should `test_auth.py` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.07130333138515488 - nodes in this community are weakly interconnected."
     }
   ]
