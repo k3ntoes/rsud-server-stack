@@ -17,6 +17,35 @@ async def test_login_success(client: AsyncClient, db_session: AsyncSession):
     assert "refresh_token" in data
     assert data["user"]["username"] == "testuser"
     assert data["user"]["role"] == "inspector"
+    assert data["user"]["name"] is None
+
+
+@pytest.mark.asyncio
+async def test_create_and_update_user_with_name(client: AsyncClient, db_session: AsyncSession):
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+
+    # Create user with name
+    resp = await client.post(
+        "/api/auth/users",
+        json={"username": "dr_john", "name": "Dr. John Doe", "password": "password123", "role": "supervisor"},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+    created_data = resp.json()
+    assert created_data["username"] == "dr_john"
+    assert created_data["name"] == "Dr. John Doe"
+    user_id = created_data["id"]
+
+    # Update user name
+    resp_update = await client.put(
+        f"/api/auth/users/{user_id}",
+        json={"name": "Dr. John Doe, Sp.PD"},
+        headers=headers,
+    )
+    assert resp_update.status_code == 200
+    updated_data = resp_update.json()
+    assert updated_data["name"] == "Dr. John Doe, Sp.PD"
 
 
 @pytest.mark.asyncio
@@ -72,6 +101,55 @@ async def test_me_wrong_token_type(client: AsyncClient, db_session: AsyncSession
     token = create_refresh_token({"sub": str(user.id)})
     resp = await client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 401
+
+
+# ── Error Code Standardization (contract 4.5 — Android Interceptor) ──
+
+
+@pytest.mark.asyncio
+async def test_me_invalid_token_code(client: AsyncClient):
+    """Malformed token → 401 with code TOKEN_INVALID (Android auto-refresh trigger)."""
+    resp = await client.get("/api/auth/me", headers={"Authorization": "Bearer not-a-jwt"})
+    assert resp.status_code == 401
+    data = resp.json()
+    assert data["code"] == "TOKEN_INVALID"
+    assert data["detail"] == "Invalid token"
+
+
+@pytest.mark.asyncio
+async def test_me_expired_token_code(client: AsyncClient, db_session: AsyncSession):
+    """Expired access token → 401 with code TOKEN_EXPIRED."""
+    from datetime import datetime, timedelta, timezone
+
+    from jose import jwt
+
+    from app.config import settings
+
+    user = await create_user(db_session, "expired", "pass", "inspector")
+    payload = {
+        "sub": str(user.id),
+        "type": "access",
+        "exp": datetime.now(timezone.utc) - timedelta(minutes=5),
+    }
+    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+    resp = await client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 401
+    data = resp.json()
+    assert data["code"] == "TOKEN_EXPIRED"
+    assert data["detail"] == "Token expired"
+
+
+@pytest.mark.asyncio
+async def test_me_wrong_token_type_code(client: AsyncClient, db_session: AsyncSession):
+    """Refresh token used as access → 401 with code TOKEN_INVALID."""
+    from app.core.security import create_refresh_token
+
+    user = await create_user(db_session, "u2", "p", "inspector")
+    token = create_refresh_token({"sub": str(user.id)})
+    resp = await client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 401
+    assert resp.json()["code"] == "TOKEN_INVALID"
 
 
 @pytest.mark.asyncio

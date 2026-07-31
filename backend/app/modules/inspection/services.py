@@ -1,14 +1,36 @@
+import os
 from datetime import date
 
+from fastapi import UploadFile
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from app.config import settings
 from app.core.sorting import apply_sorting
 from app.modules.inspection.models import Inspection, InspectionDetail, InspectionPhoto
 from app.modules.inspection.schemas import InspectionSubmit
-from app.modules.auth.models import UserRoom
+from app.modules.auth.models import User, UserRoom
 from app.modules.master.models import InspectionItem, RoomItem
+
+
+class InspectionPhotoNotFoundError(Exception):
+    """Raised when the inspection or the photo does not exist."""
+
+
+def _remove_upload_file(filename: str) -> None:
+    """Best-effort delete of a stored photo/thumbnail file.
+
+    Swallows OSError — cleanup happens after the DB commit succeeded, so a
+    filesystem error here must not turn the request into a failure (nor be
+    mistaken for a permission/403 issue upstream).
+    """
+    try:
+        path = os.path.join(settings.UPLOAD_DIR, filename)
+        if os.path.isfile(path):
+            os.remove(path)
+    except OSError:
+        pass
 
 
 def _base_inspection_query() -> select:
@@ -158,6 +180,63 @@ async def get_inspection(db: AsyncSession, inspection_id: int) -> Inspection | N
         _base_inspection_query().where(Inspection.id == inspection_id)
     )
     return result.unique().scalar_one_or_none()
+
+
+async def replace_inspection_photo(
+    db: AsyncSession,
+    current_user: User,
+    inspection_id: int,
+    photo_id: int,
+    file: UploadFile,
+) -> InspectionPhoto:
+    """Replace an existing inspection photo's file with a new upload.
+
+    Access: owner of the inspection OR supervisor/admin. Works on any status.
+    Order: save new file → update DB → create thumbnail job → commit →
+    delete old file + old thumbnail (tolerant of already-missing files).
+    """
+    inspection = await db.get(Inspection, inspection_id)
+    if inspection is None:
+        raise InspectionPhotoNotFoundError()
+
+    is_supervisor = current_user.role in ("admin_ppi", "supervisor")
+    if inspection.inspector_id != current_user.id and not is_supervisor:
+        raise PermissionError("Not allowed to replace this photo")
+
+    # Photo must belong to this inspection
+    result = await db.execute(
+        select(InspectionPhoto)
+        .join(InspectionDetail)
+        .where(
+            InspectionPhoto.id == photo_id,
+            InspectionDetail.inspection_id == inspection_id,
+        )
+    )
+    photo = result.scalar_one_or_none()
+    if photo is None:
+        raise InspectionPhotoNotFoundError()
+
+    # 1. Save new file (UUID name, 10MB safety net, reused from media module)
+    from app.modules.media.services import save_upload
+    new_name, _ = await save_upload(file)
+
+    old_name = photo.photo_file_name
+    old_thumb = photo.thumbnail_file_name
+
+    # 2. Update DB, 3. queue thumbnail regeneration (outbox, before commit)
+    photo.photo_file_name = new_name
+    photo.thumbnail_file_name = None
+    from app.modules.background.services import create_job
+    await create_job(db, "generate_thumbnail", photo.id)
+    await db.commit()
+
+    # 4. Delete old files after commit (safe rollback if step 2/3 failed)
+    if old_name:
+        _remove_upload_file(old_name)
+    if old_thumb:
+        _remove_upload_file(old_thumb)
+
+    return photo
 
 
 async def approve_inspection(db: AsyncSession, inspection_id: int) -> Inspection | None:

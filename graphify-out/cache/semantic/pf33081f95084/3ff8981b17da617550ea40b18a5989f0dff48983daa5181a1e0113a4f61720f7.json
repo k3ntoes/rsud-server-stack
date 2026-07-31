@@ -1,1 +1,1 @@
-{"nodes": [], "edges": [], "hyperedges": []}
+{"nodes": [{"id": "web_admin_index", "label": "Web Admin Entry Point", "file_type": "code", "source_file": "web-admin/index.html", "verification": "unverified"}], "edges": [], "hyperedges": []}

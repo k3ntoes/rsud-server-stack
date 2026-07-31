@@ -1,1 +1,1 @@
-{"nodes": [{"id": "skill_teach", "label": "Skill: Teach", "file_type": "document", "source_file": ".agents/skills/teach/SKILL.md"}], "edges": [], "hyperedges": []}
+{"nodes": [{"id": "skill_teach", "label": "Skill: Teach", "file_type": "document", "source_file": ".agents/skills/teach/SKILL.md"}, {"id": "agents_skills_teach_skill", "label": "Teach Skill", "file_type": "document", "source_file": ".agents/skills/teach/SKILL.md", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

@@ -39,6 +39,9 @@ Composite unique key `(room_id, local_timestamp, inspector_id)` prevents duplica
 **MissingGreenlet**:
 Error yang muncul saat `selectinload` digunakan di async context (aiosqlite tidak mendukung concurrent query). Solusi: gunakan `joinedload`.
 
+**Photo Replacement**:
+Mengganti file foto pada inspeksi yang sudah terkirim. Hanya pemilik inspeksi atau supervisor/admin; berlaku di semua status. File lama + thumbnail dihapus setelah commit. (ADR-0012)
+
 ## Key Decisions
 
 - Fully normalized header-detail structure

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -9,11 +9,12 @@ from app.modules.auth.dependencies import get_supervisor_user
 from app.modules.auth.models import User
 from app.modules.inspection.schemas import (
     InspectionSubmit, InspectionOut, InspectionListItem,
-    RejectRequest,
+    RejectRequest, PhotoOut,
 )
 from app.modules.inspection.services import (
     submit_inspection, list_inspections, get_inspection,
     approve_inspection, reject_inspection,
+    replace_inspection_photo, InspectionPhotoNotFoundError,
 )
 
 router = APIRouter(prefix="/api", tags=["inspection"])
@@ -53,7 +54,7 @@ async def get_inspections(
     sort_by: str | None = Query(None),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_supervisor_user),
+    current_user: User = Depends(get_current_user),
 ):
     from datetime import date as date_type
     bd = date_type.fromisoformat(business_date) if business_date else None
@@ -81,7 +82,7 @@ async def get_inspections(
 async def get_inspection_by_id(
     inspection_id: int,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_supervisor_user),
+    _: User = Depends(get_current_user),
 ):
     inspection = await get_inspection(db, inspection_id)
     if inspection is None:
@@ -112,3 +113,46 @@ async def reject_inspection_endpoint(
     if inspection is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Cannot reject")
     return inspection
+
+
+@router.put("/inspections/{inspection_id}/photos/{photo_id}", response_model=PhotoOut)
+async def replace_inspection_photo_endpoint(
+    inspection_id: int,
+    photo_id: int,
+    file: UploadFile | None = File(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Replace an already-submitted inspection photo (re-upload manual, ADR-0012).
+
+    Access: owner of the inspection OR supervisor/admin. Any status.
+    """
+    if file is None:
+        return error_response(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="File field 'file' is required in multipart/form-data",
+            code="MISSING_FILE",
+        )
+    try:
+        photo = await replace_inspection_photo(
+            db, current_user, inspection_id, photo_id, file
+        )
+    except InspectionPhotoNotFoundError:
+        return error_response(
+            status.HTTP_404_NOT_FOUND,
+            detail="Inspection or photo not found",
+            code="PHOTO_NOT_FOUND",
+        )
+    except PermissionError:
+        return error_response(
+            status.HTTP_403_FORBIDDEN,
+            detail="Not allowed to replace this photo",
+            code="FORBIDDEN",
+        )
+    except ValueError as e:
+        return error_response(
+            status.HTTP_413_CONTENT_TOO_LARGE,
+            detail=str(e),
+            code="FILE_TOO_LARGE",
+        )
+    return photo

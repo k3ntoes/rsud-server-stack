@@ -501,7 +501,62 @@ Android Interceptor perlu mendeteksi 401 untuk trigger auto-refresh. Gunakan for
 }
 ```
 
+**404 Not Found (photo tidak ditemukan):**
+```json
+{
+  "detail": "Inspection or photo not found",
+  "code": "PHOTO_NOT_FOUND"
+}
+```
+
 > Android menggunakan `code` field (bukan `detail`) untuk logika Interceptor — lebih stabil daripada parsing string.
+
+---
+
+### Perubahan 4.6: Replace Photo (Re-upload Foto Rusak)
+
+**Endpoint**: `PUT /api/inspections/{id}/photos/{photoId}`
+
+Mengganti file foto pada inspeksi yang **sudah terkirim**. Dipakai untuk re-upload manual dari backup lokal (`files/photos_sent`) ketika foto di server rusak/hilang — keputusan ADR-0016 (dual-path photo storage).
+
+**Request**: `multipart/form-data` — file baru (sama seperti `POST /api/upload`):
+```
+file: <binary jpeg, ≤ 300KB dari Android>
+```
+
+**Logika server:**
+1. Validasi inspeksi `{id}` ada & user login punya akses
+2. Validasi photo `{photoId}` milik inspeksi tersebut
+3. Simpan file baru (UUID baru) ke `uploads/` (terapkan safety net 10MB dari Perubahan 3.1)
+4. Update referensi `inspection_photos.photo_file_name` ke nama baru; regenerate thumbnail async (`generate_thumbnail`)
+5. Hapus file lama dari filesystem jika tidak direferensikan photo lain
+6. Return photo terbaru
+
+**Response 200 (sesuai schema photo):**
+```json
+{
+  "id": 1,
+  "photo_file_name": "uuid-photo-baru.jpg",
+  "thumbnail_file_name": null,
+  "sort_order": 0
+}
+```
+
+| Field | Tipe | Deskripsi |
+|-------|------|-----------|
+| `id` | int | Primary key foto (tidak berubah) |
+| `photo_file_name` | string | Nama file foto **BARU** (UUID) |
+| `thumbnail_file_name` | string/null | Thumbnail (null jika belum digenerate async) |
+| `sort_order` | int | Urutan tampilan (tidak berubah) |
+
+**Error:**
+- `401 TOKEN_EXPIRED` / `TOKEN_INVALID` — auth gagal
+- `404 PHOTO_NOT_FOUND` — inspeksi atau photo tidak ditemukan
+- `413 FILE_TOO_LARGE` — file > 10MB (safety net)
+
+> ✅ **Endpoint SUDAH diimplementasikan di backend** (ADR-0012). Dependensi untuk fitur re-upload manual Android (ADR-0016). `POST /api/upload` biasa selalu menghasilkan UUID baru yang TIDAK terhubung ke inspeksi; endpoint inilah yang menyambungkan file baru ke referensi photo yang sudah ada.
+>
+> **Aturan akses (ADR-0012):** pemilik inspeksi (`inspector_id`) **ATAU** role `admin_ppi`/`supervisor`. Berlaku di semua status (PENDING/APPROVED/REJECTED). File lama + thumbnail lama dihapus setelah commit. Error `403` dengan code `FORBIDDEN` untuk user yang tidak berhak.
 
 ---
 
@@ -520,6 +575,7 @@ Android Interceptor perlu mendeteksi 401 untuk trigger auto-refresh. Gunakan for
 | POST | `/api/inspections` | Per inspeksi selesai | Bearer | Validasi room_items + user_rooms |
 | GET | `/api/inspections` | Riwayat | Bearer | `?status=` filter, `?show_all=` untuk supervisor |
 | GET | `/api/inspections/{id}` | Detail | Bearer | Untuk HistoryScreen |
+| **PUT** | **`/api/inspections/{id}/photos/{photoId}`** | **Jarang (re-upload manual)** | **Bearer** | **Replace foto terkirim — dependensi ADR-0016 (SUDAH diimplementasi, ADR-0012)** |
 
 **Alur Sync Master Data (urutan benar):**
 
@@ -546,6 +602,7 @@ Android Interceptor perlu mendeteksi 401 untuk trigger auto-refresh. Gunakan for
 | **P3** | Submit inspeksi dengan validasi room_items + user_rooms | Kecil | Backend sudah implementasi — Android perlu update body request |
 | **P3** | File size limit (10MB) | Kecil | Safety net, bisa ditunda |
 | **P3** | Upload response tambahan | Kecil | Informasi tambahan, tidak blocking |
+| ~~P3~~ ✅ | Replace Photo (`PUT /api/inspections/{id}/photos/{photoId}`) | Sedang | **SUDAH diimplementasi (ADR-0012)** — hapus file lama + regenerate thumbnail |
 
 ---
 
@@ -577,3 +634,11 @@ Endpoint sync untuk assigned rooms per user:
 ### ADR Baru: Dual Delivery Auth
 
 Jika diperlukan, buat ADR-0011 dengan judul *"Dual Delivery Refresh Token — Cookie for Web, Body for Android"*.
+
+### ADR-0016 (Android) — Dependensi Endpoint Replace Photo
+
+ADR-0016 (dual-path photo storage — folder draf & folder terkirim) membutuhkan endpoint baru untuk re-upload manual foto terkirim yang rusak/hilang di server:
+
+- `PUT /api/inspections/{id}/photos/{photoId}` — ganti file + referensi photo (UUID baru), hapus file lama, regenerate thumbnail
+
+Detail lengkap: `docs/adr/0016-dual-path-photo-storage.md`. Fitur backup/tampilan (lokal-first) tidak ter-blokir endpoint ini — hanya fitur re-upload yang menunggu.
