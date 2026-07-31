@@ -1,0 +1,52 @@
+# Graphify Ignore — file/direktori yang dikecualikan dari knowledge graph
+# Syntax sama dengan .gitignore (termasuk negasi "!").
+# Catatan: .gitignore dihormati otomatis; file ini dievaluasi terakhir dan
+# hanya MENAMBAH pengecualian — tidak pernah membatalkan .gitignore.
+# Gunakan --no-gitignore pada extract jika ingin mengabaikan .gitignore
+# (file ini tetap berlaku).
+# PENTING: komentar HANYA di baris sendiri — inline "#" di akhir pattern merusak match.
+
+# ==== VCS & tool runtime (bukan source code) ====
+.git/
+# Index GitNexus (parse cache, csv) — noise
+.gitnexus/
+# Dolt DB issue tracker
+.beads/
+.antigravitycli/
+
+# ==== AI agent config & skills ====
+.agents/
+.claude/
+
+# ==== Dependencies & build output ====
+node_modules/
+dist/
+*.tsbuildinfo
+
+# ==== Output graph itu sendiri (hindari self-indexing & ghost duplicates) ====
+graphify-out/
+
+# ==== Python env & cache ====
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# ==== Runtime data & database dumps ====
+backend/uploads/
+*.db
+*.sqlite3
+*.sql
+*.dump
+
+# ==== Logs ====
+*.log
+
+# ==== Secrets (security best practice — jangan pernah masuk graph) ====
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12

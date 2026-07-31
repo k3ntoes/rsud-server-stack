@@ -1,11 +1,43 @@
-# GitNexus Ignore — direktori yang tidak perlu di-index
-# Format: .gitignore-style patterns
+# GitNexus Ignore — direktori/file yang tidak perlu di-index
+# Format: .gitignore-style patterns (didukung sejak GitNexus v1.3.x, issue #228)
+# Tujuan: kurangi noise symbol, biaya embedding, dan jalankan analisis lebih cepat.
+# Catatan: .gitignore dihormati otomatis; file ini untuk pola tambahan.
+# PENTING: komentar HANYA di baris sendiri — inline "#" di akhir pattern merusak match.
 
-# Agent skills & tools (AI agent config, bukan source code)
+# ==== Runtime tooling (bukan source code) ====
+# Index GitNexus sendiri (parse-cache, csv, lbug)
+.gitnexus/
+# Issue tracker database (Dolt) + runtime files
+.beads/
+# Runtime config Antigravity CLI
+.antigravitycli/
+
+# ==== AI agent config & skills (bukan domain code) ====
 .agents/
-
-# GitNexus skill documentation (sudah di-manage oleh .claude/ sendiri)
 .claude/
 
-# Beads issue tracker (database + runtime files, bukan source code)
-.beads/
+# ==== Dependencies & build output ====
+node_modules/
+dist/
+*.tsbuildinfo
+
+# ==== Output graph (generated, jangan di-index) ====
+graphify-out/
+
+# ==== Python env & cache ====
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# ==== Runtime data & secrets ====
+backend/uploads/
+*.db
+*.sqlite3
+.env
+.env.*
+*.log
+*.pem
+*.key
+*.crt

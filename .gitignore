@@ -3,10 +3,14 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
-.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # Environment
 .env
+.env.*
+!.env.example
 
 # IDE
 .vscode/
@@ -26,3 +30,21 @@ backend/uploads/*
 
 # beads data sync
 .beads/dolt/
+
+# GitNexus runtime index (auto-generated; nested .gitignore juga menutupi)
+.gitnexus/
+
+# Antigravity runtime config (machine-local)
+.antigravitycli/
+
+# Graphify cost tracking (local only; graph.json tetap di-commit)
+graphify-out/cost.json
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Logs & secrets
+*.log
+*.pem
+*.key
+*.crt
