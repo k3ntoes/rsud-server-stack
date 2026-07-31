@@ -116,7 +116,14 @@ export default function Layout() {
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-ink-muted">
-              {user?.username}
+              {user?.name ? (
+                <>
+                  <span className="font-medium text-ink mr-1">{user.name}</span>
+                  <span className="text-xs text-ink-muted">({user.username})</span>
+                </>
+              ) : (
+                user?.username
+              )}
               <span className="ml-1.5 rounded-full bg-navy-100 px-2 py-0.5 text-[11px] font-medium text-navy-600">
                 {user?.role}
               </span>

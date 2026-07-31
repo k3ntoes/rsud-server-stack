@@ -11,6 +11,7 @@ import { apiRequest, setAccessToken, setOnUnauthorized } from "../lib/api";
 interface User {
   id: number;
   username: string;
+  name?: string;
   role: string;
   is_active: boolean;
 }

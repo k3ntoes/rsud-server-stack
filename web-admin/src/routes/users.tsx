@@ -63,6 +63,7 @@ function UsersPage() {
   const [resetPwUser, setResetPwUser] = useState<User | null>(null);
   const [roomAssignUser, setRoomAssignUser] = useState<User | null>(null);
   const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("inspector");
   const [editActive, setEditActive] = useState(true);
@@ -71,6 +72,7 @@ function UsersPage() {
   const openCreate = () => {
     setEditing(null);
     setUsername("");
+    setName("");
     setPassword("");
     setRole("inspector");
     setEditActive(true);
@@ -81,6 +83,7 @@ function UsersPage() {
   const openEdit = (u: User) => {
     setEditing(u);
     setUsername(u.username);
+    setName(u.name ?? "");
     setPassword("");
     setRole(u.role);
     setEditActive(u.is_active);
@@ -90,6 +93,7 @@ function UsersPage() {
 
   const handleSave = async () => {
     const trimmed = username.trim();
+    const trimmedName = name.trim() || undefined;
     if (!trimmed) return;
     setSaveError("");
     try {
@@ -97,6 +101,7 @@ function UsersPage() {
         await update.mutateAsync({
           id: editing.id,
           username: trimmed,
+          name: trimmedName,
           role,
           is_active: editActive,
         });
@@ -105,7 +110,7 @@ function UsersPage() {
           setSaveError("Password harus diisi untuk pengguna baru");
           return;
         }
-        await create.mutateAsync({ username: trimmed, password, role });
+        await create.mutateAsync({ username: trimmed, name: trimmedName, password, role });
       }
       setModalOpen(false);
     } catch (err) {
@@ -119,6 +124,13 @@ function UsersPage() {
       header: "Username",
       cell: ({ row }) => (
         <span className="font-medium text-ink">{row.original.username}</span>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: "Nama Lengkap",
+      cell: ({ row }) => (
+        <span className="text-ink">{row.original.name ?? "-"}</span>
       ),
     },
     {
@@ -238,6 +250,17 @@ function UsersPage() {
             className="input-plan"
             placeholder="Masukkan username"
             autoFocus
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="label-plan">Nama Lengkap (Opsional)</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input-plan"
+            placeholder="Contoh: Dr. John Doe, Sp.PD"
           />
         </div>
 

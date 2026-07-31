@@ -42,7 +42,7 @@ Admin PPI creates Inspector and Supervisor accounts from the web dashboard.
 Admin action to kill a user's session by removing their refresh token from the whitelist.
 
 **User CRUD**:
-Admin PPI can create, list, update, and soft-delete users from the web dashboard. Saat create, admin menentukan username, password initial, dan role (admin_ppi/supervisor/inspector). Saat update, admin bisa mengubah username, role, dan status aktif. Tidak bisa mengubah password user dari halaman manajemen — user harus menggunakan fitur Change Password sendiri.
+Admin PPI can create, list, update, and soft-delete users from the web dashboard. Saat create, admin menentukan username, nama lengkap (opsional), password initial, dan role (admin_ppi/supervisor/inspector). Saat update, admin bisa mengubah username, nama lengkap (`name`), role, dan status aktif. Tidak bisa mengubah password user dari halaman manajemen — user harus menggunakan fitur Change Password sendiri.
 
 **Change Password**:
 All authenticated users can change their own password via `POST /api/auth/change-password`. Endpoint memvalidasi old password sebelum mengizinkan perubahan.

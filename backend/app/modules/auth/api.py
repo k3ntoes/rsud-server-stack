@@ -156,6 +156,7 @@ async def get_users(
         items.append(UserListOut(
             id=u.id,
             username=u.username,
+            name=u.name,
             role=u.role,
             is_active=u.is_active,
             created_at=u.created_at,
@@ -173,7 +174,7 @@ async def create_user_endpoint(
     # ponytail: broad except — catches DB errors too, not just dupes.
     # Narrow to IntegrityError if false-positives become an issue.
     try:
-        user = await create_user(db, body.username, body.password, body.role)
+        user = await create_user(db, body.username, body.password, body.role, body.name)
         return UserOut.model_validate(user)
     except Exception:
         raise HTTPException(status.HTTP_409_CONFLICT, detail="Username already exists")
@@ -186,7 +187,7 @@ async def update_user_endpoint(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_admin_user),
 ):
-    user = await update_user(db, user_id, body.username, body.role, body.is_active)
+    user = await update_user(db, user_id, body.username, body.name, body.role, body.is_active)
     if user is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
     return UserOut.model_validate(user)

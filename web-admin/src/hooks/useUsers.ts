@@ -10,6 +10,7 @@ interface SyncResponse<T> {
 export interface User {
   id: number;
   username: string;
+  name?: string;
   role: string;
   is_active: boolean;
   created_at?: string;
@@ -39,7 +40,7 @@ export function useUsers(page = 0, perPage = 20, search = "", sortBy?: string, s
 export function useCreateUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { username: string; password: string; role: string }) =>
+    mutationFn: (data: { username: string; name?: string; password: string; role: string }) =>
       apiRequest<User>("/api/auth/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -52,12 +53,13 @@ export function useCreateUser() {
 export function useUpdateUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { id: number; username?: string; role?: string; is_active?: boolean }) =>
+    mutationFn: (data: { id: number; username?: string; name?: string; role?: string; is_active?: boolean }) =>
       apiRequest<User>(`/api/auth/users/${data.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: data.username,
+          name: data.name,
           role: data.role,
           is_active: data.is_active,
         }),

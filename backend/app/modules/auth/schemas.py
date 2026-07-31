@@ -11,6 +11,7 @@ class LoginRequest(BaseModel):
 class UserOut(BaseModel):
     id: int
     username: str
+    name: str | None = None
     role: str
     is_active: bool
 
@@ -19,12 +20,14 @@ class UserOut(BaseModel):
 
 class UserCreate(BaseModel):
     username: str
+    name: str | None = None
     password: str
     role: str
 
 
 class UserUpdate(BaseModel):
     username: str | None = None
+    name: str | None = None
     role: str | None = None
     is_active: bool | None = None
 
@@ -32,6 +35,7 @@ class UserUpdate(BaseModel):
 class UserListOut(BaseModel):
     id: int
     username: str
+    name: str | None = None
     role: str
     is_active: bool
     created_at: datetime

@@ -97,7 +97,11 @@ async def get_user_room_ids(db: AsyncSession, user_id: int) -> list[int]:
 
 
 async def update_user(
-    db: AsyncSession, user_id: int, username: str | None = None, role: str | None = None,
+    db: AsyncSession,
+    user_id: int,
+    username: str | None = None,
+    name: str | None = None,
+    role: str | None = None,
     is_active: bool | None = None,
 ) -> User | None:
     user = await db.get(User, user_id)
@@ -105,6 +109,8 @@ async def update_user(
         return None
     if username is not None:
         user.username = username
+    if name is not None:
+        user.name = name
     if role is not None:
         user.role = role
     if is_active is not None:
@@ -166,9 +172,12 @@ async def authenticate(db: AsyncSession, username: str, password: str) -> User |
     return user
 
 
-async def create_user(db: AsyncSession, username: str, password: str, role: str) -> User:
+async def create_user(
+    db: AsyncSession, username: str, password: str, role: str, name: str | None = None
+) -> User:
     user = User(
         username=username,
+        name=name,
         password_hash=hash_password(password),
         role=role,
     )
