@@ -88,12 +88,19 @@ async def list_all_user_rooms(db: AsyncSession, since: datetime | None = None) -
     return list(result.scalars().all())
 
 
-async def get_user_room_ids(db: AsyncSession, user_id: int) -> list[int]:
-    """Get list of room IDs assigned to a user."""
+async def get_room_ids_by_users(db: AsyncSession, user_ids: list[int]) -> dict[int, list[int]]:
+    """Map user_id → assigned room_ids in a single query (avoids N+1)."""
+    mapping: dict[int, list[int]] = {uid: [] for uid in user_ids}
+    if not user_ids:
+        return mapping
     result = await db.execute(
-        select(UserRoom.room_id).where(UserRoom.user_id == user_id)
+        select(UserRoom.user_id, UserRoom.room_id).where(
+            UserRoom.user_id.in_(user_ids)
+        )
     )
-    return [r for r in result.scalars().all()]
+    for uid, rid in result.all():
+        mapping[uid].append(rid)
+    return mapping
 
 
 async def update_user(

@@ -25,7 +25,7 @@ from app.modules.auth.services import (
     list_users, update_user, deactivate_user, change_password,
     admin_reset_password,
     list_all_user_rooms, list_rooms_by_user, list_users_by_room,
-    assign_user_to_room, unassign_user_from_room, get_user_room_ids,
+    assign_user_to_room, unassign_user_from_room, get_room_ids_by_users,
 )
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -150,9 +150,9 @@ async def get_users(
     _: User = Depends(get_admin_user),
 ):
     users, total = await list_users(db, page, per_page, search, sort_by, sort_order)
+    room_ids_by_user = await get_room_ids_by_users(db, [u.id for u in users])
     items = []
     for u in users:
-        room_ids = await get_user_room_ids(db, u.id)
         items.append(UserListOut(
             id=u.id,
             username=u.username,
@@ -160,7 +160,7 @@ async def get_users(
             role=u.role,
             is_active=u.is_active,
             created_at=u.created_at,
-            room_ids=room_ids,
+            room_ids=room_ids_by_user[u.id],
         ))
     return paginate(items, total, page, per_page)
 
