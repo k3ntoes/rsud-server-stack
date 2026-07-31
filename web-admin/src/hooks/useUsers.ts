@@ -142,7 +142,7 @@ export function useAssignUserToRoom() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, roomId }: { userId: number; roomId: number }) =>
-      apiRequest<UserRoom>(`/api/rooms/${roomId}/users`, {
+      apiRequest<UserRoom>(`/api/auth/rooms/${roomId}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId }),
@@ -158,7 +158,7 @@ export function useUnassignUserFromRoom() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, roomId }: { userId: number; roomId: number }) =>
-      apiRequest<void>(`/api/rooms/${roomId}/users/${userId}`, { method: "DELETE" }),
+      apiRequest<void>(`/api/auth/rooms/${roomId}/users/${userId}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["user-rooms"] });
       qc.invalidateQueries({ queryKey: ["users"] });
