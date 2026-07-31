@@ -64,6 +64,10 @@
     @apply inline-flex items-center rounded-full bg-danger-muted px-2.5 py-0.5
            text-xs font-medium text-danger ring-1 ring-inset ring-danger-border;
   }
+  .badge-room {
+    @apply inline-flex items-center rounded-full bg-teal-500/10 px-2.5 py-0.5
+           text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-500/20;
+  }
 
   /* ── Sidebar Navigation ── */
   .nav-item {

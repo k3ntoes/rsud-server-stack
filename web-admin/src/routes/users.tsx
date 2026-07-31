@@ -54,6 +54,8 @@ function UsersPage() {
     setSorting(updater);
     setPagination((p) => ({ ...p, pageIndex: 0 }));
   };
+  const { data: allRooms } = useRoomsAll();
+  const roomMap = new Map((allRooms ?? []).map((r) => [r.id, r.name]));
   const create = useCreateUser();
   const update = useUpdateUser();
   const del = useDeleteUser();
@@ -141,6 +143,29 @@ function UsersPage() {
           {ROLE_LABELS[row.original.role] ?? row.original.role}
         </span>
       ),
+    },
+    {
+      id: "rooms",
+      header: "Ruangan",
+      cell: ({ row }) => {
+        const roomIds = row.original.room_ids ?? [];
+        if (!roomIds.length) return <span className="text-xs text-ink-subtle">—</span>;
+        const names = roomIds
+          .map((id) => roomMap.get(id))
+          .filter((n): n is string => !!n);
+        return (
+          <div className="flex max-w-xs flex-wrap items-center gap-1">
+            {names.slice(0, 3).map((name) => (
+              <span key={name} className="badge-room">
+                {name}
+              </span>
+            ))}
+            {names.length > 3 && (
+              <span className="badge-room opacity-70">+{names.length - 3}</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "is_active",
@@ -357,15 +382,31 @@ function UserRoomModal({
   const { data: userRooms } = useUserRooms(user?.id ?? 0);
   const assignRoom = useAssignUserToRoom();
   const unassignRoom = useUnassignUserFromRoom();
+  const [selectedRoomId, setSelectedRoomId] = useState(0);
+  const [error, setError] = useState("");
 
   const assignedRoomIds = new Set(userRooms?.map((ur) => ur.room_id) ?? []);
+  const roomNameById = new Map((allRooms ?? []).map((r) => [r.id, r.name]));
+  const availableRooms = allRooms?.filter((r) => !assignedRoomIds.has(r.id)) ?? [];
 
-  const handleToggle = async (roomId: number) => {
+  const handleAdd = async () => {
+    if (!user || !selectedRoomId) return;
+    setError("");
+    try {
+      await assignRoom.mutateAsync({ userId: user.id, roomId: selectedRoomId });
+      setSelectedRoomId(0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal menambahkan ruangan");
+    }
+  };
+
+  const handleRemove = async (roomId: number) => {
     if (!user) return;
-    if (assignedRoomIds.has(roomId)) {
+    setError("");
+    try {
       await unassignRoom.mutateAsync({ userId: user.id, roomId });
-    } else {
-      await assignRoom.mutateAsync({ userId: user.id, roomId });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal menghapus ruangan");
     }
   };
 
@@ -378,29 +419,72 @@ function UserRoomModal({
       title={`Ruangan — ${user.username}`}
     >
       <p className="mb-4 text-sm text-ink-muted">
-        Centang ruangan yang menjadi tanggung jawab pengguna ini.
+        Kelola ruangan yang menjadi tanggung jawab pengguna ini.
       </p>
-      <div className="max-h-80 space-y-2 overflow-y-auto">
-        {allRooms?.map((room) => (
-          <label
-            key={room.id}
-            className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-navy-50"
-          >
-            <input
-              type="checkbox"
-              checked={assignedRoomIds.has(room.id)}
-              onChange={() => handleToggle(room.id)}
-              className="h-4 w-4 rounded border-navy-300 text-teal-600 focus:ring-teal-500"
-            />
-            <span className="text-sm text-ink">{room.name}</span>
-          </label>
-        ))}
-        {!allRooms?.length && (
-          <p className="py-8 text-center text-sm text-ink-subtle">
-            Belum ada ruangan.
+
+      {/* Ruangan yang sudah di-assign */}
+      <div className="mb-5">
+        <label className="label-plan">Ruangan yang Di-assign</label>
+        {userRooms?.length ? (
+          <div className="flex flex-wrap gap-2">
+            {userRooms.map((ur) => (
+              <span key={ur.id} className="badge-room">
+                {roomNameById.get(ur.room_id) ?? `Ruangan #${ur.room_id}`}
+                <button
+                  onClick={() => handleRemove(ur.room_id)}
+                  disabled={unassignRoom.isPending}
+                  className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-xs font-bold leading-none text-teal-700/70 transition-colors hover:bg-teal-600 hover:text-white disabled:opacity-40"
+                  aria-label="Hapus ruangan"
+                  title="Hapus ruangan"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-ink-subtle">
+            {userRooms === undefined
+              ? "Memuat..."
+              : "Belum ada ruangan yang di-assign."}
           </p>
         )}
       </div>
+
+      {/* Tambah ruangan */}
+      <div>
+        <label className="label-plan">Tambah Ruangan</label>
+        <div className="flex gap-2">
+          <select
+            value={selectedRoomId}
+            onChange={(e) => setSelectedRoomId(Number(e.target.value))}
+            className="input-plan flex-1"
+          >
+            <option value={0}>Pilih ruangan...</option>
+            {availableRooms.map((room) => (
+              <option key={room.id} value={room.id}>
+                {room.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleAdd}
+            disabled={!selectedRoomId || assignRoom.isPending || userRooms === undefined}
+            className="btn-primary shrink-0"
+          >
+            {assignRoom.isPending ? "Menambah..." : "+ Tambah"}
+          </button>
+        </div>
+        {!availableRooms.length && (
+          <p className="mt-2 text-xs text-ink-subtle">
+            Semua ruangan sudah di-assign ke pengguna ini.
+          </p>
+        )}
+      </div>
+
+      {error && (
+        <p className="mt-3 animate-fade-in text-sm text-danger">{error}</p>
+      )}
     </Modal>
   );
 }
