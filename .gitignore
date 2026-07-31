@@ -37,8 +37,15 @@ backend/uploads/*
 # Antigravity runtime config (machine-local)
 .antigravitycli/
 
-# Graphify cost tracking (local only; graph.json tetap di-commit)
+# Graphify cost tracking & runtime marker (local only; graph.json tetap di-commit)
 graphify-out/cost.json
+graphify-out/.graphify_python
+
+# Graphify extraction intermediates per-subproyek (tetap dipakai lokal untuk
+# merge-graphs, tapi tidak di-commit — root graphify-out/ tetap di-track)
+/backend/graphify-out/
+/web-admin/graphify-out/
+/docs/graphify-out/
 
 # TypeScript build cache
 *.tsbuildinfo
