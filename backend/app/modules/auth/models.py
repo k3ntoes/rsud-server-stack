@@ -53,6 +53,13 @@ class UserRoom(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+    # Soft-delete tombstone — unassign menandai is_active=False (bukan hard delete)
+    # agar sync incremental Android bisa melihat penghapusan relasi (ADR-0010).
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Dibump saat assign/ubah/unassign — sync Android memfilter kolom ini.
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=True
+    )
 
     __table_args__ = (
         UniqueConstraint("user_id", "room_id", name="uq_user_room"),

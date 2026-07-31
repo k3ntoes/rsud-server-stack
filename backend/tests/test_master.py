@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -92,6 +93,65 @@ async def test_room_non_admin_forbidden(client: AsyncClient, db_session: AsyncSe
     resp = await client.get("/api/rooms", headers=headers)
     assert resp.status_code == 200
     assert "items" in resp.json()
+
+
+# ── Android sync — `since` filter (NULL updated_at regression) ──
+
+
+@pytest.mark.asyncio
+async def test_list_rooms_since_includes_null_updated_at(client: AsyncClient, db_session: AsyncSession):
+    """
+    Regresi: baris ber-`updated_at` NULL (data lama sebelum kolom ini diisi)
+    harus tetap terkirim saat `since` dipakai. Dulu `updated_at >= since`
+    mengecualikan NULL (NULL >= x = NULL di SQL) → sync pertama Android selalu
+    kosong meski data ada. Lihat docs/API-contract-* untuk konteks.
+    """
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "UGD")
+    room.updated_at = None  # simulasikan data lama yang belum backfill
+    await db_session.commit()
+
+    resp = await client.get("/api/rooms?since=1970-01-01T00:00:00Z", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "data" in data  # mode sync (unpaginated) saat since dipakai
+    names = [r["name"] for r in data["data"]]
+    assert "UGD" in names
+
+
+@pytest.mark.asyncio
+async def test_list_items_since_includes_null_updated_at(client: AsyncClient, db_session: AsyncSession):
+    """Regresi yang sama untuk inspection-items (NULL updated_at harus ikut terkirim)."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    item = await seed_item(db_session, "Kebersihan Tangan")
+    item.updated_at = None
+    await db_session.commit()
+
+    resp = await client.get("/api/inspection-items?since=1970-01-01T00:00:00Z", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "data" in data
+    names = [i["name"] for i in data["data"]]
+    assert "Kebersihan Tangan" in names
+
+
+@pytest.mark.asyncio
+async def test_list_rooms_since_filters_by_updated_at(client: AsyncClient, db_session: AsyncSession):
+    """Baris dengan updated_at yang lebih baru dari since tetap terfilter dengan benar."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    old = await seed_room(db_session, "UGD")
+    old.updated_at = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    new = await seed_room(db_session, "ICU")
+    new.updated_at = datetime(2026, 7, 1, tzinfo=timezone.utc)
+    await db_session.commit()
+
+    resp = await client.get("/api/rooms?since=2026-06-01T00:00:00Z", headers=headers)
+    names = [r["name"] for r in resp.json()["data"]]
+    assert "ICU" in names
+    assert "UGD" not in names
 
 
 # ── Inspection Items ──

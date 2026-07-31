@@ -2,6 +2,7 @@ from datetime import datetime, timezone, timedelta
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.master.models import RoomItem
@@ -9,6 +10,114 @@ from tests.conftest import (
     create_user, auth_header, seed_room, seed_item,
     assign_item_to_room,
 )
+
+
+# ── Android sync — soft-delete tombstone & parent updated_at bump ──
+
+
+@pytest.mark.asyncio
+async def test_unassign_sends_tombstone_to_sync(client: AsyncClient, db_session: AsyncSession):
+    """
+    Regresi: unassign item dari room kini soft-delete. Sync incremental
+    `/api/room-items?since=X` harus mengirim tombstone (is_active=False) sehingga
+    Android bisa menghapus item dari mapping lokal — dulu hard-delete membuat
+    penghapusan tak terlihat dan jumlah item di room tidak pernah berkurang.
+    """
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "UGD")
+    item = await seed_item(db_session, "Kebersihan Tangan")
+    await assign_item_to_room(db_session, room.id, item.id)
+
+    before = (datetime.now(timezone.utc) - timedelta(seconds=5)).isoformat()
+    resp = await client.delete(f"/api/rooms/{room.id}/items/{item.id}", headers=headers)
+    assert resp.status_code == 204
+
+    resp = await client.get("/api/room-items", params={"since": before}, headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert len(data) == 1
+    assert data[0]["room_id"] == room.id
+    assert data[0]["item_id"] == item.id
+    assert data[0]["is_active"] is False
+
+
+@pytest.mark.asyncio
+async def test_assign_bumps_room_and_item_updated_at(client: AsyncClient, db_session: AsyncSession):
+    """Assign item ke room harus menaikkan Room.updated_at & InspectionItem.updated_at."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "ICU")
+    item = await seed_item(db_session, "APD")
+    t0_room = room.updated_at
+    t0_item = item.updated_at
+
+    await client.post(f"/api/rooms/{room.id}/items", json={"item_id": item.id}, headers=headers)
+
+    await db_session.refresh(room)
+    await db_session.refresh(item)
+    assert room.updated_at > t0_room
+    assert item.updated_at > t0_item
+
+
+@pytest.mark.asyncio
+async def test_unassign_bumps_room_and_item_updated_at(client: AsyncClient, db_session: AsyncSession):
+    """Unassign item dari room juga harus menaikkan Room.updated_at & item.updated_at."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "Poliklinik")
+    item = await seed_item(db_session, "Limbah")
+    await assign_item_to_room(db_session, room.id, item.id)
+    t0_room = room.updated_at
+    t0_item = item.updated_at
+
+    resp = await client.delete(f"/api/rooms/{room.id}/items/{item.id}", headers=headers)
+    assert resp.status_code == 204
+
+    await db_session.refresh(room)
+    await db_session.refresh(item)
+    assert room.updated_at > t0_room
+    assert item.updated_at > t0_item
+
+
+@pytest.mark.asyncio
+async def test_assign_after_unassign_reactivates_tombstone(client: AsyncClient, db_session: AsyncSession):
+    """Re-assign setelah unassign harus reaktivasi tombstone (bukan baris baru)."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "Rawat Inap")
+    item = await seed_item(db_session, "Sterilisasi")
+    await assign_item_to_room(db_session, room.id, item.id)
+
+    await client.delete(f"/api/rooms/{room.id}/items/{item.id}", headers=headers)
+    resp = await client.post(
+        f"/api/rooms/{room.id}/items", json={"item_id": item.id}, headers=headers
+    )
+    assert resp.status_code == 201
+    assert resp.json()["is_active"] is True
+
+    # Hanya satu baris relasi untuk (room, item) — unik constraint tetap terjaga
+    result = await db_session.execute(
+        select(RoomItem).where(
+            RoomItem.room_id == room.id, RoomItem.item_id == item.id
+        )
+    )
+    assert len(result.scalars().all()) == 1
+
+
+@pytest.mark.asyncio
+async def test_list_room_items_excludes_inactive(client: AsyncClient, db_session: AsyncSession):
+    """Endpoint per-room (web admin) tidak boleh menampilkan tombstone."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "UGD")
+    item = await seed_item(db_session, "Kebersihan Tangan")
+    await assign_item_to_room(db_session, room.id, item.id)
+    await client.delete(f"/api/rooms/{room.id}/items/{item.id}", headers=headers)
+
+    resp = await client.get(f"/api/rooms/{room.id}/items", headers=headers)
+    assert resp.status_code == 200
+    assert len(resp.json()) == 0
 
 
 # ── GET /api/room-items ──

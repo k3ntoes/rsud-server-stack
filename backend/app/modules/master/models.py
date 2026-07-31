@@ -12,7 +12,12 @@ class Room(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Wajib terisi sejak dibuat — sync incremental Android memfilter berdasarkan kolom ini
+    # (lihat kontrak sync di docs). Kolom tetap nullable agar tidak memutus data lama yang
+    # belum backfill; service layer yang menjamin tidak pernah menyimpan NULL baru.
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=True
+    )
 
 
 class InspectionItem(Base):
@@ -21,7 +26,12 @@ class InspectionItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Wajib terisi sejak dibuat — sync incremental Android memfilter berdasarkan kolom ini
+    # (lihat kontrak sync di docs). Kolom tetap nullable agar tidak memutus data lama yang
+    # belum backfill; service layer yang menjamin tidak pernah menyimpan NULL baru.
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=True
+    )
 
 
 class RoomItem(Base):
@@ -32,6 +42,13 @@ class RoomItem(Base):
     item_id: Mapped[int] = mapped_column(ForeignKey("inspection_items.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    # Soft-delete tombstone — unassign menandai is_active=False (bukan hard delete)
+    # agar sync incremental Android bisa melihat penghapusan relasi (ADR-0009).
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Dibump saat assign/ubah/unassign — sync Android memfilter kolom ini.
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=True
     )
 
     __table_args__ = (

@@ -64,6 +64,7 @@ async def submit_inspection(
         select(UserRoom).where(
             UserRoom.user_id == inspector_id,
             UserRoom.room_id == data.room_id,
+            UserRoom.is_active == True,  # jangan sertakan tombstone (soft-delete)
         )
     )
     if assignment.scalar_one_or_none() is None:
@@ -71,7 +72,10 @@ async def submit_inspection(
 
     # Validate all items assigned to this room are scored
     room_items = await db.execute(
-        select(RoomItem).where(RoomItem.room_id == data.room_id)
+        select(RoomItem).where(
+            RoomItem.room_id == data.room_id,
+            RoomItem.is_active == True,  # item yang sudah di-unassign tak wajib di-score
+        )
     )
     room_item_ids = {ri.item_id for ri in room_items.scalars().all()}
     submitted_ids = {d.item_id for d in data.details}
@@ -161,7 +165,10 @@ async def list_inspections(
     # Filter by assigned rooms for supervisor (unless show_all)
     if user_id is not None and not show_all:
         assigned = await db.execute(
-            select(UserRoom.room_id).where(UserRoom.user_id == user_id)
+            select(UserRoom.room_id).where(
+                UserRoom.user_id == user_id,
+                UserRoom.is_active == True,  # jangan sertakan tombstone (soft-delete)
+            )
         )
         room_ids = [r for r in assigned.scalars().all()]
         if room_ids:

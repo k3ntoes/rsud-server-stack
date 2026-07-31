@@ -145,13 +145,18 @@ GET /api/room-items?since=2026-07-28T00:00:00Z
 ```json
 {
   "data": [
-    { "id": 1, "room_id": 1, "item_id": 1, "created_at": "2026-07-28T10:00:00Z" },
-    { "id": 2, "room_id": 1, "item_id": 2, "created_at": "2026-07-28T10:00:00Z" },
-    { "id": 3, "room_id": 2, "item_id": 1, "created_at": "2026-07-28T10:00:00Z" }
+    { "id": 1, "room_id": 1, "item_id": 1, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
+    { "id": 2, "room_id": 1, "item_id": 2, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
+    { "id": 3, "room_id": 2, "item_id": 1, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
+    { "id": 4, "room_id": 1, "item_id": 3, "is_active": false, "created_at": "2026-07-20T09:00:00Z", "updated_at": "2026-07-29T08:00:00Z" }
   ],
-  "synced_at": "2026-07-28T12:00:00Z"
+  "synced_at": "2026-07-29T12:00:00Z"
 }
 ```
+
+> `id=4` adalah **tombstone**: item `3` sudah dilepas dari room `1` pada `updated_at`
+> (relasi dibuat 20 Juli, lalu di-unassign 29 Juli). `is_active: false` = relasi
+> **harus DIHAPUS** dari mapping lokal, bukan ditambahkan.
 
 **Format data per-item:**
 | Field | Tipe | Deskripsi |
@@ -159,17 +164,42 @@ GET /api/room-items?since=2026-07-28T00:00:00Z
 | `id` | int | Primary key relasi |
 | `room_id` | int | ID room |
 | `item_id` | int | ID inspection item |
+| `is_active` | bool | **`true` = item ter-assign, `false` = TOMBSTONE (item dilepas dari room)** |
 | `created_at` | string ISO 8601 | Waktu assignment |
+| `updated_at` | string/null ISO 8601 | Waktu perubahan terakhir (assign/unassign) — null hanya jika baris dibuat tanpa melalui ORM (insert SQL mentah) |
 
-**Alur Sync Room-Items di Android:**
+**Alur Sync Room-Items di Android (PENTING):**
 
 1. Setelah sync rooms & inspection-items, Android panggil `GET /api/room-items`
-2. Bangun struktur data lokal:
+2. Untuk SETIAP baris response, **cek `is_active` dulu** — jangan asal insert:
    ```kotlin
-   val roomItemMap: Map<Int, List<Int>> // key: roomId, value: list of itemIds
+   // roomItemMap: MutableMap<Int, MutableSet<Int>>  // roomId → set of itemIds
+   for (rel in response.data) {
+       if (rel.is_active) {
+           // Relasi AKTIF → tambahkan item ke mapping room
+           roomItemMap.getOrPut(rel.room_id) { mutableSetOf() }.add(rel.item_id)
+       } else {
+           // TOMBSTONE → item SUDAH TIDAK ADA di room ini → HAPUS dari mapping
+           val items = roomItemMap[rel.room_id] ?: continue
+           items.remove(rel.item_id)
+           if (items.isEmpty()) roomItemMap.remove(rel.room_id)
+       }
+   }
    ```
 3. Saat submit inspeksi offline, gunakan mapping ini untuk validasi item yang wajib di-score
 4. Simpan `synced_at` untuk sync periodik berikutnya
+
+> ⚠️ **ATURAN WAJIB — `is_active: false` berarti HAPUS, bukan tambah.**
+>
+> Unassign item dari room kini **soft-delete (tombstone)**. Sync `?since=` mengirim
+> baris tombstone (`is_active: false`, `updated_at` dibump) supaya penghapusan bisa
+> sampai ke Android. **Jika Android hanya menambahkan baris baru dan mengabaikan
+> tombstone, jumlah item di room tidak akan pernah berkurang di Android.**
+>
+> Logika yang benar per baris: `is_active=true` → `add(itemId)`, `is_active=false` → `remove(itemId)`.
+>
+> **Full sync pertama** (tanpa `?since=`) juga bisa memuat tombstone — filter `is_active`
+> tetap wajib diterapkan di kedua mode sync.
 
 > **Catatan**: Endpoint ini **selalu** mengembalikan `SyncResponse` (wrapper `{ data, synced_at }`) — tidak seperti `/api/rooms` dan `/api/inspection-items` yang mengembalikan array biasa tanpa query `?since=`.
 
@@ -212,6 +242,17 @@ GET /api/auth/me/rooms?since=2026-07-28T00:00:00Z
 2. Sync rooms: panggil `GET /api/auth/me/rooms?since=...`
 3. Simpan daftar room lokal — hanya room ini yang tampil di dropdown/list pemilihan room
 4. Jika user adalah `admin_ppi`, endpoint tetap bisa dipanggil (return empty list — admin PPI dapat full list via `/api/rooms`)
+
+> ⚠️ **Penghapusan assignment user→room juga tombstone** (sama seperti room-items).
+>
+> Saat Admin PPI melepas petugas dari sebuah room, `user_rooms` di-soft-delete
+> (`is_active=false`, `updated_at` dibump). Endpoint **`GET /api/auth/user-rooms?since=...`**
+> (bulk sync, field `is_active`) mengirim tombstone tsb — **Android WAJIB menghapus
+> room dari daftar petugas saat menerima `is_active: false`**, jangan hanya menambah.
+>
+> `GET /api/auth/me/rooms` TIDAK mengirim tombstone — endpoint ini hanya mengembalikan
+> room yang MASIH aktif di-assign ke user login. Jadi untuk deteksi "room dicabut dari
+> petugas", Android harus sync `/api/auth/user-rooms` juga.
 
 ---
 
@@ -569,8 +610,9 @@ file: <binary jpeg, ≤ 300KB dari Android>
 | POST | `/api/auth/logout` | Logout manual | Bearer | Kirim `refresh_token` di body |
 | GET | `/api/rooms` | Periodik | Bearer | Dukung `?since=` |
 | GET | `/api/inspection-items` | Periodik | Bearer | Dukung `?since=` |
-| **GET** | **`/api/room-items`** | **Periodik** | **Bearer** | **Sync relasi room↔item — selalu `?since=`** |
-| **GET** | **`/api/auth/me/rooms`** | **Periodik** | **Bearer** | **Room yg di-assign ke user login — dukung `?since=`** |
+| **GET** | **`/api/room-items`** | **Periodik** | **Bearer** | **Sync relasi room↔item — selalu `?since=`; `is_active=false` = HAPUS item dari mapping** |
+| **GET** | **`/api/auth/user-rooms`** | **Periodik** | **Bearer** | **Assignment user↔room (bulk) — `is_active=false` = HAPUS room dari petugas** |
+| **GET** | **`/api/auth/me/rooms`** | **Periodik** | **Bearer** | **Room yg di-assign ke user login — dukung `?since=` (tanpa tombstone)** |
 | POST | `/api/upload` | Per foto (≤ 300KB) | Bearer | Multipart/form-data |
 | POST | `/api/inspections` | Per inspeksi selesai | Bearer | Validasi room_items + user_rooms |
 | GET | `/api/inspections` | Riwayat | Bearer | `?status=` filter, `?show_all=` untuk supervisor |
@@ -580,11 +622,16 @@ file: <binary jpeg, ≤ 300KB dari Android>
 **Alur Sync Master Data (urutan benar):**
 
 ```
-1. GET /api/rooms?since=<ts>         → data rooms
-2. GET /api/inspection-items?since=<ts> → data items
-3. GET /api/room-items?since=<ts>    → mapping room ↔ item (built lokal: roomId → [itemIds])
-4. GET /api/auth/me/rooms?since=<ts> → room yg di-assign ke user (filter UI)
+1. GET /api/rooms?since=<ts>             → data rooms
+2. GET /api/inspection-items?since=<ts>  → data items
+3. GET /api/room-items?since=<ts>        → mapping room ↔ item (roomId → [itemIds]; is_active=false = HAPUS)
+4. GET /api/auth/user-rooms?since=<ts>   → assignment user↔room (is_active=false = HAPUS room dr petugas)
+5. GET /api/auth/me/rooms?since=<ts>     → room yg di-assign ke user login (filter UI; tanpa tombstone)
 ```
+
+> ⚠️ **Aturan tombstone (berlaku di semua endpoint pivot):** `is_active: false`
+> berarti relasi SUDAH DIHAPUS — Android harus **menghapus** dari data lokal,
+> bukan menambah. Terapkan filter ini di sync `?since=` DAN full sync pertama.
 
 > **Catatan**: `GET /api/rooms` mengembalikan **semua** room aktif. `GET /api/auth/me/rooms` mengembalikan **hanya** room yang di-assign ke user login. Android sync keduanya — gunakan `/api/auth/me/rooms` untuk filter UI, gunakan `/api/rooms` untuk mapping nama room di data historis.
 

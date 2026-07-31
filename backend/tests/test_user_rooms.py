@@ -10,6 +10,77 @@ from tests.conftest import (
 )
 
 
+# ── Android sync — soft-delete tombstone & parent updated_at bump ──
+
+
+@pytest.mark.asyncio
+async def test_unassign_user_sends_tombstone_to_sync(client: AsyncClient, db_session: AsyncSession):
+    """
+    Regresi: unassign user dari room kini soft-delete. Sync bulk
+    `/api/auth/user-rooms?since=X` harus mengirim tombstone (is_active=False)
+    sehingga Android bisa menghapus room dari daftar petugas.
+    """
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "UGD")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+
+    headers = auth_header(admin)
+    before = (datetime.now(timezone.utc) - timedelta(seconds=5)).isoformat()
+    resp = await client.delete(
+        f"/api/auth/rooms/{room.id}/users/{inspector.id}", headers=headers
+    )
+    assert resp.status_code == 204
+
+    resp = await client.get("/api/auth/user-rooms", params={"since": before}, headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert len(data) == 1
+    assert data[0]["room_id"] == room.id
+    assert data[0]["user_id"] == inspector.id
+    assert data[0]["is_active"] is False
+
+
+@pytest.mark.asyncio
+async def test_assign_user_bumps_room_updated_at(client: AsyncClient, db_session: AsyncSession):
+    """Assign user ke room harus menaikkan Room.updated_at (sync /rooms ikut berubah)."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "ICU")
+    t0 = room.updated_at
+
+    headers = auth_header(admin)
+    resp = await client.post(
+        f"/api/auth/rooms/{room.id}/users",
+        json={"user_id": inspector.id},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+
+    await db_session.refresh(room)
+    assert room.updated_at > t0
+
+
+@pytest.mark.asyncio
+async def test_get_my_rooms_excludes_unassigned(client: AsyncClient, db_session: AsyncSession):
+    """Setelah unassign, /api/auth/me/rooms tidak lagi mengembalikan room tsb."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "UGD")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+
+    headers_admin = auth_header(admin)
+    resp = await client.delete(
+        f"/api/auth/rooms/{room.id}/users/{inspector.id}", headers=headers_admin
+    )
+    assert resp.status_code == 204
+
+    headers_insp = auth_header(inspector)
+    resp = await client.get("/api/auth/me/rooms", headers=headers_insp)
+    assert resp.status_code == 200
+    assert len(resp.json()["data"]) == 0
+
+
 # ── GET /api/auth/me/rooms ──
 
 
@@ -51,6 +122,52 @@ async def test_get_my_rooms_sync(client: AsyncClient, db_session: AsyncSession):
     # Future timestamp → no results
     future = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
     resp = await client.get("/api/auth/me/rooms", params={"since": future}, headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert len(data) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_my_rooms_since_includes_null_updated_at(client: AsyncClient, db_session: AsyncSession):
+    """
+    Regresi: room ber-`updated_at` NULL (data lama) harus tetap terkirim saat `since`
+    dipakai. Dulu `Room.updated_at >= since` mengecualikan NULL → /me/rooms selalu
+    kosong di sync pertama Android meski assignment ada. Sama dengan bug yang sudah
+    diperbaiki di /rooms dan /inspection-items (master/services.py).
+    """
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "UGD")
+    room.updated_at = None  # simulasikan data lama yang belum backfill
+    await db_session.commit()
+    await assign_user_to_room(db_session, inspector.id, room.id)
+
+    headers = auth_header(inspector)
+    resp = await client.get(
+        "/api/auth/me/rooms",
+        params={"since": "1970-01-01T00:00:00Z"},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert len(data) == 1
+    assert data[0]["name"] == "UGD"
+
+
+@pytest.mark.asyncio
+async def test_get_my_rooms_since_filters_by_updated_at(client: AsyncClient, db_session: AsyncSession):
+    """Room dengan updated_at lebih lama dari since tetap terfilter benar (NULL-safe)."""
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    old = await seed_room(db_session, "UGD")
+    old.updated_at = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    await db_session.commit()
+    await assign_user_to_room(db_session, inspector.id, old.id)
+
+    headers = auth_header(inspector)
+    resp = await client.get(
+        "/api/auth/me/rooms",
+        params={"since": "2026-06-01T00:00:00Z"},
+        headers=headers,
+    )
     assert resp.status_code == 200
     data = resp.json()["data"]
     assert len(data) == 0

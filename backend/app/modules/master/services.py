@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.sorting import apply_sorting
@@ -24,7 +24,10 @@ async def list_rooms(
         query = select(Room).where(Room.is_active == True).order_by(Room.name)
 
     if since:
-        query = query.where(Room.updated_at >= since)
+        # Baris ber-`updated_at` NULL (data lama sebelum kolom ini diisi) HARUS tetap
+        # dikirim — NULL >= since bernilai NULL di SQL sehingga baris tersebut dikecualikan
+        # dan sync pertama Android selalu kosong. `is_(None)` menjamin data lama ikut terkirim.
+        query = query.where(or_(Room.updated_at.is_(None), Room.updated_at >= since))
         result = await db.execute(query)
         return list(result.scalars().all())
 
@@ -83,28 +86,58 @@ async def delete_room(db: AsyncSession, room_id: int) -> bool:
 async def list_room_items(db: AsyncSession, since: datetime | None = None) -> list:
     query = select(RoomItem).order_by(RoomItem.room_id, RoomItem.item_id)
     if since:
-        query = query.where(RoomItem.created_at >= since)
+        # Sync mode: sertakan tombstone (is_active=False) — filter updated_at (bukan
+        # created_at) agar penghapusan relasi ikut terkirim ke Android.
+        query = query.where(
+            or_(RoomItem.updated_at.is_(None), RoomItem.updated_at >= since)
+        )
     result = await db.execute(query)
     return list(result.scalars().all())
 
 
 async def list_items_by_room(db: AsyncSession, room_id: int) -> list:
     result = await db.execute(
-        select(RoomItem).where(RoomItem.room_id == room_id)
+        select(RoomItem).where(
+            RoomItem.room_id == room_id, RoomItem.is_active == True
+        )
     )
     return list(result.scalars().all())
 
 
 async def list_rooms_by_item(db: AsyncSession, item_id: int) -> list:
     result = await db.execute(
-        select(RoomItem).where(RoomItem.item_id == item_id)
+        select(RoomItem).where(
+            RoomItem.item_id == item_id, RoomItem.is_active == True
+        )
     )
     return list(result.scalars().all())
 
 
 async def assign_item_to_room(db: AsyncSession, room_id: int, item_id: int):
-    ri = RoomItem(room_id=room_id, item_id=item_id)
-    db.add(ri)
+    now = datetime.now(timezone.utc)
+    result = await db.execute(
+        select(RoomItem).where(
+            RoomItem.room_id == room_id, RoomItem.item_id == item_id
+        )
+    )
+    ri = result.scalar_one_or_none()
+    if ri is not None and ri.is_active:
+        raise ValueError("Already assigned")  # → 409 di endpoint
+    if ri is None:
+        ri = RoomItem(room_id=room_id, item_id=item_id)
+        db.add(ri)
+    else:
+        ri.is_active = True  # reaktivasi tombstone (unik constraint tetap terjaga)
+    ri.updated_at = now
+
+    # Bump updated_at parent supaya sync /rooms & /inspection-items ikut berubah
+    room = await db.get(Room, room_id)
+    if room:
+        room.updated_at = now
+    item = await db.get(InspectionItem, item_id)
+    if item:
+        item.updated_at = now
+
     await db.commit()
     await db.refresh(ri)
     return ri
@@ -117,9 +150,20 @@ async def unassign_item_from_room(db: AsyncSession, room_id: int, item_id: int) 
         )
     )
     ri = result.scalar_one_or_none()
-    if ri is None:
+    if ri is None or not ri.is_active:
         return False
-    await db.delete(ri)
+    now = datetime.now(timezone.utc)
+    ri.is_active = False  # soft delete — tombstone terkirim via sync
+    ri.updated_at = now
+
+    # Bump updated_at parent supaya sync /rooms & /inspection-items ikut berubah
+    room = await db.get(Room, room_id)
+    if room:
+        room.updated_at = now
+    item = await db.get(InspectionItem, item_id)
+    if item:
+        item.updated_at = now
+
     await db.commit()
     return True
 
@@ -142,7 +186,12 @@ async def list_items(
         query = select(InspectionItem).where(InspectionItem.is_active == True).order_by(InspectionItem.name)
 
     if since:
-        query = query.where(InspectionItem.updated_at >= since)
+        # Baris ber-`updated_at` NULL (data lama sebelum kolom ini diisi) HARUS tetap
+        # dikirim — NULL >= since bernilai NULL di SQL sehingga baris tersebut dikecualikan
+        # dan sync pertama Android selalu kosong. `is_(None)` menjamin data lama ikut terkirim.
+        query = query.where(
+            or_(InspectionItem.updated_at.is_(None), InspectionItem.updated_at >= since)
+        )
         result = await db.execute(query)
         return list(result.scalars().all())
 

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 import secrets
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -14,6 +14,7 @@ from app.core.security import (
 )
 from app.core.sorting import apply_sorting
 from app.modules.auth.models import User, UserSession, UserRoom
+from app.modules.master.models import Room
 
 
 async def list_users(
@@ -45,21 +46,47 @@ async def list_users(
 
 async def list_rooms_by_user(db: AsyncSession, user_id: int) -> list[UserRoom]:
     result = await db.execute(
-        select(UserRoom).where(UserRoom.user_id == user_id)
+        select(UserRoom).where(
+            UserRoom.user_id == user_id, UserRoom.is_active == True
+        )
     )
     return list(result.scalars().all())
 
 
 async def list_users_by_room(db: AsyncSession, room_id: int) -> list[UserRoom]:
     result = await db.execute(
-        select(UserRoom).where(UserRoom.room_id == room_id)
+        select(UserRoom).where(
+            UserRoom.room_id == room_id, UserRoom.is_active == True
+        )
     )
     return list(result.scalars().all())
 
 
 async def assign_user_to_room(db: AsyncSession, user_id: int, room_id: int) -> UserRoom:
-    ur = UserRoom(user_id=user_id, room_id=room_id)
-    db.add(ur)
+    now = datetime.now(timezone.utc)
+    result = await db.execute(
+        select(UserRoom).where(
+            UserRoom.user_id == user_id, UserRoom.room_id == room_id
+        )
+    )
+    ur = result.scalar_one_or_none()
+    if ur is not None and ur.is_active:
+        raise ValueError("Already assigned")  # → 409 di endpoint
+    if ur is None:
+        ur = UserRoom(user_id=user_id, room_id=room_id)
+        db.add(ur)
+    else:
+        ur.is_active = True  # reaktivasi tombstone (unik constraint tetap terjaga)
+    ur.updated_at = now
+
+    # Bump updated_at parent supaya sync /rooms & /users ikut berubah
+    user = await db.get(User, user_id)
+    if user:
+        user.updated_at = now
+    room = await db.get(Room, room_id)
+    if room:
+        room.updated_at = now
+
     await db.commit()
     await db.refresh(ur)
     return ur
@@ -72,9 +99,20 @@ async def unassign_user_from_room(db: AsyncSession, user_id: int, room_id: int) 
         )
     )
     ur = result.scalar_one_or_none()
-    if ur is None:
+    if ur is None or not ur.is_active:
         return False
-    await db.delete(ur)
+    now = datetime.now(timezone.utc)
+    ur.is_active = False  # soft delete — tombstone terkirim via sync
+    ur.updated_at = now
+
+    # Bump updated_at parent supaya sync /rooms & /users ikut berubah
+    user = await db.get(User, user_id)
+    if user:
+        user.updated_at = now
+    room = await db.get(Room, room_id)
+    if room:
+        room.updated_at = now
+
     await db.commit()
     return True
 
@@ -83,7 +121,11 @@ async def list_all_user_rooms(db: AsyncSession, since: datetime | None = None) -
     """Get all user-room associations (Android bulk sync)."""
     query = select(UserRoom).order_by(UserRoom.user_id, UserRoom.room_id)
     if since:
-        query = query.where(UserRoom.created_at >= since)
+        # Sync mode: sertakan tombstone (is_active=False) — filter updated_at (bukan
+        # created_at) agar penghapusan relasi ikut terkirim ke Android.
+        query = query.where(
+            or_(UserRoom.updated_at.is_(None), UserRoom.updated_at >= since)
+        )
     result = await db.execute(query)
     return list(result.scalars().all())
 
@@ -95,7 +137,8 @@ async def get_room_ids_by_users(db: AsyncSession, user_ids: list[int]) -> dict[i
         return mapping
     result = await db.execute(
         select(UserRoom.user_id, UserRoom.room_id).where(
-            UserRoom.user_id.in_(user_ids)
+            UserRoom.user_id.in_(user_ids),
+            UserRoom.is_active == True,
         )
     )
     for uid, rid in result.all():

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response, Request
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -245,16 +245,24 @@ async def get_my_rooms(
 ):
     """List room assignments for current user (Android sync)."""
     result = await db.execute(
-        select(UserRoom).where(UserRoom.user_id == current_user.id)
+        select(UserRoom).where(
+            UserRoom.user_id == current_user.id,
+            UserRoom.is_active == True,  # jangan sertakan tombstone (soft-delete)
+        )
     )
     ur_rows = result.scalars().all()
     room_ids = [ur.room_id for ur in ur_rows]
 
     if since and room_ids:
         dt = datetime.fromisoformat(since)
+        # Baris ber-`updated_at` NULL (data lama sebelum kolom ini diisi) HARUS tetap
+        # dikirim — NULL >= since bernilai NULL di SQL sehingga baris tersebut dikecualikan
+        # dan sync pertama Android selalu kosong. `is_(None)` menjamin data lama ikut
+        # terkirim (pola yang sama dengan fix di master/services.py).
         rooms_result = await db.execute(
             select(Room).where(
-                Room.id.in_(room_ids), Room.updated_at >= dt
+                Room.id.in_(room_ids),
+                or_(Room.updated_at.is_(None), Room.updated_at >= dt),
             )
         )
     elif room_ids:

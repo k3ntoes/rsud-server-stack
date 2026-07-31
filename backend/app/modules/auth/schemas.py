@@ -61,7 +61,9 @@ class UserRoomOut(BaseModel):
     id: int
     user_id: int
     room_id: int
+    is_active: bool
     created_at: datetime
+    updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 

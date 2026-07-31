@@ -41,7 +41,9 @@ class RoomItemOut(BaseModel):
     id: int
     room_id: int
     item_id: int
+    is_active: bool
     created_at: datetime
+    updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
