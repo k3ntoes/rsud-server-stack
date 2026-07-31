@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panduan Penggunaan — RSUD Ajibarang · Sistem Inspeksi PPI</title>
+<style>
+  :root {
+    --navy-900: #081426;
+    --navy-800: #0d1f38;
+    --navy-700: #14304f;
+    --navy-600: #1d4a77;
+    --navy-300: #8fa9c4;
+    --navy-100: #dbe6f1;
+    --navy-50: #eef4fa;
+    --teal-700: #0f766e;
+    --teal-600: #0d9488;
+    --teal-500: #14b8a6;
+    --teal-50: #f0fdfa;
+    --ink: #1e2b3a;
+    --ink-muted: #5b6b7b;
+    --ink-subtle: #8a99a8;
+    --canvas: #f6f8fa;
+    --surface: #ffffff;
+    --border: #e3eaf1;
+    --danger: #dc2626;
+    --danger-muted: #fef2f2;
+    --warning: #d97706;
+    --warning-muted: #fffbeb;
+    --success: #15803d;
+    --success-muted: #f0fdf4;
+    --radius: 16px;
+    --shadow: 0 1px 3px rgba(13, 31, 56, .08), 0 4px 16px rgba(13, 31, 56, .06);
+    --shadow-lg: 0 10px 40px rgba(13, 31, 56, .18);
+    --sidebar-w: 280px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    background: var(--canvas);
+    color: var(--ink);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar TOC ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: linear-gradient(180deg, var(--navy-900), var(--navy-800));
+    color: var(--navy-100);
+    position: fixed;
+    inset: 0 auto 0 0;
+    overflow-y: auto;
+    padding: 24px 16px;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    transition: transform .3s ease;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 99px; }
+  .brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 20px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 18px; }
+  .brand-logo {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: rgba(20, 184, 166, .15); color: var(--teal-500);
+    display: grid; place-items: center; font-size: 20px; flex-shrink: 0;
+  }
+  .brand h1 { font-size: 14px; color: #f2f7fc; font-weight: 600; line-height: 1.3; }
+  .brand p { font-size: 11px; color: var(--navy-300); }
+  .toc-title { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--navy-300); padding: 0 8px 8px; }
+  .toc { list-style: none; flex: 1; }
+  .toc li { margin: 1px 0; }
+  .toc a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 10px;
+    color: var(--navy-300); text-decoration: none; font-size: 13px;
+    transition: all .15s ease;
+  }
+  .toc a:hover { background: rgba(255,255,255,.06); color: #fff; transform: translateX(2px); }
+  .toc a .num { font-size: 10px; font-weight: 700; color: var(--teal-500); min-width: 18px; }
+  .toc a.active { background: rgba(20,184,166,.12); color: var(--teal-500); }
+  .sidebar-foot { font-size: 11px; color: var(--navy-300); padding: 12px 8px 0; border-top: 1px solid rgba(255,255,255,.08); margin-top: 16px; }
+
+  /* ── Main content ── */
+  .main { flex: 1; margin-left: var(--sidebar-w); min-width: 0; }
+
+  /* Topbar */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 12px;
+    height: 60px; padding: 0 28px;
+    background: rgba(255,255,255,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .menu-btn {
+    display: none; background: none; border: 1px solid var(--border);
+    border-radius: 8px; width: 36px; height: 36px; font-size: 16px; cursor: pointer; color: var(--ink);
+  }
+  .topbar h2 { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .topbar .crumb { font-size: 12px; color: var(--ink-subtle); }
+  .topbar .spacer { flex: 1; }
+  .badge-env {
+    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px;
+    background: var(--teal-50); color: var(--teal-700);
+    border: 1px solid rgba(20,184,166,.25);
+  }
+
+  .content { max-width: 880px; margin: 0 auto; padding: 36px 28px 80px; }
+
+  /* ── Hero ── */
+  .hero {
+    border-radius: 20px; padding: 40px 36px; color: #fff;
+    background:
+      radial-gradient(800px 300px at 90% -20%, rgba(20,184,166,.35), transparent 60%),
+      radial-gradient(600px 260px at -10% 110%, rgba(29,74,119,.5), transparent 60%),
+      linear-gradient(135deg, var(--navy-900), var(--navy-700));
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 28px; position: relative; overflow: hidden;
+  }
+  .hero::after {
+    content: ""; position: absolute; inset: 0; opacity: .05;
+    background-image:
+      linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px);
+    background-size: 32px 32px; pointer-events: none;
+  }
+  .hero .kicker { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--teal-500); font-weight: 700; }
+  .hero h2 { font-size: 30px; font-weight: 700; margin: 10px 0 12px; line-height: 1.2; }
+  .hero p { font-size: 15px; color: var(--navy-100); max-width: 620px; }
+  .hero .meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+  .hero .meta .chip {
+    font-size: 12px; padding: 6px 14px; border-radius: 99px;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16);
+    color: #e8f1fa;
+  }
+
+  /* ── Sections ── */
+  section { margin-bottom: 44px; scroll-margin-top: 76px; }
+  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .section-icon {
+    width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 20px;
+    background: var(--navy-50); border: 1px solid var(--border);
+  }
+  .section-head h3 { font-size: 22px; font-weight: 700; color: var(--ink); }
+  .section-head .sub { font-size: 13px; color: var(--ink-muted); }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 24px; margin-bottom: 16px;
+  }
+  .card h4 { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .card p { font-size: 14px; color: var(--ink-muted); margin-bottom: 10px; }
+  .card p:last-child { margin-bottom: 0; }
+  .card ul, .card ol { margin: 8px 0 10px 22px; }
+  .card li { font-size: 14px; color: var(--ink-muted); margin-bottom: 6px; }
+
+  /* Callout */
+  .callout { border-radius: 12px; padding: 14px 16px; margin: 14px 0; font-size: 14px; display: flex; gap: 10px; align-items: flex-start; }
+  .callout .ico { flex-shrink: 0; }
+  .callout-info { background: var(--navy-50); border: 1px solid var(--navy-100); color: var(--navy-700); }
+  .callout-info b { color: var(--navy-700); }
+  .callout-warn { background: var(--warning-muted); border: 1px solid #fde68a; color: #92400e; }
+  .callout-warn b { color: #92400e; }
+  .callout-tip { background: var(--teal-50); border: 1px solid rgba(20,184,166,.3); color: var(--teal-700); }
+  .callout-tip b { color: var(--teal-700); }
+  .callout-danger { background: var(--danger-muted); border: 1px solid #fecaca; color: #991b1b; }
+  .callout-danger b { color: #991b1b; }
+
+  /* Steps */
+  .steps { list-style: none; margin: 14px 0 4px !important; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative;
+    padding: 0 0 16px 44px; font-size: 14px; color: var(--ink-muted);
+  }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    width: 30px; height: 30px; border-radius: 10px;
+    background: var(--teal-600); color: #fff; font-weight: 700; font-size: 13px;
+    display: grid; place-items: center; box-shadow: 0 2px 8px rgba(13,148,136,.35);
+  }
+  .steps li b { color: var(--ink); }
+  .steps li code { background: var(--navy-50); border: 1px solid var(--navy-100); padding: 1px 6px; border-radius: 6px; font-size: 12px; color: var(--navy-700); }
+
+  /* Code / credentials */
+  .cred {
+    background: var(--navy-900); color: #d7e4f2; border-radius: 12px;
+    padding: 16px 18px; margin: 12px 0; font-size: 13px; overflow-x: auto;
+  }
+  .cred .row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,.09); }
+  .cred .row:last-child { border-bottom: 0; }
+  .cred .row .u { color: var(--teal-500); font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+  .cred .row .p { color: #a5f3fc; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+  .cred .row .r { font-size: 11px; color: var(--navy-300); text-transform: uppercase; letter-spacing: .06em; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 12px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
+  th { background: var(--navy-50); color: var(--navy-700); text-align: left; font-weight: 600; padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--ink-muted); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  tr:hover td { background: #fafcfe; }
+  td .yes { color: var(--success); font-weight: 700; }
+  td .no { color: var(--ink-subtle); }
+  td .semi { color: var(--warning); font-weight: 600; }
+
+  /* Badges */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 99px; margin: 1px 2px 1px 0; }
+  .pill-admin { background: var(--navy-800); color: #fff; }
+  .pill-super { background: var(--warning-muted); color: var(--warning); border: 1px solid #fde68a; }
+  .pill-insp { background: var(--teal-50); color: var(--teal-700); border: 1px solid rgba(20,184,166,.3); }
+  .pill-ok { background: var(--success-muted); color: var(--success); border: 1px solid #bbf7d0; }
+  .pill-warn { background: var(--warning-muted); color: var(--warning); border: 1px solid #fde68a; }
+  .pill-bad { background: var(--danger-muted); color: var(--danger); border: 1px solid #fecaca; }
+  .pill-mute { background: var(--navy-50); color: var(--navy-600); border: 1px solid var(--navy-100); }
+
+  /* Key-value grid */
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 8px 16px; margin: 10px 0; }
+  .kv dt { font-size: 13px; color: var(--ink-subtle); font-weight: 600; }
+  .kv dd { font-size: 13.5px; color: var(--ink-muted); }
+
+  /* Flow diagram (simple) */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin: 16px 0; }
+  .flow .node {
+    flex: 1; min-width: 130px; background: var(--navy-50); border: 1px solid var(--navy-100);
+    border-radius: 12px; padding: 12px 14px; font-size: 12.5px; color: var(--navy-700);
+  }
+  .flow .node b { display: block; font-size: 13px; margin-bottom: 3px; color: var(--ink); }
+  .flow .node .role { font-size: 11px; color: var(--teal-700); font-weight: 600; }
+  .flow .arrow { display: grid; place-items: center; color: var(--teal-500); font-size: 18px; font-weight: 700; padding-top: 8px; }
+
+  /* Print */
+  @media print {
+    .sidebar, .topbar, .menu-btn { display: none !important; }
+    .main { margin-left: 0; }
+    body { background: #fff; }
+    .card, .hero { box-shadow: none; }
+    .hero { background: var(--navy-800) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .pill, .steps li::before, .cred { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    section { break-inside: avoid; }
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .menu-btn { display: grid; place-items: center; }
+    .content { padding: 24px 16px 60px; }
+    .hero { padding: 28px 22px; }
+    .hero h2 { font-size: 24px; }
+    .kv { grid-template-columns: 1fr; gap: 2px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ═══════════ SIDEBAR / TOC ═══════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">🏥</div>
+      <div>
+        <h1>RSUD Ajibarang</h1>
+        <p>Sistem Inspeksi PPI</p>
+      </div>
+    </div>
+    <p class="toc-title">Daftar Isi</p>
+    <ul class="toc" id="toc">
+      <li><a href="#mulai"><span class="num">01</span> Memulai</a></li>
+      <li><a href="#peran"><span class="num">02</span> Peran &amp; Hak Akses</a></li>
+      <li><a href="#login"><span class="num">03</span> Login &amp; Akun</a></li>
+      <li><a href="#dashboard"><span class="num">04</span> Dashboard</a></li>
+      <li><a href="#ruangan"><span class="num">05</span> Ruangan</a></li>
+      <li><a href="#item"><span class="num">06</span> Item Inspeksi</a></li>
+      <li><a href="#inspeksi"><span class="num">07</span> Inspeksi</a></li>
+      <li><a href="#detail"><span class="num">08</span> Detail Inspeksi</a></li>
+      <li><a href="#pengguna"><span class="num">09</span> Pengguna</a></li>
+      <li><a href="#kinerja"><span class="num">10</span> Kinerja Inspector</a></li>
+      <li><a href="#analitik"><span class="num">11</span> Analitik</a></li>
+      <li><a href="#alur"><span class="num">12</span> Alur Kerja Lengkap</a></li>
+      <li><a href="#android"><span class="num">13</span> Aplikasi Android</a></li>
+      <li><a href="#faq"><span class="num">14</span> FAQ &amp; Troubleshooting</a></li>
+    </ul>
+    <div class="sidebar-foot">© 2026 RSUD Ajibarang · v1.0<br />Planograph UI · Dokumen tutorial resmi</div>
+  </aside>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Buka menu">☰</button>
+      <h2>Panduan Penggunaan</h2>
+      <span class="crumb">· Web Admin &amp; Android</span>
+      <div class="spacer"></div>
+      <span class="badge-env">Sistem Inspeksi PPI</span>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══ HERO ═══ -->
+      <div class="hero">
+        <div class="kicker">Panduan Resmi</div>
+        <h2>Panduan Penggunaan<br />Sistem Inspeksi PPI RSUD Ajibarang</h2>
+        <p>Dokumen ini menjelaskan secara lengkap cara menggunakan aplikasi <b>Web Admin</b> dan <b>Aplikasi Android</b> untuk pengelolaan inspeksi pencegahan dan pengendalian infeksi (PPI) di lingkungan rumah sakit — mulai dari login, pengelolaan data master, alur persetujuan inspeksi, hingga analitik kinerja.</p>
+        <div class="meta">
+          <span class="chip">🏥 3 Peran Pengguna</span>
+          <span class="chip">📊 7 Menu Utama</span>
+          <span class="chip">📱 Web + Android</span>
+          <span class="chip">🔒 JWT Secure</span>
+        </div>
+      </div>
+
+      <!-- ═══ 01 MEMULAI ═══ -->
+      <section id="mulai">
+        <div class="section-head">
+          <div class="section-icon">🚀</div>
+          <div>
+            <h3>1. Memulai</h3>
+            <div class="sub">Cara mengakses aplikasi dan akun default</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>🌐 Cara Mengakses</h4>
+          <ul>
+            <li><b>Web Admin</b> (untuk Admin PPI &amp; Supervisor) — buka di browser komputer, contoh: <code>http://localhost:8080</code> atau alamat server yang sudah disediakan pihak IT.</li>
+            <li><b>Aplikasi Android</b> (untuk Inspector di lapangan) — install aplikasi dari file <code>.apk</code> yang dibagikan tim IT, lalu isi alamat server saat pertama kali dibuka.</li>
+            <li>Disarankan menggunakan <b>Chrome / Edge / Firefox versi terbaru</b> agar semua fitur berjalan optimal.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>🔑 Akun Default (Setelah Instalasi / Seed Data)</h4>
+          <p>Setelah database di-seed, tersedia 3 akun percobaan:</p>
+          <div class="cred">
+            <div class="row"><span><span class="u">admin</span></span><span class="p">admin123</span><span class="r">Admin PPI</span></div>
+            <div class="row"><span><span class="u">supervisor</span></span><span class="p">supervisor123</span><span class="r">Supervisor</span></div>
+            <div class="row"><span><span class="u">inspector</span></span><span class="p">inspector123</span><span class="r">Inspector</span></div>
+          </div>
+          <div class="callout callout-danger"><span class="ico">⚠️</span><div><b>Penting!</b> Segera ganti password default setelah login pertama kali melalui menu <b>Ganti Password</b> di pojok kanan atas. Password default hanya untuk keperluan demo/pengujian.</div></div>
+        </div>
+
+        <div class="card">
+          <h4>🗺️ Menu di Sisi Kiri (Sidebar)</h4>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Menu</th><th>Ikon</th><th>Fungsi</th><th>Hak Akses</th></tr>
+              <tr><td><b>Dashboard</b></td><td>📊</td><td>Ringkasan angka: inspeksi menunggu, total ruangan, inspeksi bulan ini, skor rata-rata</td><td>Semua</td></tr>
+              <tr><td><b>Ruangan</b></td><td>🏥</td><td>Kelola daftar ruangan &amp; item yang diperiksa per ruangan</td><td>Semua (edit: Admin)</td></tr>
+              <tr><td><b>Item Inspeksi</b></td><td>📋</td><td>Kelola daftar item penilaian kebersihan &amp; ruangan yang memakainya</td><td>Semua (edit: Admin)</td></tr>
+              <tr><td><b>Inspeksi</b></td><td>✅</td><td>Daftar inspeksi, filter status, pencarian, masuk ke detail</td><td>Semua</td></tr>
+              <tr><td><b>Kinerja Inspector</b></td><td>👤</td><td>Jumlah inspeksi disetujui per inspector per bulan</td><td>Semua</td></tr>
+              <tr><td><b>Pengguna</b></td><td>🔐</td><td>Kelola akun pengguna, reset password, assign ruangan</td><td>Admin PPI</td></tr>
+              <tr><td><b>Analitik</b></td><td>📈</td><td>Ruangan skor terendah &amp; item paling sering bermasalah</td><td>Admin + Supervisor*</td></tr>
+            </table>
+          </div>
+          <p style="font-size:12px; color:var(--ink-subtle);">* Menu tetap tampil untuk Inspector, tetapi hanya menampilkan kartu kosong/gagal karena akses terbatas ke Admin &amp; Supervisor.</p>
+        </div>
+      </section>
+
+      <!-- ═══ 02 PERAN ═══ -->
+      <section id="peran">
+        <div class="section-head">
+          <div class="section-icon">🛡️</div>
+          <div>
+            <h3>2. Peran &amp; Hak Akses</h3>
+            <div class="sub">Tiga peran pengguna dengan kewenangan berbeda</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="kv">
+            <dt>Admin PPI</dt>
+            <dd><span class="pill pill-admin">admin_ppi</span> Pengelola penuh: kelola pengguna, ruangan, item, assign ruangan ke petugas, serta menyetujui/menolak inspeksi.</dd>
+            <dt>Supervisor</dt>
+            <dd><span class="pill pill-super">supervisor</span> Menyetujui/menolak inspeksi, melihat semua ruangan dan analitik. Tidak bisa mengelola pengguna &amp; data master.</dd>
+            <dt>Inspector</dt>
+            <dd><span class="pill pill-insp">inspector</span> Petugas lapangan via aplikasi Android: mengisi penilaian, mengunggah foto, dan mengirim inspeksi untuk ruangan yang di-assign. Di web hanya bisa melihat inspeksi milik ruangannya sendiri.</dd>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>Matriks Kewenangan</h4>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Fitur</th><th>Admin PPI</th><th>Supervisor</th><th>Inspector</th></tr>
+              <tr><td>Login &amp; lihat dashboard</td><td class="yes">✔</td><td class="yes">✔</td><td class="yes">✔</td></tr>
+              <tr><td>Kelola Pengguna (tambah/edit/hapus, reset password, assign ruangan)</td><td class="yes">✔</td><td class="no">—</td><td class="no">—</td></tr>
+              <tr><td>Kelola Ruangan &amp; Item Inspeksi</td><td class="yes">✔</td><td class="no">—</td><td class="no">—</td></tr>
+              <tr><td>Setujui / Tolak inspeksi</td><td class="yes">✔</td><td class="yes">✔</td><td class="no">—</td></tr>
+              <tr><td>Lihat semua inspeksi semua ruangan</td><td class="yes">✔</td><td class="yes">✔</td><td class="semi">ruangan sendiri</td></tr>
+              <tr><td>Lihat Analitik</td><td class="yes">✔</td><td class="yes">✔</td><td class="no">—</td></tr>
+              <tr><td>Kirim inspeksi (lewat Android)</td><td class="no">tidak</td><td class="no">tidak</td><td class="yes">✔ (alur utama)</td></tr>
+              <tr><td>Ganti foto inspeksi</td><td class="semi">semua</td><td class="semi">semua</td><td class="semi">punya sendiri</td></tr>
+            </table>
+          </div>
+          <div class="callout callout-info"><span class="ico">💡</span><div>Supervisor otomatis bisa menyetujui/menolak karena sistem menganggap Admin PPI <i>termasuk</i> kategori supervisor. Tombol aksi di web hanya muncul bila kewenangan Anda sesuai.</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 03 LOGIN ═══ -->
+      <section id="login">
+        <div class="section-head">
+          <div class="section-icon">🔐</div>
+          <div>
+            <h3>3. Login &amp; Akun</h3>
+            <div class="sub">Masuk, keluar, dan mengganti password</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>🔓 Melakukan Login</h4>
+          <ol class="steps">
+            <li>Buka alamat aplikasi di browser (misal <code>http://localhost:8080</code>). Anda akan diarahkan ke halaman <b>Login</b>.</li>
+            <li>Isi kolom <b>Username</b> dan <b>Password</b> sesuai akun Anda.</li>
+            <li>Klik tombol <b>Masuk</b>. Jika berhasil, Anda masuk ke halaman <b>Dashboard</b>.</li>
+          </ol>
+          <div class="callout callout-warn"><span class="ico">⚠️</span><div>Jika muncul pesan <b>“Invalid credentials”</b>, periksa kembali username/password, atau hubungi Admin PPI untuk reset password. Akun yang dinonaktifkan juga tidak bisa login.</div></div>
+        </div>
+
+        <div class="card">
+          <h4>🔑 Mengganti Password Sendiri</h4>
+          <ol class="steps">
+            <li>Klik tombol <b>Ganti Password</b> di pojok kanan atas (dekat nama pengguna).</li>
+            <li>Isi <b>Password Lama</b>, <b>Password Baru</b> (minimal 6 karakter), dan <b>Konfirmasi Password Baru</b>.</li>
+            <li>Klik <b>Simpan</b>. Klik <b>Generate</b> untuk membuat password acak yang kuat.</li>
+            <li>Password berhasil diubah — gunakan password baru pada login berikutnya.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h4>🚪 Keluar (Logout)</h4>
+          <p>Klik tombol <b>Keluar</b> di pojok kanan atas. Sesi akan ditutup dan Anda kembali ke halaman login. Selalu logout saat selesai menggunakan komputer bersama.</p>
+        </div>
+      </section>
+
+      <!-- ═══ 04 DASHBOARD ═══ -->
+      <section id="dashboard">
+        <div class="section-head">
+          <div class="section-icon">📊</div>
+          <div>
+            <h3>4. Dashboard</h3>
+            <div class="sub">Ringkasan cepat kondisi inspeksi kebersihan</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <p>Halaman pertama setelah login. Menampilkan 4 kartu statistik:</p>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Kartu</th><th>Arti</th><th>Contoh Warna</th></tr>
+              <tr><td>⏳ Menunggu Persetujuan</td><td>Jumlah inspeksi berstatus <b>PENDING</b> yang belum disetujui/ditolak</td><td><span class="pill pill-warn">kuning</span></td></tr>
+              <tr><td>🏥 Total Ruangan</td><td>Total ruangan terdaftar di sistem</td><td><span class="pill pill-mute">abu-abu</span></td></tr>
+              <tr><td>📋 Inspeksi Bulan Ini</td><td>Jumlah inspeksi yang dikirim pada bulan berjalan</td><td><span class="pill pill-ok">hijau</span></td></tr>
+              <tr><td>📊 Skor Rata-rata Bulan Ini</td><td>Rata-rata skor inspeksi yang <b>disetujui</b> bulan ini (dalam persen)</td><td><span class="pill pill-mute">abu-abu</span></td></tr>
+            </table>
+          </div>
+          <div class="callout callout-info"><span class="ico">💡</span><div><b>Menunggu Persetujuan</b> adalah kartu terpenting bagi Admin/Supervisor — segera buka menu <b>Inspeksi</b> untuk menyetujui inspeksi yang tertunda.</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 05 RUANGAN ═══ -->
+      <section id="ruangan">
+        <div class="section-head">
+          <div class="section-icon">🏥</div>
+          <div>
+            <h3>5. Ruangan</h3>
+            <div class="sub">Mengelola daftar ruangan dan item yang diperiksa di dalamnya</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>➕ Menambah Ruangan</h4>
+          <ol class="steps">
+            <li>Buka menu <b>Ruangan</b> di sidebar.</li>
+            <li>Klik tombol <b>+ Tambah Ruangan</b> di kanan atas.</li>
+            <li>Isi <b>Nama Ruangan</b> (contoh: <code>UGD</code>, <code>ICU</code>, <code>Kamar Operasi</code>), lalu klik <b>Simpan</b>.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h4>✏️ / 🗑️ Mengedit &amp; Menghapus Ruangan</h4>
+          <ol class="steps">
+            <li>Pada baris ruangan, klik tombol <b>Edit</b> untuk mengubah nama, atau <b>Hapus</b> untuk menonaktifkan.</li>
+            <li>Konfirmasi dengan OK saat dialog muncul. Data yang dihapus menjadi <b>nonaktif</b>, bukan terhapus permanen.</li>
+          </ol>
+          <div class="callout callout-info"><span class="ico">💡</span><div>Setiap ruangan menampilkan <b>badge nama item</b> yang menjadi tanggung jawabnya — hasil pemetaan di tombol <b>Item</b>.</div></div>
+        </div>
+
+        <div class="card">
+          <h4>📋 Menentukan Item yang Diperiksa di Ruangan (Admin)</h4>
+          <ol class="steps">
+            <li>Klik tombol <b>Item</b> pada baris ruangan yang diinginkan.</li>
+            <li>Centang item yang harus diperiksa di ruangan tersebut.</li>
+            <li>Klik tombol <b>Item</b> pada ruangan lain untuk menambah/mengurangi pemetaan item-nya. Perubahan tersimpan otomatis.</li>
+          </ol>
+          <div class="callout callout-warn"><span class="ico">⚠️</span><div>Tombol <b>Item</b> hanya muncul untuk akun <b>Admin PPI</b>. Supervisor/Inspector hanya melihat daftar ruangan.</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 06 ITEM ═══ -->
+      <section id="item">
+        <div class="section-head">
+          <div class="section-icon">📋</div>
+          <div>
+            <h3>6. Item Inspeksi</h3>
+            <div class="sub">Mengelola item penilaian kebersihan (skor 0–2)</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <p>Item adalah aspek yang dinilai saat inspeksi, misalnya <b>Kebersihan Tangan</b>, <b>Penggunaan APD</b>, <b>Pengelolaan Limbah Medis</b>, <b>Sterilisasi Alat</b>, dan lain-lain.</p>
+          <div class="kv">
+            <dt>➕ Tambah Item</dt>
+            <dd>Klik <b>+ Tambah Item</b> → isi nama → <b>Simpan</b>.</dd>
+            <dt>✏️ / 🗑️ Edit / Hapus</dt>
+            <dd>Tombol <b>Edit</b> / <b>Hapus</b> pada baris item.</dd>
+            <dt>🏥 Tombol Ruangan</dt>
+            <dd>(Admin) atur di ruangan mana saja item ini diperiksa — hasilnya tampil sebagai badge di tabel.</dd>
+          </div>
+          <div class="callout callout-tip"><span class="ico">💡</span><div>Item yang sudah pernah dipakai dalam inspeksi tersimpan sebagai <b>snapshot nama</b> — mengganti nama item tidak mengubah data inspeksi lama.</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 07 INSPEKSI ═══ -->
+      <section id="inspeksi">
+        <div class="section-head">
+          <div class="section-icon">✅</div>
+          <div>
+            <h3>7. Inspeksi</h3>
+            <div class="sub">Daftar, filter, dan pencarian inspeksi</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>📋 Melihat Daftar Inspeksi</h4>
+          <p>Menu <b>Inspeksi</b> menampilkan tabel berisi <b>Tanggal</b>, <b>Ruangan</b>, <b>Status</b>, jumlah <b>Item</b>, dan tombol <b>Detail</b>.</p>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Status</th><th>Label</th><th>Arti</th></tr>
+              <tr><td><span class="pill pill-warn">Menunggu</span></td><td>PENDING</td><td>Dikirim inspector, belum disetujui — perlu aksi Admin/Supervisor</td></tr>
+              <tr><td><span class="pill pill-ok">Disetujui</span></td><td>APPROVED</td><td>Sudah disetujui dan dihitung dalam analitik</td></tr>
+              <tr><td><span class="pill pill-bad">Ditolak</span></td><td>REJECTED</td><td>Ditolak dengan alasan tertentu</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>🔎 Filter &amp; Pencarian</h4>
+          <ol class="steps">
+            <li><b>Tab status</b> di atas tabel: Semua / Menunggu / Disetujui / Ditolak. Secara default menampilkan <b>Menunggu</b>.</li>
+            <li><b>Lihat semua ruangan</b>: centang untuk menampilkan inspeksi semua ruangan (khusus Admin/Supervisor). Inspector hanya melihat ruangannya sendiri.</li>
+            <li>Kotak <b>Cari inspeksi...</b> untuk pencarian global berdasarkan kata kunci.</li>
+            <li>Klik header kolom untuk <b>mengurutkan</b>; gunakan pagination di bawah tabel.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ═══ 08 DETAIL ═══ -->
+      <section id="detail">
+        <div class="section-head">
+          <div class="section-icon">🔍</div>
+          <div>
+            <h3>8. Detail Inspeksi &amp; Persetujuan</h3>
+            <div class="sub">Menyetujui/menolak dan memeriksa hasil inspeksi</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>👀 Membuka Detail</h4>
+          <p>Klik tombol <b>Detail</b> pada baris inspeksi. Halaman menampilkan: nama ruangan, tanggal &amp; jam, status, tabel item penilaian, dan foto dokumentasi.</p>
+          <div class="kv">
+            <dt>Skor 0</dt><dd><span class="pill pill-bad">0 — Berisiko</span> tidak sesuai standar</dd>
+            <dt>Skor 1</dt><dd><span class="pill pill-warn">1 — Minor</span> kurang sempurna</dd>
+            <dt>Skor 2</dt><dd><span class="pill pill-ok">2 — Sesuai Standar</span> baik</dd>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>✅ Menyetujui Inspeksi (Admin/Supervisor)</h4>
+          <ol class="steps">
+            <li>Buka inspeksi berstatus <b>Menunggu</b>.</li>
+            <li>Periksa nilai tiap item dan foto dokumentasi (klik thumbnail untuk melihat foto besar).</li>
+            <li>Klik tombol <b>Setujui</b>, konfirmasi OK. Status berubah menjadi <b>Disetujui</b> dan masuk ke perhitungan analitik.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h4>❌ Menolak Inspeksi (Admin/Supervisor)</h4>
+          <ol class="steps">
+            <li>Klik tombol <b>Tolak</b>.</li>
+            <li>Isi <b>Alasan penolakan</b> di jendela pop-up (wajib diisi).</li>
+            <li>Klik <b>Tolak</b>. Alasan ditampilkan di halaman detail sebagai catatan merah.</li>
+          </ol>
+          <div class="callout callout-danger"><span class="ico">⚠️</span><div>Inspeksi yang ditolak <b>tidak dihitung</b> dalam skor analitik. Inspector harus memperbaiki dan mengirim ulang inspeksi.</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 09 PENGGUNA ═══ -->
+      <section id="pengguna">
+        <div class="section-head">
+          <div class="section-icon">👥</div>
+          <div>
+            <h3>9. Pengguna (Khusus Admin PPI)</h3>
+            <div class="sub">Kelola akun, reset password, dan assignment ruangan</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>➕ Menambah Pengguna Baru</h4>
+          <ol class="steps">
+            <li>Buka menu <b>Pengguna</b> → klik <b>+ Tambah Pengguna</b>.</li>
+            <li>Isi <b>Username</b>, <b>Nama Lengkap</b> (opsional), dan <b>Password</b> (wajib untuk pengguna baru).</li>
+            <li>Pilih <b>Role</b>: Admin PPI / Supervisor / Inspector.</li>
+            <li>Klik <b>Simpan</b>. Beri tahu pengguna baru username &amp; password awal.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h4>✏️ Edit, Nonaktifkan, &amp; Reset Password</h4>
+          <ol class="steps">
+            <li><b>Edit</b>: ubah username, nama, role, atau status aktif/nonaktif.</li>
+            <li><b>Reset PW</b>: atur password baru secara manual atau klik <b>Generate</b> untuk password acak 12 karakter.</li>
+            <li><b>Hapus</b>: menonaktifkan akun (user tidak bisa login lagi).</li>
+          </ol>
+          <div class="callout callout-info"><span class="ico">💡</span><div>Reset password otomatis <b>mencabut semua sesi aktif</b> pengguna — ia harus login ulang dengan password baru.</div></div>
+        </div>
+
+        <div class="card">
+          <h4>🏥 Badge Ruangan di Tabel Pengguna</h4>
+          <p>Setiap baris pengguna menampilkan <b>badge nama ruangan</b> yang menjadi tanggung jawabnya (maksimal 3 badge, sisanya ditandai <b>+N</b>). Klik tombol <b>Ruangan</b> untuk mengelolanya.</p>
+        </div>
+
+        <div class="card">
+          <h4>➕➖ Menambah &amp; Menghapus Ruangan pada Pengguna (Admin)</h4>
+          <ol class="steps">
+            <li>Klik tombol <b>Ruangan</b> pada baris pengguna (selain Admin PPI).</li>
+            <li>Untuk <b>menghapus</b>: klik tanda <b>×</b> pada badge ruangan yang di-assign. Badge langsung hilang setelah proses selesai.</li>
+            <li>Untuk <b>menambah</b>: pilih ruangan pada dropdown <b>Tambah Ruangan</b>, lalu klik <b>+ Tambah</b>. Badge ruangan muncul di daftar assign.</li>
+          </ol>
+          <div class="callout callout-tip"><span class="ico">💡</span><div><b>Peran penting</b>: Inspector hanya bisa mengirim inspeksi untuk ruangan yang di-assign padanya. Pastikan assignment ruangan benar sebelum inspector bertugas.</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 10 KINERJA ═══ -->
+      <section id="kinerja">
+        <div class="section-head">
+          <div class="section-icon">👤</div>
+          <div>
+            <h3>10. Kinerja Inspector</h3>
+            <div class="sub">Monitoring produktivitas petugas per bulan</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <ol class="steps">
+            <li>Buka menu <b>Kinerja Inspector</b>.</li>
+            <li>Pilih <b>bulan</b> pada input tanggal bulan di kanan atas (format YYYY-MM).</li>
+            <li>Setiap inspector ditampilkan dengan <b>avatar inisial</b>, nama, jumlah <b>inspeksi yang disetujui</b>, badge ruangan tanggung jawabnya, dan <b>bar perbandingan</b> terhadap inspector paling produktif.</li>
+          </ol>
+          <div class="callout callout-info"><span class="ico">💡</span><div>Angka dihitung dari inspeksi berstatus <b>APPROVED</b> saja — inspeksi PENDING/REJECTED tidak dihitung.</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 11 ANALITIK ═══ -->
+      <section id="analitik">
+        <div class="section-head">
+          <div class="section-icon">📈</div>
+          <div>
+            <h3>11. Analitik (Admin &amp; Supervisor)</h3>
+            <div class="sub">Evaluasi kualitas kebersihan per ruangan &amp; item</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>📉 Ruangan dengan Skor Terendah</h4>
+          <ul>
+            <li>Menampilkan 3 ruangan dengan rata-rata skor terendah pada bulan terpilih.</li>
+            <li>Warna bar menunjukkan tingkat kesehatan: <span class="pill pill-bad">merah &lt;60%</span>, <span class="pill pill-warn">kuning 60–79%</span>, <span class="pill pill-ok">hijau ≥80%</span>.</li>
+            <li>Skor dihitung dari total inspeksi <b>disetujui</b> bulan tersebut.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>🔴 Item Paling Sering Bermasalah</h4>
+          <ul>
+            <li>Item dengan skor <b>0 (Berisiko)</b> paling sering muncul — prioritas perbaikan.</li>
+            <li>Contoh data seed: <i>Pengelolaan Limbah Medis</i>, <i>Kebersihan Lingkungan</i>, <i>Ketersediaan Sabun &amp; Handuk</i>.</li>
+          </ul>
+          <div class="callout callout-tip"><span class="ico">💡</span><div>Gunakan halaman ini dalam <b>rapat evaluasi bulanan</b>: tentukan ruangan yang perlu perhatian dan item yang harus diperbaiki bersama tim.</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 12 ALUR ═══ -->
+      <section id="alur">
+        <div class="section-head">
+          <div class="section-icon">🔄</div>
+          <div>
+            <h3>12. Alur Kerja Lengkap</h3>
+            <div class="sub">Skenario end-to-end dari setup hingga evaluasi</div>
+          </div>
+        </div>
+
+        <div class="flow">
+          <div class="node"><b>1. Setup Data Master</b><span class="role">Admin PPI</span>Buat ruangan &amp; item, lalu petakan item↔ruangan</div>
+          <div class="arrow">→</div>
+          <div class="node"><b>2. Buat Akun Petugas</b><span class="role">Admin PPI</span>Tambah user inspector &amp; assign ruangan tanggung jawab</div>
+          <div class="arrow">→</div>
+          <div class="node"><b>3. Inspeksi Lapangan</b><span class="role">Inspector (Android)</span>Nilai item, foto dokumentasi, kirim inspeksi</div>
+          <div class="arrow">→</div>
+          <div class="node"><b>4. Persetujuan</b><span class="role">Admin / Supervisor</span>Setujui / tolak di menu Inspeksi</div>
+          <div class="arrow">→</div>
+          <div class="node"><b>5. Evaluasi</b><span class="role">Admin / Supervisor</span>Analitik, kinerja inspector, perbaikan</div>
+        </div>
+
+        <div class="card">
+          <h4>🎯 Skenario A — Menyiapkan Sistem Baru</h4>
+          <ol class="steps">
+            <li>Login sebagai <b>admin</b>.</li>
+            <li>Menu <b>Ruangan</b> → tambah semua ruangan (UGD, ICU, Rawat Inap, dll).</li>
+            <li>Menu <b>Item Inspeksi</b> → tambah semua item penilaian.</li>
+            <li>Di halaman Ruangan, klik <b>Item</b> per ruangan dan centang item yang berlaku.</li>
+            <li>Menu <b>Pengguna</b> → tambah akun supervisor &amp; inspector, lalu klik <b>Ruangan</b> untuk menetapkan tanggung jawab tiap inspector.</li>
+            <li>Bagikan kredensial &amp; alamat server ke petugas; minta mereka segera ganti password.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h4>🎯 Skenario B — Siklus Inspeksi Harian</h4>
+          <ol class="steps">
+            <li><b>Inspector</b> membuka aplikasi Android, memilih ruangan yang di-assign, menilai tiap item (0/1/2), memotret bukti, lalu <b>mengirim inspeksi</b>.</li>
+            <li><b>Admin/Supervisor</b> membuka menu <b>Inspeksi</b> (default filter “Menunggu”), periksa detail + foto.</li>
+            <li>Jika sesuai → <b>Setujui</b>. Jika tidak → <b>Tolak</b> dengan alasan.</li>
+            <li>Inspeksi yang ditolak → inspector kirim ulang setelah perbaikan.</li>
+            <li>Data disetujui otomatis memperbarui <b>Dashboard</b>, <b>Analitik</b>, dan <b>Kinerja Inspector</b>.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h4>🎯 Skenario C — Evaluasi Bulanan</h4>
+          <ol class="steps">
+            <li>Buka <b>Analitik</b>, pilih bulan berjalan.</li>
+            <li>Identifikasi <b>ruangan dengan skor terendah</b> untuk dijadikan target perbaikan.</li>
+            <li>Identifikasi <b>item paling sering bermasalah</b> untuk pelatihan/sosialisasi petugas.</li>
+            <li>Buka <b>Kinerja Inspector</b> untuk membandingkan produktivitas tim.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ═══ 13 ANDROID ═══ -->
+      <section id="android">
+        <div class="section-head">
+          <div class="section-icon">📱</div>
+          <div>
+            <h3>13. Aplikasi Android (Inspector)</h3>
+            <div class="sub">Alur kerja petugas lapangan</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>🔄 Sinkronisasi &amp; Mode Offline</h4>
+          <ul>
+            <li>Android <b>sinkronisasi data</b> (ruangan, item, user-room, foto) saat tersambung internet.</li>
+            <li>Jika jaringan hilang, aplikasi menyimpan pekerjaan dan <b>mengirim ulang otomatis</b> saat online kembali.</li>
+          </ul>
+          <h4>📸 Mengirim Inspeksi</h4>
+          <ol class="steps">
+            <li>Login dengan akun inspector.</li>
+            <li>Pilih ruangan yang di-assign ke Anda.</li>
+            <li>Nilai setiap item (skor 0 = berisiko, 1 = minor, 2 = sesuai standar) dan lampirkan <b>foto dokumentasi</b>.</li>
+            <li>Kirim inspeksi. Status menjadi <b>Menunggu</b> hingga disetujui Admin/Supervisor.</li>
+          </ol>
+          <div class="callout callout-info"><span class="ico">💡</span><div>Foto yang keliru bisa <b>diganti</b> — inspector pemilik inspeksi atau Admin/Supervisor dapat mengunggah ulang foto (fitur Replace Photo, ADR-0012).</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ 14 FAQ ═══ -->
+      <section id="faq">
+        <div class="section-head">
+          <div class="section-icon">❓</div>
+          <div>
+            <h3>14. FAQ &amp; Troubleshooting</h3>
+            <div class="sub">Masalah umum dan solusinya</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>🔒 Tidak bisa login</h4>
+          <ul>
+            <li>Periksa username/password (sensitif huruf besar/kecil).</li>
+            <li>Hubungi Admin PPI untuk <b>reset password</b> di menu Pengguna.</li>
+            <li>Akun mungkin <b>dinonaktifkan</b> oleh admin.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>👁️ Menu / tombol tidak muncul</h4>
+          <ul>
+            <li>Setiap peran punya kewenangan berbeda (lihat <a href="#peran">Bagian 2</a>). Tombol <b>Item</b>, <b>Ruangan</b> (di Pengguna), dan <b>Analitik</b> hanya untuk peran tertentu.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>📷 Foto tidak tampil / gagal upload</h4>
+          <ul>
+            <li>Periksa koneksi internet dan ukuran file (maksimal mengikuti konfigurasi server, default 10 MB di nginx).</li>
+            <li>Foto dilindungi autentikasi — pastikan sesi masih aktif.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>📤 Inspeksi tidak bisa dikirim (Android)</h4>
+          <ul>
+            <li>Pastikan ruangan sudah <b>di-assign</b> ke akun Anda oleh Admin (menu Pengguna → Ruangan).</li>
+            <li>Hindari mengirim <b>duplikat</b> untuk ruangan/tanggal/jam yang sama — sistem menolak duplikat.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>📊 Angka dashboard/analitik tidak berubah</h4>
+          <ul>
+            <li>Analitik hanya menghitung inspeksi <b>APPROVED</b>.</li>
+            <li>Data diproses lewat <b>background job</b> — tunggu beberapa saat, lalu muat ulang halaman.</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-tip"><span class="ico">🛟</span><div><b>Butuh bantuan lebih lanjut?</b> Hubungi tim IT RSUD Ajibarang atau Admin PPI dengan menyertakan detail: peran akun, halaman, dan pesan error yang muncul.</div></div>
+      </section>
+
+      <footer style="text-align:center; color:var(--ink-subtle); font-size:12px; padding-top:24px; border-top:1px solid var(--border);">
+        Panduan Penggunaan — RSUD Ajibarang · Sistem Inspeksi PPI v1.0<br />
+        Web Admin &middot; Aplikasi Android &middot; Backend API · Dokumen ini dapat dicetak (Ctrl+P).
+      </footer>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Highlight active TOC link on scroll
+  const links = Array.from(document.querySelectorAll(".toc a"));
+  const sections = links.map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove("active"));
+        const active = links.find(l => l.getAttribute("href") === "#" + entry.target.id);
+        if (active) active.classList.add("active");
+      }
+    });
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
