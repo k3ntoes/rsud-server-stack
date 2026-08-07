@@ -11,14 +11,14 @@ from app.modules.auth.models import User
 from app.modules.master.schemas import (
     RoomCreate, RoomUpdate, RoomOut,
     ItemCreate, ItemUpdate, ItemOut,
-    RoomItemOut, RoomItemAssign,
+    RoomItemOut, RoomItemAssign, RoomItemReorder,
     SyncResponse,
 )
 from app.modules.master.services import (
     list_rooms, get_room, create_room, update_room, delete_room,
     list_items, get_item, create_item, update_item, delete_item,
     list_room_items, list_items_by_room, list_rooms_by_item,
-    assign_item_to_room, unassign_item_from_room,
+    assign_item_to_room, unassign_item_from_room, reorder_room_items,
 )
 
 router = APIRouter(prefix="/api", tags=["master"])
@@ -226,6 +226,27 @@ async def unassign_item_from_room_endpoint(
 ):
     if not await unassign_item_from_room(db, room_id, item_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Assignment not found")
+
+
+@router.put("/rooms/{room_id}/items/reorder")
+async def reorder_room_items_endpoint(
+    room_id: int,
+    body: RoomItemReorder,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    """Atur urutan item ruangan (ADR-0013) — body `{ "item_ids": [...] }` terurut."""
+    room = await get_room(db, room_id)
+    if room is None or not room.is_active:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Room not found")
+    try:
+        rows = await reorder_room_items(db, room_id, body.item_ids)
+    except ValueError:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="item_ids must match active items of room",
+        )
+    return [RoomItemOut.model_validate(r) for r in rows]
 
 
 # Item → Rooms

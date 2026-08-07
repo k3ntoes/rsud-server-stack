@@ -120,6 +120,199 @@ async def test_list_room_items_excludes_inactive(client: AsyncClient, db_session
     assert len(resp.json()) == 0
 
 
+# ── ADR-0013: sort_order & ordering ──
+
+
+@pytest.mark.asyncio
+async def test_list_items_by_room_ordered_by_sort_order(client: AsyncClient, db_session: AsyncSession):
+    """ADR-0013: item per ruangan tampil urut (sort_order ASC, item_id ASC)."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    room = await seed_room(db_session, "UGD")
+    item_a = await seed_item(db_session, "Tembok")
+    item_b = await seed_item(db_session, "Lantai")
+    item_c = await seed_item(db_session, "Atap")
+
+    headers = auth_header(admin)
+    # Assign via API → sort_order append (0, 1, 2) sesuai urutan assign
+    for item in (item_a, item_b, item_c):
+        resp = await client.post(
+            f"/api/rooms/{room.id}/items", json={"item_id": item.id}, headers=headers
+        )
+        assert resp.status_code == 201
+
+    # Reorder: Lantai (item_b) → Tembok (item_a) → Atap (item_c)
+    resp = await client.put(
+        f"/api/rooms/{room.id}/items/reorder",
+        json={"item_ids": [item_b.id, item_a.id, item_c.id]},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+
+    resp = await client.get(f"/api/rooms/{room.id}/items", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert [r["item_id"] for r in data] == [item_b.id, item_a.id, item_c.id]
+    assert [r["sort_order"] for r in data] == [0, 1, 2]
+
+
+@pytest.mark.asyncio
+async def test_assign_item_appends_to_end_of_room(client: AsyncClient, db_session: AsyncSession):
+    """ADR-0013: item baru di-assign harus append di akhir ruangan (max+1)."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    room = await seed_room(db_session, "ICU")
+    item_a = await seed_item(db_session, "Kebersihan Tangan")
+    item_b = await seed_item(db_session, "APD")
+    item_c = await seed_item(db_session, "Limbah")
+
+    headers = auth_header(admin)
+    for item in (item_a, item_b):
+        await client.post(
+            f"/api/rooms/{room.id}/items", json={"item_id": item.id}, headers=headers
+        )
+
+    resp = await client.post(
+        f"/api/rooms/{room.id}/items", json={"item_id": item_c.id}, headers=headers
+    )
+    assert resp.status_code == 201
+    assert resp.json()["sort_order"] == 2  # max(0,1)+1
+
+    data = (await client.get(f"/api/rooms/{room.id}/items", headers=headers)).json()
+    assert [r["item_id"] for r in data] == [item_a.id, item_b.id, item_c.id]
+
+
+@pytest.mark.asyncio
+async def test_room_items_sync_includes_sort_order(client: AsyncClient, db_session: AsyncSession):
+    """ADR-0013: payload sync `/api/room-items` memuat sort_order untuk Android."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "UGD")
+    item = await seed_item(db_session, "Kebersihan Tangan")
+    await assign_item_to_room(db_session, room.id, item.id)
+
+    resp = await client.get("/api/room-items", headers=headers)
+    assert resp.status_code == 200
+    row = resp.json()["data"][0]
+    assert row["room_id"] == room.id
+    assert row["item_id"] == item.id
+    assert "sort_order" in row
+    assert row["sort_order"] == 0
+
+
+# ── ADR-0013: reorder endpoint (3j5) ──
+
+
+@pytest.mark.asyncio
+async def test_reorder_room_items_updates_order(client: AsyncClient, db_session: AsyncSession):
+    """Reorder valid → urutan berubah + response list penuh dalam urutan baru."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "UGD")
+    item_a = await seed_item(db_session, "A")
+    item_b = await seed_item(db_session, "B")
+    item_c = await seed_item(db_session, "C")
+    for item in (item_a, item_b, item_c):
+        await assign_item_to_room(db_session, room.id, item.id)
+
+    resp = await client.put(
+        f"/api/rooms/{room.id}/items/reorder",
+        json={"item_ids": [item_c.id, item_a.id, item_b.id]},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    assert [r["item_id"] for r in resp.json()] == [item_c.id, item_a.id, item_b.id]
+
+    # Persisted: query ulang menunjukkan urutan baru
+    data = (await client.get(f"/api/rooms/{room.id}/items", headers=headers)).json()
+    assert [r["item_id"] for r in data] == [item_c.id, item_a.id, item_b.id]
+
+
+@pytest.mark.asyncio
+async def test_reorder_room_items_invalid_items_rejected(client: AsyncClient, db_session: AsyncSession):
+    """Daftar item_ids harus persis item aktif room — subset/kelebihan ditolak 422."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "UGD")
+    item_a = await seed_item(db_session, "A")
+    item_b = await seed_item(db_session, "B")
+    await assign_item_to_room(db_session, room.id, item_a.id)
+    await assign_item_to_room(db_session, room.id, item_b.id)
+
+    # Subset (item_b dihilangkan)
+    resp = await client.put(
+        f"/api/rooms/{room.id}/items/reorder",
+        json={"item_ids": [item_a.id]},
+        headers=headers,
+    )
+    assert resp.status_code == 422
+
+    # Kelebihan item (item bukan milik room)
+    item_c = await seed_item(db_session, "C")
+    resp = await client.put(
+        f"/api/rooms/{room.id}/items/reorder",
+        json={"item_ids": [item_a.id, item_b.id, item_c.id]},
+        headers=headers,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_reorder_room_items_sync_bump(client: AsyncClient, db_session: AsyncSession):
+    """Reorder harus dibump `updated_at` baris berubah → terlihat di sync `?since=`."""
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    room = await seed_room(db_session, "ICU")
+    item_a = await seed_item(db_session, "A")
+    item_b = await seed_item(db_session, "B")
+    # Assign via API → sort_order 0 dan 1 (distinct)
+    for item in (item_a, item_b):
+        await client.post(
+            f"/api/rooms/{room.id}/items", json={"item_id": item.id}, headers=headers
+        )
+
+    before = (datetime.now(timezone.utc) - timedelta(seconds=5)).isoformat()
+    resp = await client.put(
+        f"/api/rooms/{room.id}/items/reorder",
+        json={"item_ids": [item_b.id, item_a.id]},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+
+    resp = await client.get("/api/room-items", params={"since": before}, headers=headers)
+    data = resp.json()["data"]
+    assert len(data) == 2  # kedua baris berubah urutannya → keduanya di-bump
+    by_item = {r["item_id"]: r for r in data}
+    assert by_item[item_a.id]["sort_order"] == 1
+    assert by_item[item_b.id]["sort_order"] == 0
+
+
+@pytest.mark.asyncio
+async def test_reorder_room_items_forbidden_non_admin(client: AsyncClient, db_session: AsyncSession):
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "UGD")
+    item = await seed_item(db_session, "Item")
+    await assign_item_to_room(db_session, room.id, item.id)
+
+    headers = auth_header(inspector)
+    resp = await client.put(
+        f"/api/rooms/{room.id}/items/reorder",
+        json={"item_ids": [item.id]},
+        headers=headers,
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_reorder_room_items_room_not_found(client: AsyncClient, db_session: AsyncSession):
+    admin = await create_user(db_session, "admin", "pass", "admin_ppi")
+    headers = auth_header(admin)
+    resp = await client.put(
+        "/api/rooms/999/items/reorder",
+        json={"item_ids": [1]},
+        headers=headers,
+    )
+    assert resp.status_code == 404
+
+
 # ── GET /api/room-items ──
 
 

@@ -145,10 +145,10 @@ GET /api/room-items?since=2026-07-28T00:00:00Z
 ```json
 {
   "data": [
-    { "id": 1, "room_id": 1, "item_id": 1, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
-    { "id": 2, "room_id": 1, "item_id": 2, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
-    { "id": 3, "room_id": 2, "item_id": 1, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
-    { "id": 4, "room_id": 1, "item_id": 3, "is_active": false, "created_at": "2026-07-20T09:00:00Z", "updated_at": "2026-07-29T08:00:00Z" }
+    { "id": 1, "room_id": 1, "item_id": 1, "sort_order": 1, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
+    { "id": 2, "room_id": 1, "item_id": 2, "sort_order": 0, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
+    { "id": 3, "room_id": 2, "item_id": 1, "sort_order": 0, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
+    { "id": 4, "room_id": 1, "item_id": 3, "sort_order": 0, "is_active": false, "created_at": "2026-07-20T09:00:00Z", "updated_at": "2026-07-29T08:00:00Z" }
   ],
   "synced_at": "2026-07-29T12:00:00Z"
 }
@@ -157,6 +157,9 @@ GET /api/room-items?since=2026-07-28T00:00:00Z
 > `id=4` adalah **tombstone**: item `3` sudah dilepas dari room `1` pada `updated_at`
 > (relasi dibuat 20 Juli, lalu di-unassign 29 Juli). `is_active: false` = relasi
 > **harus DIHAPUS** dari mapping lokal, bukan ditambahkan.
+>
+> Contoh urutan checklist room `1`: tampil `item 2` (sort_order 0) → `item 1`
+> (sort_order 1) — **bukan** urutan `item_id`.
 
 **Format data per-item:**
 | Field | Tipe | Deskripsi |
@@ -164,30 +167,42 @@ GET /api/room-items?since=2026-07-28T00:00:00Z
 | `id` | int | Primary key relasi |
 | `room_id` | int | ID room |
 | `item_id` | int | ID inspection item |
+| `sort_order` | int | Urutan tampilan item dalam checklist inspeksi ruangan — urutkan ascending; tie-breaker: `item_id` ASC. Diatur Admin PPI per ruangan via web-admin (ADR-0013) |
 | `is_active` | bool | **`true` = item ter-assign, `false` = TOMBSTONE (item dilepas dari room)** |
 | `created_at` | string ISO 8601 | Waktu assignment |
-| `updated_at` | string/null ISO 8601 | Waktu perubahan terakhir (assign/unassign) — null hanya jika baris dibuat tanpa melalui ORM (insert SQL mentah) |
+| `updated_at` | string/null ISO 8601 | Waktu perubahan terakhir (assign/unassign/reorder) — null hanya jika baris dibuat tanpa melalui ORM (insert SQL mentah) |
+
+> 📌 **Urutan checklist (ADR-0013):** Android WAJIB menampilkan item room dalam urutan
+> `sort_order ASC, item_id ASC`. Saat Admin PPI mengubah urutan (tombol ▲/▼ di
+> web-admin), `updated_at` baris tsb dibump → terkirim via sync `?since=` → Android
+> memperbarui urutan lokal. Item baru yang di-assign selalu muncul di posisi paling
+> akhir ruangan.
 
 **Alur Sync Room-Items di Android (PENTING):**
 
 1. Setelah sync rooms & inspection-items, Android panggil `GET /api/room-items`
 2. Untuk SETIAP baris response, **cek `is_active` dulu** — jangan asal insert:
    ```kotlin
-   // roomItemMap: MutableMap<Int, MutableSet<Int>>  // roomId → set of itemIds
+   // roomItemMap: MutableMap<Int, MutableList<Pair<Int, Int>>>  // roomId → [(itemId, sortOrder)]
    for (rel in response.data) {
        if (rel.is_active) {
-           // Relasi AKTIF → tambahkan item ke mapping room
-           roomItemMap.getOrPut(rel.room_id) { mutableSetOf() }.add(rel.item_id)
+           // Relasi AKTIF → tambahkan (itemId, sortOrder) ke mapping room
+           roomItemMap.getOrPut(rel.room_id) { mutableListOf() }.add(rel.item_id to rel.sort_order)
        } else {
            // TOMBSTONE → item SUDAH TIDAK ADA di room ini → HAPUS dari mapping
            val items = roomItemMap[rel.room_id] ?: continue
-           items.remove(rel.item_id)
+           items.removeAll { it.first == rel.item_id }
            if (items.isEmpty()) roomItemMap.remove(rel.room_id)
        }
    }
+   // Urutkan checklist tiap room: sort_order ASC, lalu item_id ASC (tie-breaker) — ADR-0013
+   roomItemMap.forEach { (roomId, list) ->
+       roomItemMap[roomId] = list.sortedWith(compareBy({ it.second }, { it.first })).toMutableList()
+   }
    ```
-3. Saat submit inspeksi offline, gunakan mapping ini untuk validasi item yang wajib di-score
-4. Simpan `synced_at` untuk sync periodik berikutnya
+3. Saat menampilkan checklist inspeksi room, urutkan item berdasarkan `sort_order ASC, item_id ASC` (lihat contoh Kotlin di atas) — inspector mengisi sesuai urutan ini
+4. Saat submit inspeksi offline, gunakan mapping ini untuk validasi item yang wajib di-score
+5. Simpan `synced_at` untuk sync periodik berikutnya
 
 > ⚠️ **ATURAN WAJIB — `is_active: false` berarti HAPUS, bukan tambah.**
 >
@@ -610,7 +625,7 @@ file: <binary jpeg, ≤ 300KB dari Android>
 | POST | `/api/auth/logout` | Logout manual | Bearer | Kirim `refresh_token` di body |
 | GET | `/api/rooms` | Periodik | Bearer | Dukung `?since=` |
 | GET | `/api/inspection-items` | Periodik | Bearer | Dukung `?since=` |
-| **GET** | **`/api/room-items`** | **Periodik** | **Bearer** | **Sync relasi room↔item — selalu `?since=`; `is_active=false` = HAPUS item dari mapping** |
+| **GET** | **`/api/room-items`** | **Periodik** | **Bearer** | **Sync relasi room↔item — selalu `?since=`; `is_active=false` = HAPUS item dari mapping; urutkan item per room berdasar `sort_order` (ADR-0013)** |
 | **GET** | **`/api/auth/user-rooms`** | **Periodik** | **Bearer** | **Assignment user↔room (bulk) — `is_active=false` = HAPUS room dari petugas** |
 | **GET** | **`/api/auth/me/rooms`** | **Periodik** | **Bearer** | **Room yg di-assign ke user login — dukung `?since=` (tanpa tombstone)** |
 | POST | `/api/upload` | Per foto (≤ 300KB) | Bearer | Multipart/form-data |
@@ -624,7 +639,7 @@ file: <binary jpeg, ≤ 300KB dari Android>
 ```
 1. GET /api/rooms?since=<ts>             → data rooms
 2. GET /api/inspection-items?since=<ts>  → data items
-3. GET /api/room-items?since=<ts>        → mapping room ↔ item (roomId → [itemIds]; is_active=false = HAPUS)
+3. GET /api/room-items?since=<ts>        → mapping room ↔ item (roomId → [(itemId, sortOrder)]; is_active=false = HAPUS; urutkan per sort_order)
 4. GET /api/auth/user-rooms?since=<ts>   → assignment user↔room (is_active=false = HAPUS room dr petugas)
 5. GET /api/auth/me/rooms?since=<ts>     → room yg di-assign ke user login (filter UI; tanpa tombstone)
 ```
@@ -677,6 +692,12 @@ Endpoint sync untuk assigned rooms per user:
 - `GET /api/auth/me/rooms?since=...` — room yang di-assign ke user login
 - Inspector hanya bisa submit ke room yang di-assign
 - Supervisor hanya melihat room yang di-assign secara default (`?show_all=true` untuk override)
+
+### ADR-0013 — Room-Item Ordering (Urutan Item per Ruangan)
+
+Relasi room↔item bertambah field `sort_order` — diatur Admin PPI per ruangan via
+web-admin (tombol ▲/▼). Android menampilkan checklist inspeksi dalam urutan
+`sort_order ASC, item_id ASC`. Detail: `docs/adr/0013-room-item-ordering.md`.
 
 ### ADR Baru: Dual Delivery Auth
 

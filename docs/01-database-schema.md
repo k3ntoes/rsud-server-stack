@@ -5,7 +5,7 @@
 - `updated_at` dibump otomatis oleh service layer (create/update/delete) dan dipakai sync incremental Android (`?since=`).
 
 **1b. Pivot Tables (`room_items`, `user_rooms`)**
-- `room_items` (relasi room↔inspection item): `id`, `room_id` (FK), `item_id` (FK), `created_at` (DateTime timezone), `is_active` (Boolean, default True), `updated_at` (DateTime timezone, nullable). Unique `(room_id, item_id)`.
+- `room_items` (relasi room↔inspection item): `id`, `room_id` (FK), `item_id` (FK), `sort_order` (Integer, default 0 — urutan checklist per ruangan, ADR-0013), `created_at` (DateTime timezone), `is_active` (Boolean, default True), `updated_at` (DateTime timezone, nullable). Unique `(room_id, item_id)`.
 - `user_rooms` (relasi user↔room): `id`, `user_id` (FK), `room_id` (FK), `created_at` (DateTime timezone), `is_active` (Boolean, default True), `updated_at` (DateTime timezone, nullable). Unique `(user_id, room_id)`.
 - **Soft-delete tombstone (ADR-0009 / ADR-0010):** unassign = `is_active=False` + bump `updated_at`, BUKAN hard delete — supaya sync incremental Android (`?since=` memfilter `updated_at`) bisa mengirim penghapusan relasi. Assign ulang = reaktivasi tombstone (bukan baris baru, unik constraint tetap terjaga). Kolom ditambahkan + backfill `updated_at = created_at` di migrasi `007_soft_delete_pivot_tables`.
 

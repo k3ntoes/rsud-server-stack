@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { createRoute } from "@tanstack/react-router";
 import { protectedRoute } from "./_protected";
 import MasterDataPage from "../components/MasterDataPage";
@@ -13,6 +13,7 @@ import {
   useRoomItemsByRoom,
   useAssignItemToRoom,
   useUnassignItemFromRoom,
+  useReorderRoomItems,
   type Room,
 } from "../hooks/useMasterData";
 import { useAuth } from "../hooks/useAuth";
@@ -26,6 +27,41 @@ function RoomsPage() {
   const { data: roomItems } = useRoomItemsByRoom(itemModalRoom?.id ?? 0);
   const assignItem = useAssignItemToRoom();
   const unassignItem = useUnassignItemFromRoom();
+  const reorderItems = useReorderRoomItems();
+
+  // Urutan lokal item (ADR-0013): sinkron dari API, lalu diubah via tombol ▲/▼
+  const [localItemOrder, setLocalItemOrder] = useState<number[]>([]);
+  useEffect(() => {
+    if (roomItems) {
+      setLocalItemOrder(roomItems.map((ri) => ri.item_id));
+    }
+  }, [roomItems]);
+
+  const orderedRoomItems = useMemo(() => {
+    if (!roomItems) return [];
+    const idxOf = new Map(localItemOrder.map((id, i) => [id, i]));
+    return [...roomItems].sort(
+      (a, b) => (idxOf.get(a.item_id) ?? 0) - (idxOf.get(b.item_id) ?? 0),
+    );
+  }, [roomItems, localItemOrder]);
+
+  const itemName = (itemId: number) =>
+    allItems?.find((i) => i.id === itemId)?.name ?? `Item #${itemId}`;
+
+  const handleMove = async (index: number, delta: number) => {
+    if (!itemModalRoom) return;
+    const target = index + delta;
+    if (target < 0 || target >= orderedRoomItems.length) return;
+    const next = [...localItemOrder];
+    [next[index], next[target]] = [next[target], next[index]];
+    setLocalItemOrder(next);
+    try {
+      await reorderItems.mutateAsync({ roomId: itemModalRoom.id, itemIds: next });
+    } catch {
+      // Rollback optimistik saat server menolak — kembali ke urutan terakhir dari API
+      if (roomItems) setLocalItemOrder(roomItems.map((ri) => ri.item_id));
+    }
+  };
 
   const assignedItemIds = new Set(roomItems?.map((ri) => ri.item_id) ?? []);
 
@@ -101,6 +137,55 @@ function RoomsPage() {
         onClose={() => setItemModalRoom(null)}
         title={`Item Inspeksi — ${itemModalRoom?.name ?? ""}`}
       >
+        <div className="mb-5">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-muted">
+            Urutan Checklist
+          </p>
+          {orderedRoomItems.length === 0 ? (
+            <p className="rounded-lg bg-navy-50/60 px-3 py-2.5 text-sm text-ink-subtle">
+              Belum ada item ter-assign. Centang item di bawah untuk menambah.
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {orderedRoomItems.map((ri, idx) => {
+                const isFirst = idx === 0;
+                const isLast = idx === orderedRoomItems.length - 1;
+                const pending = reorderItems.isPending;
+                return (
+                  <div
+                    key={ri.id}
+                    className="flex items-center gap-2 rounded-lg border border-navy-100/60 bg-surface px-3 py-2 transition-colors"
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700 ring-1 ring-inset ring-teal-200/60">
+                      {idx + 1}
+                    </span>
+                    <span className="flex-1 text-sm text-ink">{itemName(ri.item_id)}</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleMove(idx, -1)}
+                        disabled={isFirst || pending}
+                        aria-label={`Pindah ke atas: ${itemName(ri.item_id)}`}
+                        title="Naik"
+                        className="btn-ghost h-7 w-7 p-0 text-xs disabled:cursor-not-allowed disabled:opacity-30"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => handleMove(idx, 1)}
+                        disabled={isLast || pending}
+                        aria-label={`Pindah ke bawah: ${itemName(ri.item_id)}`}
+                        title="Turun"
+                        className="btn-ghost h-7 w-7 p-0 text-xs disabled:cursor-not-allowed disabled:opacity-30"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
         <p className="mb-4 text-sm text-ink-muted">
           Centang item yang harus diperiksa di ruangan ini.
         </p>

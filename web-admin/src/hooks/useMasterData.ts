@@ -113,7 +113,10 @@ export interface RoomItem {
   id: number;
   room_id: number;
   item_id: number;
+  sort_order: number;
+  is_active: boolean;
   created_at: string;
+  updated_at?: string | null;
 }
 
 export function useRoomItemsByRoom(roomId: number) {
@@ -166,6 +169,22 @@ export function useUnassignItemFromRoom() {
   return useMutation({
     mutationFn: ({ roomId, itemId }: { roomId: number; itemId: number }) =>
       apiRequest<void>(`/api/rooms/${roomId}/items/${itemId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["room-items"] });
+      qc.invalidateQueries({ queryKey: ["rooms"] });
+    },
+  });
+}
+
+export function useReorderRoomItems() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roomId, itemIds }: { roomId: number; itemIds: number[] }) =>
+      apiRequest<RoomItem[]>(`/api/rooms/${roomId}/items/reorder`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ item_ids: itemIds }),
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["room-items"] });
       qc.invalidateQueries({ queryKey: ["rooms"] });

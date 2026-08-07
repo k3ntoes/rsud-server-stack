@@ -149,9 +149,9 @@ GET /api/room-items?since=2026-07-28T00:00:00Z
 ```json
 {
   "data": [
-    { "id": 1, "room_id": 1, "item_id": 1, "created_at": "2026-07-28T10:00:00Z" },
-    { "id": 2, "room_id": 1, "item_id": 2, "created_at": "2026-07-28T10:00:00Z" },
-    { "id": 3, "room_id": 2, "item_id": 1, "created_at": "2026-07-28T10:00:00Z" }
+    { "id": 1, "room_id": 1, "item_id": 1, "sort_order": 1, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
+    { "id": 2, "room_id": 1, "item_id": 2, "sort_order": 0, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" },
+    { "id": 3, "room_id": 2, "item_id": 1, "sort_order": 0, "is_active": true,  "created_at": "2026-07-28T10:00:00Z", "updated_at": "2026-07-28T10:00:00Z" }
   ],
   "synced_at": "2026-07-29T12:00:00Z"
 }
@@ -163,7 +163,10 @@ GET /api/room-items?since=2026-07-28T00:00:00Z
 | `id` | int | Primary key relasi |
 | `room_id` | int | ID Room |
 | `item_id` | int | ID Inspection Item |
+| `sort_order` | int | **Urutan tampilan item dalam checklist ruangan (ADR-0013)** — urutkan ascending; tie-breaker: `item_id` ASC |
+| `is_active` | bool | `true` = ter-assign, `false` = tombstone (item dilepas dari room) |
 | `created_at` | string (ISO 8601) | Waktu assignment |
+| `updated_at` | string/null (ISO 8601) | Waktu perubahan terakhir (assign/unassign/reorder) |
 
 #### B. GET /api/rooms/{roomId}/items — Items per room
 
@@ -198,25 +201,46 @@ GET /api/inspection-items/1/rooms
 
 **Step 2: Bangun struktur data lokal**
 ```kotlin
-// Data class untuk RoomItem
+// Data class untuk RoomItem — wajib simpan sort_order (ADR-0013)
 data class RoomItemDto(
     val id: Int,
-    val roomId: Int,
-    val itemId: Int,
-    val createdAt: String
+    @SerializedName("room_id") val roomId: Int,
+    @SerializedName("item_id") val itemId: Int,
+    @SerializedName("sort_order") val sortOrder: Int = 0,
+    @SerializedName("is_active") val isActive: Boolean = true,
+    @SerializedName("created_at") val createdAt: String,
+    @SerializedName("updated_at") val updatedAt: String? = null
 )
 
-// Build mapping roomId → list of itemIds
-val roomItemMap: Map<Int, List<Int>> = roomItems
-    .groupBy({ it.roomId }, { it.itemId })
+// Build mapping roomId → list of (itemId, sortOrder)
+// Tombol ▲/▼ di web-admin mengubah sort_order + menaikkan updated_at →
+// reorder admin sampai ke Android via sync `?since=`.
+val roomItemMap: MutableMap<Int, MutableList<Pair<Int, Int>>> = mutableMapOf()
+for (rel in roomItems) {
+    if (rel.isActive) {
+        roomItemMap.getOrPut(rel.roomId) { mutableListOf() }.add(rel.itemId to rel.sortOrder)
+    } else {
+        // Tombstone → HAPUS dari mapping (bukan menambah)
+        roomItemMap[rel.roomId]?.removeAll { it.first == rel.itemId }
+    }
+}
+// Urutkan checklist tiap room: sort_order ASC, lalu item_id ASC (tie-breaker)
+roomItemMap.forEach { (roomId, list) ->
+    roomItemMap[roomId] = list.sortedWith(compareBy({ it.second }, { it.first })).toMutableList()
+}
 
 // Build lookup item name
 val itemMap: Map<Int, String> = items.associate { it.id to it.name }
 
-// Untuk menampilkan badge items di setiap room:
+// Checklist inspeksi room DALAM URUTAN yang sudah diatur admin (ADR-0013):
+fun getChecklistForRoom(roomId: Int): List<Int> {
+    return roomItemMap[roomId]?.map { it.first } ?: emptyList()
+}
+
+// Untuk menampilkan badge items di setiap room (urutan tidak penting di badge):
 fun getItemNamesForRoom(roomId: Int): List<String> {
     return roomItemMap[roomId]
-        ?.mapNotNull { itemMap[it] }
+        ?.mapNotNull { itemMap[it.first] }
         ?: emptyList()
 }
 ```
@@ -225,9 +249,13 @@ fun getItemNamesForRoom(roomId: Int): List<String> {
 ```kotlin
 // Saat user memilih room tertentu, cek items apa saja yang WAJIB di-score
 fun getRequiredItemsForRoom(roomId: Int): List<Int> {
-    return roomItemMap[roomId] ?: emptyList()
+    return roomItemMap[roomId]?.map { it.first } ?: emptyList()
 }
 ```
+
+> 📌 **Urutan checklist (ADR-0013):** Inspector mengisi item sesuai urutan
+> `sort_order ASC, item_id ASC`. Item yang di-assign belakangan selalu muncul di
+> posisi paling akhir ruangan. Item baru → `sort_order` tertinggi+1 dari backend.
 
 ### 3.4. Data Class Room Out
 
@@ -291,7 +319,7 @@ data class ItemEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: String?
 )
 
-// Tabel pivot RoomItem
+// Tabel pivot RoomItem — wajib simpan sort_order untuk urutan checklist (ADR-0013)
 @Entity(
     tableName = "room_items",
     foreignKeys = [
@@ -304,8 +332,15 @@ data class RoomItemEntity(
     @PrimaryKey val id: Int,
     @ColumnInfo(name = "room_id") val roomId: Int,
     @ColumnInfo(name = "item_id") val itemId: Int,
+    @ColumnInfo(name = "sort_order") val sortOrder: Int = 0,
     @ColumnInfo(name = "created_at") val createdAt: String
 )
+
+// Query checklist per room — urutkan dengan sort_order ASC, item_id ASC:
+@Query("SELECT i.* FROM room_items ri JOIN inspection_items i ON ri.item_id = i.id " +
+       "WHERE ri.room_id = :roomId AND ri.is_active = 1 " +
+       "ORDER BY ri.sort_order ASC, ri.item_id ASC")
+suspend fun getChecklistForRoom(roomId: Int): List<ItemEntity>
 ```
 
 **Query Room dengan item names:**
@@ -544,6 +579,12 @@ suspend fun syncAll() {
 
 ### 5.3. SyncPeriodik
 
+> 📌 **ADR-0013 — Reorder ikut ter-sync:** Saat Admin PPI mengubah urutan item
+> via web-admin, `updated_at` baris `room_items` yang berubah di-bump → sync
+> incremental `GET /api/room-items?since=` mengirim `sort_order` baru → Android
+> memperbarui urutan checklist lokal. Pastikan `RoomItemDto`/`RoomItemEntity`
+> menyimpan `sort_order` (jangan dibuang saat parsing).
+
 Rekomendasi interval sync:
 - **Saat pertama kali install app**: Full sync semua data
 - **Setiap buka app**: Sync incremental (dengan `since=`)
@@ -699,7 +740,10 @@ data class RoomItemDto(
     val id: Int,
     @SerializedName("room_id") val roomId: Int,
     @SerializedName("item_id") val itemId: Int,
-    @SerializedName("created_at") val createdAt: String
+    @SerializedName("sort_order") val sortOrder: Int = 0,
+    @SerializedName("is_active") val isActive: Boolean = true,
+    @SerializedName("created_at") val createdAt: String,
+    @SerializedName("updated_at") val updatedAt: String? = null
 )
 
 data class UserRoomDto(
@@ -853,6 +897,11 @@ interface RoomDao {
     
     @Query("SELECT * FROM rooms WHERE is_active = 1 ORDER BY name")
     suspend fun getActiveRooms(): List<RoomEntity>
+    
+    @Query("SELECT i.* FROM room_items ri JOIN inspection_items i ON ri.item_id = i.id " +
+           "WHERE ri.room_id = :roomId AND ri.is_active = 1 " +
+           "ORDER BY ri.sort_order ASC, ri.item_id ASC")
+    suspend fun getChecklistForRoom(roomId: Int): List<ItemEntity>
     
     @Query("SELECT i.name FROM room_items ri JOIN inspection_items i ON ri.item_id = i.id WHERE ri.room_id = :roomId")
     suspend fun getItemNamesForRoom(roomId: Int): List<String>

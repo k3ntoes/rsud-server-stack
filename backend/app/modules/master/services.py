@@ -84,7 +84,11 @@ async def delete_room(db: AsyncSession, room_id: int) -> bool:
 
 
 async def list_room_items(db: AsyncSession, since: datetime | None = None) -> list:
-    query = select(RoomItem).order_by(RoomItem.room_id, RoomItem.item_id)
+    # Urutkan per room memakai sort_order (ADR-0013) — Android membangun checklist
+    # dalam urutan ini; tie-breaker item_id agar deterministik.
+    query = select(RoomItem).order_by(
+        RoomItem.room_id, RoomItem.sort_order, RoomItem.item_id
+    )
     if since:
         # Sync mode: sertakan tombstone (is_active=False) — filter updated_at (bukan
         # created_at) agar penghapusan relasi ikut terkirim ke Android.
@@ -96,10 +100,11 @@ async def list_room_items(db: AsyncSession, since: datetime | None = None) -> li
 
 
 async def list_items_by_room(db: AsyncSession, room_id: int) -> list:
+    # Urutan tampilan item per ruangan (ADR-0013): sort_order ASC, item_id ASC
     result = await db.execute(
         select(RoomItem).where(
             RoomItem.room_id == room_id, RoomItem.is_active == True
-        )
+        ).order_by(RoomItem.sort_order, RoomItem.item_id)
     )
     return list(result.scalars().all())
 
@@ -124,7 +129,14 @@ async def assign_item_to_room(db: AsyncSession, room_id: int, item_id: int):
     if ri is not None and ri.is_active:
         raise ValueError("Already assigned")  # → 409 di endpoint
     if ri is None:
-        ri = RoomItem(room_id=room_id, item_id=item_id)
+        # Append di posisi paling akhir ruangan (ADR-0013) — max(sort_order)+1
+        max_result = await db.execute(
+            select(func.max(RoomItem.sort_order)).where(RoomItem.room_id == room_id)
+        )
+        max_order = max_result.scalar()
+        ri = RoomItem(
+            room_id=room_id, item_id=item_id, sort_order=(max_order + 1 if max_order is not None else 0)
+        )
         db.add(ri)
     else:
         ri.is_active = True  # reaktivasi tombstone (unik constraint tetap terjaga)
@@ -141,6 +153,37 @@ async def assign_item_to_room(db: AsyncSession, room_id: int, item_id: int):
     await db.commit()
     await db.refresh(ri)
     return ri
+
+
+async def reorder_room_items(db: AsyncSession, room_id: int, item_ids: list[int]) -> list:
+    """Set urutan item ruangan (ADR-0013). `item_ids` harus persis = item aktif milik room.
+
+    Hanya baris yang sort_order-nya berubah yang di-bump `updated_at`-nya,
+    supaya sync incremental Android (`GET /api/room-items?since=`) hanya
+    mengirim baris yang benar-benar berubah urutannya.
+    """
+    result = await db.execute(
+        select(RoomItem).where(
+            RoomItem.room_id == room_id, RoomItem.is_active == True
+        )
+    )
+    rows = list(result.scalars().all())
+    active_ids = {r.item_id for r in rows}
+    if set(item_ids) != active_ids or len(item_ids) != len(active_ids):
+        raise ValueError("item_ids must match active items of room")
+
+    now = datetime.now(timezone.utc)
+    order_by_item = {item_id: idx for idx, item_id in enumerate(item_ids)}
+    for r in rows:
+        new_order = order_by_item[r.item_id]
+        if r.sort_order != new_order:
+            r.sort_order = new_order
+            r.updated_at = now  # bump → sync incremental Android melihat reorder
+
+    await db.commit()
+    # Return semua item aktif room dalam urutan baru (UI butuh list penuh),
+    # walau hanya baris berubah yang di-bump updated_at-nya.
+    return sorted(rows, key=lambda r: (r.sort_order, r.item_id))
 
 
 async def unassign_item_from_room(db: AsyncSession, room_id: int, item_id: int) -> bool:

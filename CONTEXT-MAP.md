@@ -44,6 +44,8 @@ This file maps the domain contexts in this repository. Each context has its own 
 | ADR-0009 | ✅ Accepted | Room-Item Many-to-Many Relationship — per-room inspection items via pivot table |
 | ADR-0010 | ✅ Accepted | User-Room Assignment — inspector & supervisor assignment to rooms via pivot table |
 | ADR-0011 | ✅ Accepted | Dashboard Dedicated Endpoint — satu endpoint untuk 4 card statistik dashboard |
+| ADR-0012 | ✅ Accepted | Replace Photo Endpoint |
+| ADR-0013 | ✅ Accepted | Room-Item Ordering — Urutan Item Inspeksi per Ruangan |
 
 System-wide ADRs: `docs/adr/`
 
@@ -51,6 +53,7 @@ System-wide ADRs: `docs/adr/`
 
 | Tanggal | Perubahan |
 |---------|-----------|
+| 7 Aug 2026 | ADR-0013: Room-Item Ordering — `sort_order` per ruangan di pivot `room_items` |
 | 29 Jul 2026 | ADR-0011: Dashboard Dedicated Endpoint |
 | 29 Jul 2026 | ADR-0009, ADR-0010, ADR-0011 added to ADR index |
 | 29 Jul 2026 | Cross-cutting: User-Rooms bulk sync endpoint `GET /api/auth/user-rooms` |

@@ -40,6 +40,9 @@ class RoomItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id"), nullable=False)
     item_id: Mapped[int] = mapped_column(ForeignKey("inspection_items.id"), nullable=False)
+    # Urutan tampilan item dalam checklist inspeksi ruangan (ADR-0013) — diatur
+    # Admin PPI via web-admin (tombol ▲/▼). Query memakai sort_order ASC, item_id ASC.
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
