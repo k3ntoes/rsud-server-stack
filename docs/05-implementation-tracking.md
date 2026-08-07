@@ -223,6 +223,65 @@ flowchart LR
 
 ---
 
+### Phase 12 — ADR-0013 Room-Item Ordering (Urutan Item per Ruangan)
+
+| Issue | ID | Status | Claimed By | Blocked By |
+|-------|----|--------|------------|------------|
+| **12A: Backend — Kolom `sort_order` + ordering service** | `rsud-server-stack-wvc` | 🟢 Done | Bagus Sudrajat | None |
+| **12B: Backend — Endpoint reorder + sync bump** | `rsud-server-stack-3j5` | 🟢 Done | Bagus Sudrajat | 12A |
+| **12C: Web-admin — UI tombol ▲/▼** | `rsud-server-stack-65s` | 🟢 Done | Bagus Sudrajat | 12B |
+| **12D: Android — Konsumsi `sort_order`** | `rsud-server-stack-odx` | 🟢 Done (docs) | Bagus Sudrajat | 12A |
+
+---
+
+## Phase 12 — Detail Perubahan
+
+### Ringkasan
+
+| Area | Sebelum | Sesudah |
+|------|---------|---------|
+| Urutan item per ruangan | Tidak diatur — ikut insertion order (`id`) | **Diatur admin** via `sort_order` di pivot `room_items` (ADR-0013) |
+| Ordering query | Tanpa `ORDER BY` (`list_items_by_room`) | `ORDER BY sort_order ASC, item_id ASC` |
+| Item baru di-assign | Posisi tidak jelas | Append di akhir ruangan (`max(sort_order)+1`) |
+| Reorder via web-admin | Tidak ada | Tombol ▲/▼ per item (tanpa library drag & drop) |
+| Sync ke Android | Hanya data assignment | `sort_order` ikut terkirim; reorder di-bump `updated_at` → terlihat via `?since=` |
+
+### Backend
+
+| File | Perubahan |
+|------|-----------|
+| `backend/app/alembic/versions/008_room_items_sort_order.py` | **NEW** — +`sort_order` (Integer, default 0) di `room_items` + backfill `sort_order = item_id` |
+| `backend/app/modules/master/models.py` | +`RoomItem.sort_order` (Integer, default 0) |
+| `backend/app/modules/master/schemas.py` | +`RoomItemOut.sort_order`; +`RoomItemReorder` schema (`item_ids: list[int]`) |
+| `backend/app/modules/master/services.py` | `list_room_items()` & `list_items_by_room()` → `ORDER BY sort_order ASC, item_id ASC`; `assign_item_to_room()` → append `max+1`; +`reorder_room_items()` (hanya baris berubah yang di-bump `updated_at`) |
+| `backend/app/modules/master/api.py` | +`PUT /api/rooms/{id}/items/reorder` (admin-only; 404 room not found, 422 item_ids mismatch) |
+
+### Frontend
+
+| File | Perubahan |
+|------|-----------|
+| `web-admin/src/hooks/useMasterData.ts` | `RoomItem` interface +`sort_order`/`is_active`/`updated_at`; +`useReorderRoomItems()` mutation (invalidate `["room-items"]` & `["rooms"]`) |
+| `web-admin/src/routes/rooms.tsx` | Modal Room +daftar **Urutan Checklist** (nomor urut + tombol ▲/▼, disabled di posisi ujung, rollback saat gagal) |
+
+### Android Docs
+
+| File | Perubahan |
+|------|-----------|
+| `docs/android-implementation-guide.md` | `RoomItemDto`/`RoomItemEntity` +`sort_order`; aturan urut `(sort_order, item_id)`; contoh Kotlin sync + DAO query `ORDER BY sort_order ASC, item_id ASC` |
+| `docs/android-to-be-api-contract.md` | Payload `sort_order` di §2.2 + contoh Kotlin + alur sync (sudah ter-update, diikuti oleh 12D) |
+| `docs/01-database-schema.md` | Pivot `room_items` +`sort_order` (Integer, default 0 — ADR-0013) |
+| `docs/adr/0013-room-item-ordering.md` | **NEW** — ADR-0013 (kolom `sort_order`, ordering deterministik, reorder via sync, UI ▲/▼) |
+
+### Tests
+
+| File | Perubahan |
+|------|-----------|
+| `backend/tests/test_room_items.py` | +8 test: ordering `sort_order`, assign append di akhir, payload sync memuat `sort_order`, reorder normal, item invalid ditolak (422), sync bump `?since=`, forbidden non-admin (403), room not found (404) |
+
+> ✅ **Verifikasi**: 167 backend tests pass · `npx tsc --noEmit` + `npm run build` pass · migration `008` ter-apply ke dev DB (backfill `sort_order = item_id` terverifikasi).
+
+---
+
 ## Workflow Per Issue
 
 ### Sebelum Mengerjakan
