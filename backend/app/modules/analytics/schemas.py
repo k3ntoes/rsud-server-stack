@@ -39,3 +39,6 @@ class DashboardOut(BaseModel):
     total_rooms: int
     monthly_inspection_count: int
     avg_score_pct: float
+    # Effective month the stats refer to — falls back to the latest month with
+    # data when the requested month is empty; None when no stats exist at all.
+    year_month: str | None = None

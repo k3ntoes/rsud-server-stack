@@ -93,7 +93,12 @@ async def get_dashboard_data(
     db: AsyncSession,
     year_month: str | None = None,
 ) -> dict:
-    """Single endpoint for dashboard: pending count, room count, monthly stats."""
+    """Single endpoint for dashboard: pending count, room count, monthly stats.
+
+    Falls back to the most recent month that has stats when the requested month
+    has none, so a fresh month never shows an empty dashboard. Returns the
+    effective ``year_month`` (``None`` when no stats exist at all).
+    """
     ym = year_month or datetime.now().strftime("%Y-%m")
 
     # 1. Pending inspections count
@@ -108,11 +113,25 @@ async def get_dashboard_data(
     )
     total_rooms = rooms.scalar() or 0
 
-    # 3. Monthly stats from RoomMonthlyStats
+    # 3. Monthly stats from RoomMonthlyStats — fall back to the latest month
+    #    with data (year_month is zero-padded "YYYY-MM", so max() is correct)
     stats = await db.execute(
         select(RoomMonthlyStats).where(RoomMonthlyStats.year_month == ym)
     )
     rows = list(stats.scalars().all())
+    effective_ym = ym
+    if not rows:
+        latest = await db.execute(
+            select(func.max(RoomMonthlyStats.year_month))
+        )
+        latest_ym = latest.scalar()
+        if latest_ym:
+            effective_ym = latest_ym
+            stats = await db.execute(
+                select(RoomMonthlyStats).where(RoomMonthlyStats.year_month == effective_ym)
+            )
+            rows = list(stats.scalars().all())
+
     monthly_inspections = sum(r.inspection_count for r in rows)
     total_score = sum(r.total_score for r in rows)
     max_score = sum(r.max_score for r in rows)
@@ -123,4 +142,5 @@ async def get_dashboard_data(
         "total_rooms": total_rooms,
         "monthly_inspection_count": monthly_inspections,
         "avg_score_pct": avg_pct,
+        "year_month": effective_ym if rows else None,
     }

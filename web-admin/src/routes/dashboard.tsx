@@ -1,6 +1,6 @@
 import { createRoute } from "@tanstack/react-router";
 import { protectedRoute } from "./_protected";
-import { useDashboardData } from "../hooks/useAnalytics";
+import { useDashboardData, currentWeekMonth } from "../hooks/useAnalytics";
 
 export const Route = createRoute({
   getParentRoute: () => protectedRoute,
@@ -8,13 +8,34 @@ export const Route = createRoute({
   component: DashboardPage,
 });
 
+function formatMonth(yearMonth: string) {
+  const [year, month] = yearMonth.split("-").map(Number);
+  return new Date(year, month - 1, 1).toLocaleDateString("id-ID", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
 function DashboardPage() {
   const { data } = useDashboardData();
 
+  const currentMonth = currentWeekMonth();
   const pendingCount = data?.pending_count ?? "—";
   const roomCount = data?.total_rooms ?? "—";
-  const monthlyCount = data?.monthly_inspection_count ?? "—";
-  const avgScore = data?.avg_score_pct != null ? `${data.avg_score_pct}%` : "—";
+
+  // Monthly stats fall back to the latest month with data (backend), or null
+  // when there is no data at all — render an informative empty state then.
+  const statsMonth = data?.year_month ?? null;
+  const hasMonthlyData = statsMonth != null;
+  const fallbackMonth =
+    hasMonthlyData && statsMonth !== currentMonth ? statsMonth : null;
+  const monthlyCount = hasMonthlyData
+    ? (data?.monthly_inspection_count ?? "—")
+    : "—";
+  const avgScore =
+    hasMonthlyData && data?.avg_score_pct != null
+      ? `${data.avg_score_pct}%`
+      : "—";
 
   return (
     <div className="animate-fade-in">
@@ -65,7 +86,11 @@ function DashboardPage() {
             </div>
             <div>
               <p className="stat-label">Inspeksi Bulan Ini</p>
-              <p className="stat-value text-teal-600">{monthlyCount}</p>
+              <p
+                className={`stat-value ${hasMonthlyData ? "text-teal-600" : "text-ink-subtle"}`}
+              >
+                {monthlyCount}
+              </p>
             </div>
           </div>
         </div>
@@ -78,11 +103,35 @@ function DashboardPage() {
             </div>
             <div>
               <p className="stat-label">Skor Rata-rata Bulan Ini</p>
-              <p className="stat-value text-navy-600">{avgScore}</p>
+              <p
+                className={`stat-value ${hasMonthlyData ? "text-navy-600" : "text-ink-subtle"}`}
+              >
+                {avgScore}
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Fallback / empty-state notices */}
+      {fallbackMonth && (
+        <div className="mt-6 flex items-start gap-3 rounded-plan-lg border border-warning-border bg-warning-muted px-4 py-3 text-sm text-warning">
+          <span className="text-base leading-none">⚠️</span>
+          <p>
+            Belum ada inspeksi bulan ini — menampilkan data{" "}
+            <strong>{formatMonth(fallbackMonth)}</strong>.
+          </p>
+        </div>
+      )}
+      {data && !hasMonthlyData && (
+        <div className="mt-6 empty-state py-10">
+          <span className="empty-state-icon">📊</span>
+          <p className="empty-state-text">
+            Belum ada data inspeksi. Statistik bulanan muncul setelah inspeksi
+            disetujui.
+          </p>
+        </div>
+      )}
 
       {/* Welcome section */}
       <div className="mt-6 card-plan p-8">

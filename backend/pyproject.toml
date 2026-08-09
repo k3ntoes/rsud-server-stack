@@ -12,6 +12,7 @@ dependencies = [
     "python-jose[cryptography]",
     "bcrypt>=4.0",
     "python-multipart",
+    "pillow",  # thumbnail generation for inspection photos (background worker)
 ]
 
 [project.optional-dependencies]

@@ -17,8 +17,8 @@ to prevent duplicates on re-run.
 ║  UserRoom:  Inspector & supervisor → all rooms (ADR-0010)    ║
 ║                                                             ║
 ║  Inspections (total 12):                                     ║
-║   ├─ July 2026 — 6 ruangan × 1-2 APPROVED = 12 inspeksi     ║
-║   ├─ June 2026 — 2 ruangan × 1 APPROVED = 2 inspeksi         ║
+║   ├─ Current month — 6 ruangan × 1-2 APPROVED = 12 inspeksi ║
+║   ├─ Previous month — 2 ruangan × 1 APPROVED = 2 inspeksi   ║
 ║   ├─ REJECTED — 1 inspeksi (test rejection flow)              ║
 ║   └─ PENDING  — 1 inspeksi (test approval flow)              ║
 ║                                                             ║
@@ -245,10 +245,11 @@ async def seed():
 
         inspector = users_map["inspector"]
 
-        # ── Fixed base datetime for idempotent re-runs ──
-        # Using a fixed seed epoch ensures same timestamps across runs,
-        # so the composite unique key catches duplicates.
-        SEED_EPOCH = datetime(2026, 7, 29, 8, 0, 0, tzinfo=timezone.utc)
+        # ── Base datetime for idempotent re-runs ──
+        # Anchored to "now" so demo data always lands in the current month
+        # (dashboard/analytics default to the current month on the web).
+        # Re-running later produces new timestamps → new inspection rows.
+        SEED_EPOCH = datetime.now(timezone.utc)
         today = SEED_EPOCH.date()
 
         # ──────────────── 7. HELPER: CREATE INSPECTION ────────────────
@@ -297,9 +298,9 @@ async def seed():
 
         created_inspections: list[Inspection] = []
 
-        # ── 8a. July 2026 — Current month: 1 inspection per room ──
-        print("\n  📋 Creating July 2026 inspections (current month)...")
-        july_schedule = [
+        # ── 8a. Current month: 1 inspection per room ──
+        print("\n  📋 Creating current-month inspections...")
+        current_schedule = [
             ("UGD",          3,  ROOM_PROFILES["UGD"]),
             ("Rawat Inap A", 5,  ROOM_PROFILES["Rawat Inap A"]),
             ("Rawat Inap B", 4,  ROOM_PROFILES["Rawat Inap B"]),
@@ -307,14 +308,14 @@ async def seed():
             ("Poliklinik",   6,  ROOM_PROFILES["Poliklinik"]),
             ("Kamar Operasi",7,  ROOM_PROFILES["Kamar Operasi"]),
         ]
-        for room_name, days_ago, scores in july_schedule:
+        for room_name, days_ago, scores in current_schedule:
             insp = await _make_inspection(room_name, days_ago, "APPROVED", scores)
             if insp:
                 created_inspections.append(insp)
                 print(f"    ✅ {room_name} — APPROVED (D-{days_ago}, {len(scores)} items)")
 
-        # ── 8b. July round 2 — extra inspections for UGD & Rawat Inap A ──
-        print("\n  📋 Creating July round 2 inspections (extra data)...")
+        # ── 8b. Current-month round 2 — extra inspections for UGD & Rawat Inap A ──
+        print("\n  📋 Creating current-month round 2 inspections (extra data)...")
         round2 = [
             ("UGD",          8,  ROOM_PROFILES_ROUND2["UGD"]),
             ("Rawat Inap A", 9,  ROOM_PROFILES_ROUND2["Rawat Inap A"]),
@@ -325,19 +326,18 @@ async def seed():
                 created_inspections.append(insp)
                 print(f"    ✅ {room_name} — APPROVED (D-{days_ago}, round 2)")
 
-        # ── 8c. June 2026 — Previous month (for month filter testing) ──
-        print("\n  📋 Creating June 2026 inspections (previous month)...")
-        # Adjust days_ago to land in June
-        # Today = July 29, so ~30 days ago = June 29
-        june_schedule = [
+        # ── 8c. Previous month (for month filter testing) ──
+        print("\n  📋 Creating previous-month inspections...")
+        # ~30-35 days ago from the seed date lands in the previous month
+        previous_schedule = [
             ("UGD",          32, ROOM_PROFILES_JUNE["UGD"]),
             ("ICU",          35, ROOM_PROFILES_JUNE["ICU"]),
         ]
-        for room_name, days_ago, scores in june_schedule:
+        for room_name, days_ago, scores in previous_schedule:
             insp = await _make_inspection(room_name, days_ago, "APPROVED", scores)
             if insp:
                 created_inspections.append(insp)
-                print(f"    ✅ {room_name} — APPROVED (June 2026)")
+                print(f"    ✅ {room_name} — APPROVED (previous month)")
 
         # ── 8d. REJECTED inspection ──
         print("\n  📋 Creating REJECTED inspection...")
@@ -395,15 +395,15 @@ async def seed():
         print("║  Items: 10 inspection items                          ║")
         print("║                                                     ║")
         print(f"║  Inspections: {len(created_inspections)} total                          ║")
-        print(f"║    ├─ July APPROVED:   {len([i for i in created_inspections if i.status == 'APPROVED' and (today - i.business_date).days <= 31])}  ║")
-        print(f"║    ├─ June APPROVED:   {len([i for i in created_inspections if i.status == 'APPROVED' and (today - i.business_date).days > 31])}  ║")
+        print(f"║    ├─ Current month APPROVED:   {len([i for i in created_inspections if i.status == 'APPROVED' and (today - i.business_date).days <= 31])}  ║")
+        print(f"║    ├─ Previous month APPROVED:  {len([i for i in created_inspections if i.status == 'APPROVED' and (today - i.business_date).days > 31])}  ║")
         print(f"║    ├─ REJECTED:       {len([i for i in created_inspections if i.status == 'REJECTED'])}  ║")
         print(f"║    └─ PENDING:        {len([i for i in created_inspections if i.status == 'PENDING'])}  ║")
         print("║                                                     ║")
         print("║  📊 Analytics page shows:                           ║")
         print("║    • 6 rooms with score data                        ║")
         print("║    • Multiple issue items (score=0)                 ║")
-        print("║    • Previous month data (June)                     ║")
+        print("║    • Previous month data                            ║")
         print("║    • Inspector performance                          ║")
         print("║                                                     ║")
         print("╚═══════════════════════════════════════════════════════╝")

@@ -104,6 +104,48 @@ services:
     networks:
       - rsud-net
 
+  # Background worker — processes outbox jobs (recalculate_analytics,
+  # generate_thumbnail) created by the API on approval/photo upload.
+  # Without this service, approved inspections never update analytics.
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rsud-worker
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    environment:
+      DATABASE_URL: postgresql+asyncpg://rsud:${POSTGRES_PASSWORD:-rsud_secret}@db:5432/rsud
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "${ACCESS_TOKEN_EXPIRE:-15}"
+      REFRESH_TOKEN_EXPIRE_DAYS: "${REFRESH_TOKEN_EXPIRE:-7}"
+      UPLOAD_DIR: /app/uploads
+      # PENDING jobs older than this mark the worker unhealthy (default 5 min)
+      WORKER_HEALTH_STALE_MINUTES: "${WORKER_HEALTH_STALE_MINUTES:-5}"
+    command: ["python", "-m", "app.modules.background.worker"]
+    healthcheck:
+      # Healthcheck exec bypasses the entrypoint, so use the venv python directly
+      # (skips migrations/seed; probes only background_jobs for stale PENDING jobs)
+      test: ["CMD", "/app/.venv/bin/python", "-m", "app.modules.background.healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          memory: 128M
+    networks:
+      - rsud-net
+
 volumes:
   pgdata:
     name: rsud-pgdata

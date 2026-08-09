@@ -427,3 +427,98 @@ async def test_inspector_performance_no_auth(client: AsyncClient):
     """No token → 401."""
     resp = await client.get("/api/analytics/inspector-performance")
     assert resp.status_code == 401
+
+
+# ── dashboard ──
+
+
+@pytest.mark.asyncio
+async def test_dashboard_with_current_month_data(
+    client: AsyncClient, db_session: AsyncSession,
+):
+    """Returns current-month stats with the effective year_month."""
+    supervisor = await create_user(db_session, "sup", "pass", "supervisor")
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "Ruang")
+    item = await seed_item(db_session, "Item")
+
+    # Two inspections this month: total score 4, max 6 → 66.7%
+    await _seed_approved_inspection(
+        db_session, room.id, inspector.id, [item.id], [0],
+    )
+    await _seed_approved_inspection(
+        db_session, room.id, inspector.id, [item.id, item.id], [2, 2],
+    )
+
+    headers = auth_header(supervisor)
+    resp = await client.get("/api/analytics/dashboard", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["pending_count"] == 0
+    assert data["total_rooms"] == 1
+    assert data["monthly_inspection_count"] == 2
+    assert data["avg_score_pct"] == 66.7
+    assert data["year_month"] == date.today().strftime("%Y-%m")
+
+
+@pytest.mark.asyncio
+async def test_dashboard_falls_back_to_latest_month(
+    client: AsyncClient, db_session: AsyncSession,
+):
+    """Empty requested month → stats from the latest month with data."""
+    supervisor = await create_user(db_session, "sup", "pass", "supervisor")
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "Ruang")
+    item = await seed_item(db_session, "Item")
+
+    # Only July 2026 has data
+    await _seed_approved_inspection(
+        db_session, room.id, inspector.id, [item.id, item.id], [2, 2],
+        business_date=date(2026, 7, 15),
+    )
+
+    headers = auth_header(supervisor)
+    resp = await client.get(
+        "/api/analytics/dashboard?year_month=2099-01", headers=headers,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["year_month"] == "2026-07"
+    assert data["monthly_inspection_count"] == 1
+    assert data["avg_score_pct"] == 100.0
+
+
+@pytest.mark.asyncio
+async def test_dashboard_no_data_at_all(
+    client: AsyncClient, db_session: AsyncSession,
+):
+    """No stats anywhere → year_month null and zero counts (frontend shows
+    an informative empty state instead of misleading 0/0%)."""
+    supervisor = await create_user(db_session, "sup", "pass", "supervisor")
+    headers = auth_header(supervisor)
+    resp = await client.get("/api/analytics/dashboard", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["year_month"] is None
+    assert data["monthly_inspection_count"] == 0
+    assert data["avg_score_pct"] == 0.0
+    assert data["pending_count"] == 0
+    assert data["total_rooms"] == 0
+
+
+@pytest.mark.asyncio
+async def test_dashboard_as_inspector_forbidden(
+    client: AsyncClient, db_session: AsyncSession,
+):
+    """Non-supervisor role gets 403."""
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    headers = auth_header(inspector)
+    resp = await client.get("/api/analytics/dashboard", headers=headers)
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_dashboard_no_auth(client: AsyncClient):
+    """No token → 401."""
+    resp = await client.get("/api/analytics/dashboard")
+    assert resp.status_code == 401

@@ -64,6 +64,9 @@ export interface DashboardAll {
   total_rooms: number;
   monthly_inspection_count: number;
   avg_score_pct: number;
+  /** Effective month the stats refer to; falls back to the latest month with
+   * data when the current month is empty, or null when there is no data. */
+  year_month: string | null;
 }
 
 export function useDashboardData(yearMonth?: string) {
