@@ -362,23 +362,31 @@ Gunakan kombinasi: **Nginx** untuk first line defense + **Middleware** untuk apl
     {
       "item_id": 1,
       "score": 2,
-      "photos": ["uuid-photo-1.jpg"]
+      "photos": [
+        { "file_name": "uuid-photo-1.jpg", "sort_order": 0 }
+      ]
     },
     {
       "item_id": 2,
       "score": 0,
-      "photos": ["uuid-photo-2.jpg", "uuid-photo-3.jpg"]
+      "photos": [
+        { "file_name": "uuid-photo-2.jpg", "sort_order": 0 },
+        { "file_name": "uuid-photo-3.jpg", "sort_order": 1 }
+      ]
     }
   ]
 }
 ```
 
-> **Catatan**: `business_date` bersifat opsional — jika tidak dikirim, BE akan mengisi dengan tanggal hari ini. Format: `YYYY-MM-DD`.
+> **Catatan**: `photos` adalah **array objek** `{ "file_name": "<nama file dari upload>", "sort_order": <urutan> }` — BUKAN array string. `sort_order` = urutan tampilan foto dalam item (0 = pertama).
+>
+> **`business_date` WAJIB dikirim** (format `YYYY-MM-DD`) — BE tidak mengisi otomatis. Gunakan hari-bisnis WIB (Asia/Jakarta), bukan `take(10)` dari timestamp UTC.
 
 Validasi sisi server:
 1. `room_id` harus di-assign ke user yang login (via `user_rooms`)
 2. Semua item yang terasosiasi dengan room (via `room_items`) harus di-score — **tidak boleh ada yang terlewat**
 3. Idempotency key `(room_id, local_timestamp, inspector_id)` — cegah duplikat dari retry
+4. Gagal validasi #1 → `422` dengan code `ROOM_NOT_ASSIGNED`; gagal #2 → `422` dengan code `SYNC_REQUIRED` (lihat §4.5) — Android WAJIB re-sync master data lalu retry, bukan menampilkan error permanen
 
 ### Perubahan 4.2: Submit Inspection Response
 
@@ -540,6 +548,33 @@ Android Interceptor perlu mendeteksi 401 untuk trigger auto-refresh. Gunakan for
   "code": "FILE_TOO_LARGE"
 }
 ```
+
+**422 Unprocessable Entity (checklist basi / item belum ter-sync):**
+```json
+{
+  "detail": "Missing items for room: [7, 8]",
+  "code": "SYNC_REQUIRED"
+}
+```
+> Daftar item room di server lebih baru dari yang ada di device. **Recovery Android:** panggil sync master data (`room-items`) dulu, lalu retry submit.
+
+**422 Unprocessable Entity (room tidak ter-assign):**
+```json
+{
+  "detail": "Room 3 is not assigned to you",
+  "code": "ROOM_NOT_ASSIGNED"
+}
+```
+> Assignment user↔room di server berubah (dicabut/tombstone). **Recovery Android:** re-sync `user-rooms`; jika room memang sudah dicabut, hapus dari daftar room petugas dan jangan retry.
+
+**422 Unprocessable Entity (payload tidak valid — schema validation):**
+```json
+{
+  "detail": "Validation error: details[0].score (less_than_equal)",
+  "code": "VALIDATION_ERROR"
+}
+```
+> Dihasilkan FastAPI saat body tidak lolos validasi schema (tipe salah, `score` di luar 0–2, field wajib kosong, dll.). Bentuk `{detail, code}` sama dengan error lain — **semua 422 bisa di-parse Android** (beda dengan `detail` array bawaan FastAPI yang gagal di-deserialize `ApiErrorDto`).
 
 **409 Conflict (duplicate inspection):**
 ```json

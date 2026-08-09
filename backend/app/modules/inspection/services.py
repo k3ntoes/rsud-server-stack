@@ -18,6 +18,22 @@ class InspectionPhotoNotFoundError(Exception):
     """Raised when the inspection or the photo does not exist."""
 
 
+class RoomNotAssignedError(ValueError):
+    """Inspector is not (actively) assigned to the submitted room.
+
+    Recoverable: client's user-room list is stale → re-sync, then retry.
+    Maps to HTTP 422 with code ROOM_NOT_ASSIGNED.
+    """
+
+
+class MissingItemsError(ValueError):
+    """Not all active room items were scored in the submission.
+
+    Recoverable: client's room-item checklist is stale → re-sync master data,
+    then retry. Maps to HTTP 422 with code SYNC_REQUIRED.
+    """
+
+
 def _remove_upload_file(filename: str) -> None:
     """Best-effort delete of a stored photo/thumbnail file.
 
@@ -68,7 +84,7 @@ async def submit_inspection(
         )
     )
     if assignment.scalar_one_or_none() is None:
-        raise ValueError(f"Room {data.room_id} is not assigned to you")
+        raise RoomNotAssignedError(f"Room {data.room_id} is not assigned to you")
 
     # Validate all items assigned to this room are scored
     room_items = await db.execute(
@@ -81,7 +97,7 @@ async def submit_inspection(
     submitted_ids = {d.item_id for d in data.details}
     missing = room_item_ids - submitted_ids
     if missing:
-        raise ValueError(f"Missing items for room: {sorted(missing)}")
+        raise MissingItemsError(f"Missing items for room: {sorted(missing)}")
 
     inspection = Inspection(
         room_id=data.room_id,

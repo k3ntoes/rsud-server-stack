@@ -59,6 +59,108 @@ async def test_submit_inspection_duplicate(client: AsyncClient, db_session: Asyn
 
 
 @pytest.mark.asyncio
+async def test_submit_inspection_multi_photo_per_item(
+    client: AsyncClient, db_session: AsyncSession, monkeypatch, tmp_path
+):
+    """Multi-photo in one item (ADR-0002): 2 uploads → 1 item with 2 photos."""
+    from app.config import settings
+    monkeypatch.setattr(settings, "UPLOAD_DIR", str(tmp_path))
+
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "UGD")
+    item = await seed_item(db_session, "Kebersihan Tangan")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_item_to_room(db_session, room.id, item.id)
+    headers = auth_header(inspector)
+
+    # Android sync flow: upload each photo first, then reference the file names
+    names = []
+    for i in range(2):
+        resp = await client.post(
+            "/api/upload",
+            files={"file": (f"photo-{i}.jpg", b"img-bytes", "image/jpeg")},
+            headers=headers,
+        )
+        assert resp.status_code == 200, resp.text
+        names.append(resp.json()["photo_file_name"])
+
+    body = _submit_body(room.id, [item.id])
+    body["details"][0]["photos"] = [
+        {"file_name": names[0], "sort_order": 0},
+        {"file_name": names[1], "sort_order": 1},
+    ]
+    resp = await client.post("/api/inspections", json=body, headers=headers)
+    assert resp.status_code == 201, resp.text
+    photos = resp.json()["details"][0]["photos"]
+    assert [p["photo_file_name"] for p in photos] == names
+    assert [p["sort_order"] for p in photos] == [0, 1]
+
+
+@pytest.mark.asyncio
+async def test_submit_inspection_missing_items_sync_required(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """Stale offline checklist: room has 2 items, client submits 1 → 422 SYNC_REQUIRED."""
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "ICU")
+    item_a = await seed_item(db_session, "Item A")
+    item_b = await seed_item(db_session, "Item B")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_item_to_room(db_session, room.id, item_a.id)
+    await assign_item_to_room(db_session, room.id, item_b.id)
+    headers = auth_header(inspector)
+
+    body = _submit_body(room.id, [item_a.id])  # item_b missing
+    resp = await client.post("/api/inspections", json=body, headers=headers)
+    assert resp.status_code == 422
+    data = resp.json()
+    assert data["code"] == "SYNC_REQUIRED"
+    assert "Missing items for room" in data["detail"]
+
+
+@pytest.mark.asyncio
+async def test_submit_inspection_room_not_assigned(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """Inspector submits to a room they are not assigned to → 422 ROOM_NOT_ASSIGNED."""
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "POLI")
+    item = await seed_item(db_session, "Item A")
+    await assign_item_to_room(db_session, room.id, item.id)
+    headers = auth_header(inspector)
+
+    body = _submit_body(room.id, [item.id])
+    resp = await client.post("/api/inspections", json=body, headers=headers)
+    assert resp.status_code == 422
+    data = resp.json()
+    assert data["code"] == "ROOM_NOT_ASSIGNED"
+    assert "not assigned to you" in data["detail"]
+
+
+@pytest.mark.asyncio
+async def test_submit_inspection_schema_422_has_code(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """FastAPI schema-validation 422 → consistent {detail, code: VALIDATION_ERROR}."""
+    inspector = await create_user(db_session, "insp", "pass", "inspector")
+    room = await seed_room(db_session, "UGD")
+    item = await seed_item(db_session, "Kebersihan Tangan")
+    await assign_user_to_room(db_session, inspector.id, room.id)
+    await assign_item_to_room(db_session, room.id, item.id)
+    headers = auth_header(inspector)
+
+    # score di luar 0..2 → RequestValidationError (schema), bukan ValueError bisnis
+    body = _submit_body(room.id, [item.id])
+    body["details"][0]["score"] = 5
+    resp = await client.post("/api/inspections", json=body, headers=headers)
+    assert resp.status_code == 422
+    data = resp.json()
+    assert data["code"] == "VALIDATION_ERROR"
+    assert "Validation error" in data["detail"]
+    assert "score" in data["detail"]
+
+
+@pytest.mark.asyncio
 async def test_list_inspections_as_supervisor(client: AsyncClient, db_session: AsyncSession):
     inspector = await create_user(db_session, "insp", "pass", "inspector")
     supervisor = await create_user(db_session, "sup", "pass", "supervisor")

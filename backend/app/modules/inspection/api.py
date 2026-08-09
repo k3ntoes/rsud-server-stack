@@ -15,6 +15,7 @@ from app.modules.inspection.services import (
     submit_inspection, list_inspections, get_inspection,
     approve_inspection, reject_inspection,
     replace_inspection_photo, InspectionPhotoNotFoundError,
+    RoomNotAssignedError, MissingItemsError,
 )
 
 router = APIRouter(prefix="/api", tags=["inspection"])
@@ -28,6 +29,18 @@ async def create_inspection(
 ):
     try:
         return await submit_inspection(db, current_user.id, body)
+    except RoomNotAssignedError as e:
+        return error_response(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(e),
+            code="ROOM_NOT_ASSIGNED",
+        )
+    except MissingItemsError as e:
+        return error_response(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(e),
+            code="SYNC_REQUIRED",
+        )
     except ValueError as e:
         return error_response(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
