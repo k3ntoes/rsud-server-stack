@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select, func, or_
+from sqlalchemy import ColumnElement, select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.sorting import apply_sorting
@@ -74,13 +74,28 @@ async def delete_room(db: AsyncSession, room_id: int) -> bool:
     room = await db.get(Room, room_id)
     if room is None or not room.is_active:
         return False
+    now = datetime.now(timezone.utc)
     room.is_active = False
-    room.updated_at = datetime.now(timezone.utc)
+    room.updated_at = now
+    await _deactivate_room_items(db, RoomItem.room_id == room_id, now)
     await db.commit()
     return True
 
 
 # ── Room-Items (pivot) ──
+
+
+async def _deactivate_room_items(
+    db: AsyncSession, condition: ColumnElement[bool], now: datetime
+) -> None:
+    """Soft-delete RoomItem yang cocok — cegah pivot yatim yang memunculkan
+    placeholder "Item #N" di web-admin saat parent dihapus."""
+    result = await db.execute(
+        select(RoomItem).where(RoomItem.is_active == True, condition)
+    )
+    for ri in result.scalars().all():
+        ri.is_active = False
+        ri.updated_at = now
 
 
 async def list_room_items(db: AsyncSession, since: datetime | None = None) -> list:
@@ -280,7 +295,9 @@ async def delete_item(db: AsyncSession, item_id: int) -> bool:
     item = await db.get(InspectionItem, item_id)
     if item is None or not item.is_active:
         return False
+    now = datetime.now(timezone.utc)
     item.is_active = False
-    item.updated_at = datetime.now(timezone.utc)
+    item.updated_at = now
+    await _deactivate_room_items(db, RoomItem.item_id == item_id, now)
     await db.commit()
     return True
