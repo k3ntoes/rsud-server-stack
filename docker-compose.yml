@@ -41,6 +41,8 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@rsud.local}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-rsud_admin}
       PGADMIN_REPLACE_SERVERS_ON_STARTUP: "True"
+      # .local is a special-use domain (mDNS); pgAdmin rejects it unless allowed
+      PGADMIN_CONFIG_ALLOW_SPECIAL_EMAIL_DOMAINS: "['local']"
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rsud_secret}
     ports:
       - "${PGADMIN_PORT:-5050}:80"
